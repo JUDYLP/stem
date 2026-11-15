@@ -58,7 +58,7 @@ node --check src/demo.js
 - tests/：Node 内置测试。
 - docs/planning/：后续唯一维护的计划、任务与决策。
 
-后续需要：用户人工审校、公开 HTTPS 部署、真实浏览器 API/CORS 实验（有 Key 且已授权才执行）、正式提交材料。没有 Git 远程，未创建公开仓库或发布。
+后续需要：用户人工审校、公开 HTTPS 部署、真实浏览器 API/CORS 实验（有 Key 且已授权才执行）、正式提交材料。用户指定远程为 https://github.com/JUDYLP/stem 。Pages workflow 与静态资源打包已准备，发布结果以 docs/DEPLOYMENT.md 和实际工作流状态为准。
 
 ## AI 辅助开发披露
 

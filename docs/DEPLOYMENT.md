@@ -1,0 +1,15 @@
+# GitHub Pages 发布
+
+目标仓库由用户指定：https://github.com/JUDYLP/stem 。2026-11-15，git ls-remote --heads 返回空且退出0：当时未发现远程分支。
+
+采用 GitHub 官方静态 Pages workflow：[文档](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)。
+
+首次配置：仓库 Settings → Pages → Build and deployment → Source 选择 GitHub Actions。此设置尚需实际确认。推送 main 后工作流会生成并部署纯静态包。目标 URL 应以成功的 Actions 输出为准，不能仅靠拼接地址宣称已上线。
+
+`python tools/package_site.py _site` 只复制8个明确列出的页面资源及.nojekyll，不包含.git、docs、tests或秘密文件。输出目录必须不存在，脚本不删除或覆盖任何已有目录。
+
+本地检查也可用 `python tools/package_site.py work/site-check-1`。在项目根目录启动HTTP后，访问对应子路径，验证资源使用相对URL。脚本只在打包/发布时使用；网站本身无构建运行时依赖。
+
+发布验收：工作流成功、真实HTTPS URL未登录可访问、三题加载、Demo无Key、子路径资源无404。公开仓库、配置文件或push成功都不能代替此验收。
+
+状态详见 TASKS 与 QA_REPORT；API/CORS尚未测试，公开预览成功后再进行。
