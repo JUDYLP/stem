@@ -24,9 +24,9 @@
           <p class="intro">把“代码能跑”变成“我能讲清楚”。<br>练习用自己的话，解释代码背后的概念、机制与边界。</p>
           <div class="actions" aria-describedby="availability">
             <a class="button primary" href="#practice">Practice <span aria-hidden="true">↗</span></a>
-            <button class="button secondary" type="button" disabled aria-describedby="availability">Try Demo <span aria-hidden="true">↗</span></button>
+            <button id="open-demo" class="button secondary" type="button">Try Demo <span aria-hidden="true">↗</span></button>
           </div>
-          <p id="availability" class="availability">练习无需 API Key · Try Demo 开发中，尚未开放</p>
+          <p id="availability" class="availability">练习无需 API Key · English Demo 为固定模拟示例</p>
           <a class="text-link" href="#method">先了解三层训练 <span aria-hidden="true">↓</span></a>
         </section>
 
@@ -41,6 +41,32 @@
             <li><span class="layer-number">L2</span><div><h3 lang="en">Reason</h3><p class="layer-subtitle">为什么</p><p>沿着因果关系解释机制，说明结果如何发生。</p></div></li>
             <li><span class="layer-number">L3</span><div><h3 lang="en">Stress-test</h3><p class="layer-subtitle">边界在哪里</p><p>用反例与极端情况检验解释，再讨论方案的取舍。</p></div></li>
           </ol>
+        </section>
+
+        <section id="demo" class="practice" lang="en" aria-labelledby="demo-title" hidden>
+          <p class="eyebrow">DEMO PREVIEW · NO API KEY NEEDED</p>
+          <h2 id="demo-title" tabindex="-1">Explain. Reflect. Try again.</h2>
+          <p class="warning">Simulated example — no live AI call. Nothing here changes your practice records.</p>
+          <p>L1 Explain → <strong>L2 Reason</strong> → L3 Stress-test</p>
+          <h3>Why can two increments lose an update?</h3>
+          <p>In Java, two threads increment the same volatile integer. How can one update be lost?</p>
+          <h4>Example first explanation</h4>
+          <p class="sample-answer">“Volatile makes i++ thread-safe because every thread sees the latest value.”</p>
+          <button id="demo-feedback-button" type="button" class="button primary">Show simulated feedback</button>
+          <div id="demo-feedback" hidden>
+            <p class="warning">Simulated example — no live AI call</p>
+            <p><strong>Reasoning gap:</strong> Visibility does not make a read-modify-write operation atomic.</p>
+            <p><strong>One follow-up:</strong> If both threads read 5 before either writes back, what could happen?</p>
+            <label for="demo-retry">Retry in your own words</label>
+            <textarea id="demo-retry" rows="4" maxlength="8000" placeholder="Explain the steps and what you would change."></textarea>
+            <button id="demo-use-example" type="button" class="button secondary">Use a sample retry</button>
+            <p><strong>After:</strong> <span id="demo-after">Your retry will appear here.</span></p>
+            <p>This retry is not automatically evaluated. Choose a self-rating for this demo:</p>
+            <div class="actions"><button id="demo-pass" type="button" class="button secondary">Pass</button><button id="demo-review" type="button" class="button secondary">Review</button></div>
+            <p id="demo-status" role="status">Not rated.</p>
+            <p id="demo-sheet" class="fine-print">A review item will appear here only if you choose Review.</p>
+          </div>
+          <div class="actions demo-actions"><button id="demo-reset" type="button" class="button secondary">Restart example</button><button id="close-demo" type="button" class="button secondary">Exit demo / 返回练习</button></div>
         </section>
 
         <section id="practice" class="practice" aria-labelledby="practice-title">
@@ -71,6 +97,14 @@
               </form>
               <div id="self-check" hidden>
                 <details id="rubric-details"><summary>对照参考要点 / Self-check</summary><ul id="rubric"></ul></details>
+                <div class="retry-area">
+                  <h4>Retry · 再解释一次</h4>
+                  <p>针对参考要点自行修正。这里不会调用 AI，也不会自动判定进步。</p>
+                  <details><summary>Before · 首次解释</summary><p id="before-answer" class="answer-text"></p></details>
+                  <label for="retry-answer">After · 我的修正</label>
+                  <textarea id="retry-answer" rows="4" maxlength="8000" placeholder="哪里需要补充？重新用自己的话解释。"></textarea>
+                  <p class="fine-print">修正文本仅留在本页内存中。填写不会自动改动自评。</p>
+                </div>
                 <p>请自行判断当前这一层；参考要点不是自动评分。</p>
                 <div class="actions"><button id="rate-pass" class="button secondary" type="button">Pass · 自评通过</button><button id="rate-review" class="button secondary" type="button">Review · 需要复习</button></div>
               </div>
@@ -89,7 +123,7 @@
 
         <aside class="development-note" aria-labelledby="development-title">
           <h2 id="development-title">一步一步，先把基础做实。</h2>
-          <p>当前支持手动练习与本地自评。英文 Demo 和 AI 尚未开放，不会请求 API Key。题目仅供练习，仍待人工审校。</p>
+          <p>当前支持手动练习、自评、再次解释和复习单；英文 Demo 为固定模拟示例。未接入 Live AI，不会请求 API Key。题目仍待人工审校。</p>
         </aside>
       </main>
 

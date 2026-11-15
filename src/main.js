@@ -1,6 +1,9 @@
 import { loadQuestions } from './questions.js';
 import { createProgressStore } from './storage.js';
 import { reviewItems, buildCrashSheet, downloadCrashSheet } from './export.js';
+import { initDemo } from './demo.js';
+
+initDemo();
 
 const $ = id => document.getElementById(id);
 const store = createProgressStore();
@@ -10,7 +13,7 @@ const current = () => questions.find(q => q.id === questionId);
 const key = () => `${questionId}::L${layerIndex + 1}`;
 const statusText = status => ({pass:'自评通过',review:'需要复习'}[status] || '未评价');
 function draft() {
-  if (!drafts.has(key())) drafts.set(key(), { text: '', submitted: null });
+  if (!drafts.has(key())) drafts.set(key(), { text: '', submitted: null, retry: '' });
   return drafts.get(key());
 }
 function option(value, text) {
@@ -57,6 +60,8 @@ function renderLayer() {
   $('answer').value = d.text; $('answer-count').textContent = `${d.text.length} / 8000`;
   $('answer-message').textContent = ''; $('self-check').hidden = d.submitted === null;
   $('rubric-details').open = false; $('rubric').replaceChildren();
+  $('before-answer').textContent = d.submitted || '';
+  $('retry-answer').value = d.retry;
   if (d.submitted !== null) fillRubric();
   renderProgress();
 }
@@ -78,7 +83,7 @@ $('random-question').addEventListener('click', () => {
   selectQuestion(pool[Math.floor(Math.random() * pool.length)].id);
 });
 $('answer').addEventListener('input', () => {
-  const d = draft(); d.text = $('answer').value; d.submitted = null;
+  const d = draft(); d.text = $('answer').value; d.submitted = null; d.retry = '';
   $('answer-count').textContent = `${d.text.length} / 8000`;
   $('self-check').hidden = true; $('rubric').replaceChildren();
   $('answer-message').textContent = '修改后请重新提交，再进行自评。';
@@ -89,12 +94,14 @@ $('answer-form').addEventListener('submit', event => {
     $('answer-message').textContent = '请先写下 1–8000 个字符的解释（不能只有空白）。'; $('answer').focus(); return;
   }
   d.submitted = d.text; fillRubric(); $('self-check').hidden = false; $('rubric-details').open = true;
+  $('before-answer').textContent = d.submitted; $('retry-answer').value = d.retry;
   $('answer-message').textContent = '已提交。对照要点后，请选择自己的评价。';
 });
 for (const status of ['pass','review']) $('rate-' + status).addEventListener('click', () => {
   if (draft().submitted === null) return;
   store.rate(key(), status); renderProgress();
 });
+$('retry-answer').addEventListener('input', () => { draft().retry = $('retry-answer').value; });
 async function boot() {
   $('reload-questions').hidden = true; $('practice-body').hidden = true;
   $('load-message').textContent = '正在加载题库…';
