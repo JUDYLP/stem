@@ -14,7 +14,7 @@
     <div class="page">
       <header class="site-header">
         <a class="wordmark" href="#main" aria-label="Unscripted（脱稿）首页">Unscripted<span>（脱稿）</span></a>
-        <span class="build-label">T00 · 首屏开发版</span>
+        <span class="build-label">无 Key 手动练习版</span>
       </header>
 
       <main id="main">
@@ -23,10 +23,10 @@
           <h1 id="hero-title" lang="en">AI can write your code.<br><em>Can you explain it?</em></h1>
           <p class="intro">把“代码能跑”变成“我能讲清楚”。<br>练习用自己的话，解释代码背后的概念、机制与边界。</p>
           <div class="actions" aria-describedby="availability">
-            <button class="button primary" type="button" disabled aria-describedby="availability">Practice <span aria-hidden="true">↗</span></button>
+            <a class="button primary" href="#practice">Practice <span aria-hidden="true">↗</span></a>
             <button class="button secondary" type="button" disabled aria-describedby="availability">Try Demo <span aria-hidden="true">↗</span></button>
           </div>
-          <p id="availability" class="availability">Coming soon / 开发中 · 练习与演示尚未开放</p>
+          <p id="availability" class="availability">练习无需 API Key · Try Demo 开发中，尚未开放</p>
           <a class="text-link" href="#method">先了解三层训练 <span aria-hidden="true">↓</span></a>
         </section>
 
@@ -43,9 +43,45 @@
           </ol>
         </section>
 
+        <section id="practice" class="practice" aria-labelledby="practice-title">
+          <p class="eyebrow">PRACTICE / 用自己的话解释</p>
+          <h2 id="practice-title">先回答，再对照。</h2>
+          <p class="fine-print">3 道资料核验题，待参赛者人工审校。参考要点只在提交后展开。自评由您决定，不是能力认证。</p>
+          <p id="load-message" role="status">正在加载题库…</p>
+          <button id="reload-questions" class="button secondary" type="button" hidden>重试加载</button>
+          <noscript><p>请启用 JavaScript 以加载题库和开始练习。</p></noscript>
+          <div id="practice-body" hidden>
+            <p id="storage-warning" class="warning" role="status" hidden></p>
+            <div class="selectors">
+              <label>分类<select id="category"><option value="">全部分类</option></select></label>
+              <label class="question-selector">题目<select id="question"></select></label>
+              <button id="random-question" class="button secondary" type="button">随机选题</button>
+            </div>
+            <nav id="depth-meter" class="depth-meter" aria-label="选择题目层级"></nav>
+            <article class="answer-card" aria-labelledby="question-title">
+              <p id="layer-label" class="eyebrow"></p>
+              <h3 id="question-title"></h3>
+              <p id="layer-prompt"></p>
+              <form id="answer-form">
+                <label for="answer">我的解释</label>
+                <textarea id="answer" rows="6" maxlength="8000" aria-describedby="draft-note answer-count" placeholder="先写下你的理解，不必一次就完整。"></textarea>
+                <div class="answer-meta"><p id="draft-note">回答仅留在本页内存中，刷新会清空；自评单独保存于本浏览器。</p><span id="answer-count">0 / 8000</span></div>
+                <button class="button primary" type="submit">提交解释，查看参考要点</button>
+                <p id="answer-message" role="status"></p>
+              </form>
+              <div id="self-check" hidden>
+                <details id="rubric-details"><summary>对照参考要点 / Self-check</summary><ul id="rubric"></ul></details>
+                <p>请自行判断当前这一层；参考要点不是自动评分。</p>
+                <div class="actions"><button id="rate-pass" class="button secondary" type="button">Pass · 自评通过</button><button id="rate-review" class="button secondary" type="button">Review · 需要复习</button></div>
+              </div>
+              <p id="rating-status" class="rating-status" role="status"></p>
+            </article>
+          </div>
+        </section>
+
         <aside class="development-note" aria-labelledby="development-title">
           <h2 id="development-title">一步一步，先把基础做实。</h2>
-          <p>当前仅提供项目介绍。题库、答题、自评、记录、复习单和 AI 功能均尚未实现。本页不会请求 API Key，也不会保存练习数据。</p>
+          <p>当前支持手动练习与本地自评。英文 Demo 和 AI 尚未开放，不会请求 API Key。题目仅供练习，仍待人工审校。</p>
         </aside>
       </main>
 
