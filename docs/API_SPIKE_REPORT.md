@@ -2,7 +2,7 @@
 
 2026-11-15：NOT RUN。
 
-前置条件未满足：公开HTTPS部署尚未成功，尚未获得实际origin；没有在界面安全输入并验证有效Key/额度。没有向候选服务商发出任何模型请求，没有CORS成功或失败结论。
+公开HTTPS前置已满足：页面https://judylp.github.io/stem/，实际origin为https://judylp.github.io。尚无安全输入界面，也未输入并验证有效Key/额度。没有向候选服务商发出任何模型请求，没有CORS成功或失败结论。
 
 候选 endpoint/model 仅来自规划，不代表当前可用。不得把尚未测试写成CORS失败。
 

@@ -3,13 +3,13 @@
 ## 当前状态（由主执行者维护）
 
 - 更新：2026-11-15。项目根目录 E:/Project/stem/unscripted。原目录不再维护。
-- T00 DONE；T02工程完成、用户人工审校待办；T03 DONE；T04核心完成、下载落盘待确认；T08 DONE；T09交互和退出完成、桌面视觉通过，最终移动截图因审批额度限制待补。
+- T00 DONE；T02工程完成、用户人工审校待办；T03 DONE；T04核心完成、下载落盘待确认；T08 DONE；T09交互和退出完成、桌面视觉通过，最终移动截图已在公开HTTPS补验收通过。
 - 已实现三题九层、手动解释/自评、持久化、Depth Meter、复习单、Retry、独立英文模拟Demo。
 - 测试：15项Node测试通过；浏览器正常路径/故障注入结果见 docs/QA_REPORT.md，未测项明确保留。
 - commits：2613321（题库），a5d1b89（手动练习/存储），d5e7b92（复习单），9246dbf（Retry/Demo）。
-- T01推进：用户指定https://github.com/JUDYLP/stem.git；远程分支初查为空；752dd3f已push；工作流打包成功、configure-pages失败。仓库Private且Pages未配置，等待用户改Public并选择GitHub Actions。gh未发现。T05–T07未执行；未接入Live API。
+- T01公开预览DONE：https://judylp.github.io/stem/；仓库Public，Actions 43706124478 attempt 2成功，部署752dd3f。独立浏览器三题加载、8资源200/MIME/哈希一致、390px Demo与存储隔离通过。Discord具体安排仍待核实。T05–T07未执行；未接入Live API。
 - T10–T13待办。优先补验收并准备部署；无Key不影响当前练习与模拟Demo。
-- 本轮Subagent 0，无发布、无模型API请求。原始“零代码”是启动事实，不再描述当前状态。
+- 本轮Subagent 0，已发布静态HTTPS预览，无模型API请求。原始“零代码”是启动事实，不再描述当前状态。
 
 ## 全部任务共同规则
 

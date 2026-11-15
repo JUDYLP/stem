@@ -2,7 +2,7 @@
 
 **AI can write your code. Can you explain it?**
 
-纯前端解释训练器。当前为本地开发版，尚未公开部署，尚未接入 Live AI。
+纯前端解释训练器。公开预览：https://judylp.github.io/stem/ 。无需登录或 API Key；尚未接入 Live AI。
 
 ## 已实现
 
