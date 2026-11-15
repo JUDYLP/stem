@@ -31,3 +31,6 @@
 实际HTTPS地址：https://judylp.github.io/stem/ 。独立Chrome上下文unscripted-https无需登录访问成功，加载三道题。浏览器fetch(cache:reload)检查index.html、styles.css、src/{main,questions,storage,export,demo}.js、data/questions.json：8项均200，分别为HTML/CSS/JavaScript/JSON正确类型。浏览器crypto.subtle SHA-256与本地Get-FileHash逐项一致。
 
 390px手机模拟视口：scrollWidth=innerWidth=390；完整截图检查Demo反馈、Retry、自评和退出无遮挡。Demo流程及退出成功，正式localStorage保持原值，控制台无消息，应用加载仅有同源资源请求。旧部署阻塞已解除；真实手机、API/CORS不在本次通过范围。
+
+
+2026-11-15 v2公开发布复验：Actions https://github.com/JUDYLP/stem/actions/runs/43707943812 completed/success，部署提交2510c80bae45af9a159e6e94d996b95f2569eb3b。Chrome打开https://judylp.github.io/stem/确认模拟卡存在、开始练习中文CTA、8行代码及三个-v2题ID。

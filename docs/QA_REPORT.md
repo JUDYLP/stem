@@ -74,3 +74,6 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - 本地首次5175预览因沙箱套接字限制失败；获环境权限后5176预览成功。没有把失败预览算通过。
 - NOT RUN：Java/Redis/MySQL实例实验、用户学习效果试验、真实设备/多浏览器、新版下载落盘；题目内容依旧待参赛者人工审校。
 - 中文标题使用本机Noto/思源/宋体回退，未下载或内嵌字体；不同系统的字形可能不同。首屏模拟示例不会执行fetch代码、不会自动评级。
+
+
+2026-11-15 v2公开发布复验：Actions https://github.com/JUDYLP/stem/actions/runs/43707943812 completed/success，部署提交2510c80bae45af9a159e6e94d996b95f2569eb3b。Chrome打开https://judylp.github.io/stem/确认模拟卡存在、开始练习中文CTA、8行代码及三个-v2题ID。
