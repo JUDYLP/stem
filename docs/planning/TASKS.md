@@ -7,7 +7,7 @@
 - 已实现三题九层、手动解释/自评、持久化、Depth Meter、复习单、Retry、独立英文模拟Demo。
 - 测试：15项Node测试通过；浏览器正常路径/故障注入结果见 docs/QA_REPORT.md，未测项明确保留。
 - commits：2613321（题库），a5d1b89（手动练习/存储），d5e7b92（复习单），9246dbf（Retry/Demo）。
-- T01推进：用户指定https://github.com/JUDYLP/stem.git；远程分支初查为空，静态打包与Pages workflow已准备，待推送/部署确认。gh未发现。T05–T07未执行；未接入Live API。
+- T01推进：用户指定https://github.com/JUDYLP/stem.git；远程分支初查为空；752dd3f已push；工作流打包成功、configure-pages失败。仓库Private且Pages未配置，等待用户改Public并选择GitHub Actions。gh未发现。T05–T07未执行；未接入Live API。
 - T10–T13待办。优先补验收并准备部署；无Key不影响当前练习与模拟Demo。
 - 本轮Subagent 0，无发布、无模型API请求。原始“零代码”是启动事实，不再描述当前状态。
 

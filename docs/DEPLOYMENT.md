@@ -13,3 +13,13 @@
 发布验收：工作流成功、真实HTTPS URL未登录可访问、三题加载、Demo无Key、子路径资源无404。公开仓库、配置文件或push成功都不能代替此验收。
 
 状态详见 TASKS 与 QA_REPORT；API/CORS尚未测试，公开预览成功后再进行。
+
+## 2026-11-15 实际发布结果
+
+- 已推送 main，提交 752dd3f030b96811f7490929f8f2ff4b84c6ca05，保留完整开发历史，无force push。
+- 已通过已连接GitHub元数据确认仓库visibility=private，不能声称已公开。
+- 工作流 https://github.com/JUDYLP/stem/actions/runs/43706124478 实际失败。
+- checkout及静态打包成功；actions/configure-pages@v5失败：Get Pages site failed / Not Found，提示启用Pages并设为GitHub Actions。
+- 未上传部署artifact，未生成经验证的线上URL。
+- 用户待办：Settings中改Public，Settings→Pages→Source选择GitHub Actions；完成后重跑失败任务并检查HTTPS站点。
+- 连接器没有更改可见性/Pages配置的操作，Chrome自动审批服务额度不足；未绕过审批、未擅自获取凭证。
