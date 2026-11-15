@@ -2,13 +2,14 @@
 
 ## 当前状态（由主执行者维护）
 
-- 更新：2026-11-15 T00 执行；已从零创建首屏和独立 Git 仓库，尚无题库或练习功能。
-- 项目根目录：`E:\Project\stem\unscripted`；此前工作已复制迁入，旧目录不再维护。`git log -1` 查看实际提交。
-- 当前任务：T00 DONE（HTTP、JS语法、Chrome桌面/390px移动视口、模块与交互、控制台/网络均已验收）。下一任务 T02。
-- T00 DONE；T01–T13 全部 TODO。T06/T07 以 T05 成功为条件，T10 可选。
-- 已实测：Git、Python、Node、HTTP、Chrome视觉/交互；未实测：GitHub 权限、公开部署、供应商/额度/CORS。Devpost 规则已于本轮核验，见 MASTER_PLAN §9；Discord 具体安排未核实，用户尚未加入。
-- 本轮 Subagent：0；未调用模型 API、未发布。T00 Git 提交结果见 SETUP_REPORT 和实际 git log。
-- 规划文件验证：14 张任务卡、8 段提示词、20 条测试矩阵；UTF-8 无替换字符，代码围栏成对。这里只验证文档结构，产品测试结果以 SETUP_REPORT 为准，后续测试矩阵未执行。
+- 更新：2026-11-15。项目根目录 E:/Project/stem/unscripted。原目录不再维护。
+- T00 DONE；T02工程完成、用户人工审校待办；T03 DONE；T04核心完成、下载落盘待确认；T08 DONE；T09交互完成、退出/最终视觉待补。
+- 已实现三题九层、手动解释/自评、持久化、Depth Meter、复习单、Retry、独立英文模拟Demo。
+- 测试：15项Node测试通过；浏览器正常路径/故障注入结果见 docs/QA_REPORT.md，未测项明确保留。
+- commits：2613321（题库），a5d1b89（手动练习/存储），d5e7b92（复习单），9246dbf（Retry/Demo）。
+- T01未执行：无远程仓库，gh未发现；公开部署权限未核实。T05–T07未执行；未接入Live API。
+- T10–T13待办。优先补验收并准备部署；无Key不影响当前练习与模拟Demo。
+- 本轮Subagent 0，无发布、无模型API请求。原始“零代码”是启动事实，不再描述当前状态。
 
 ## 全部任务共同规则
 
