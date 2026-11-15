@@ -13,6 +13,9 @@ export function initDemo() {
     reset(); $('demo').hidden = false; $('practice').hidden = true;
     $('demo-title').focus(); $('demo').scrollIntoView({block:'start'});
   });
+  document.querySelector('a[href="#practice"]').addEventListener('click', () => {
+    $('demo').hidden = true; $('practice').hidden = false;
+  });
   $('close-demo').addEventListener('click', () => {
     $('demo').hidden = true; $('practice').hidden = false;
     $('practice').scrollIntoView({block:'start'}); $('open-demo').focus({preventScroll:true});
