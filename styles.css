@@ -76,6 +76,10 @@ summary { cursor: pointer; font-weight: 600; }
 details li { margin-bottom: 9px; }
 .warning { padding: 14px; background: #fff0d4; border-left: 3px solid #8c601c; }
 .rating-status { color: var(--muted); font-size: 13px; margin: 20px 0 0; }
+.review-sheet { padding: 30px 0 0; }
+.review-sheet h3 { font-size: 24px; font-weight: 500; margin: 0; }
+.review-sheet ul { padding-left: 20px; }
+.review-link { font: inherit; color: var(--accent); border: 0; background: transparent; text-align: left; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; padding: 8px 0; overflow-wrap: anywhere; }
 @media (max-width: 650px) {
   .selectors { flex-direction: column; align-items: stretch; }
   .depth-meter { grid-template-columns: 1fr; gap: 6px; }

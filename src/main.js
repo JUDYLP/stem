@@ -1,5 +1,6 @@
 import { loadQuestions } from './questions.js';
 import { createProgressStore } from './storage.js';
+import { reviewItems, buildCrashSheet, downloadCrashSheet } from './export.js';
 
 const $ = id => document.getElementById(id);
 const store = createProgressStore();
@@ -26,7 +27,28 @@ function renderProgress() {
   }));
   $('rating-status').textContent = `该层最后一次自评：${statusText(data.items[key()]?.status)}。编辑答案不会自动改变自评。`;
   $('storage-warning').textContent = store.warning; $('storage-warning').hidden = !store.warning;
+  renderReview();
 }
+function renderReview() {
+  const items = reviewItems(questions, store.snapshot());
+  $('review-count').textContent = items.length ? `当前 ${items.length} 个题目层级需要复习（全分类）` : '当前没有待复习条目。完成解释后，可自行标记 Review。';
+  $('review-list').replaceChildren(...items.map(({question, layer}) => {
+    const li = document.createElement('li'), button = document.createElement('button');
+    button.type = 'button'; button.className = 'review-link';
+    button.textContent = `${question.category} / ${layer.id} · ${question.title}`;
+    button.addEventListener('click', () => {
+      $('category').value = ''; renderOptions(); selectQuestion(question.id); layerIndex = question.layers.indexOf(layer); renderLayer();
+      $('question-title').scrollIntoView({block:'start'}); $('answer').focus({preventScroll:true});
+    });
+    li.append(button); return li;
+  }));
+  $('export-review').disabled = !items.length;
+}
+$('export-review').addEventListener('click', () => {
+  const text = buildCrashSheet(questions, store.snapshot());
+  downloadCrashSheet(text);
+  $('export-message').textContent = '已生成 Markdown 复习单，请在浏览器下载列表中查看。';
+});
 function renderLayer() {
   const q = current(), layer = q.layers[layerIndex], d = draft();
   $('question-title').textContent = q.title;
