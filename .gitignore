@@ -1,0 +1,10 @@
+# Local runtime files and secrets
+.env
+.env.*
+!.env.example
+*.log
+*.pid
+__pycache__/
+.DS_Store
+Thumbs.db
+work/

@@ -1,0 +1,65 @@
+:root {
+  color-scheme: light;
+  --paper: #f6f5ef;
+  --ink: #202d29;
+  --muted: #59665e;
+  --accent: #245b48;
+  --line: #d4dbd0;
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.65;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: inherit; }
+button { font: inherit; }
+.page { width: min(1120px, calc(100% - 80px)); margin: 0 auto; }
+.site-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 29px 0; border-bottom: 1px solid var(--line); }
+.wordmark { text-decoration: none; font-weight: 750; font-size: 24px; letter-spacing: -1px; }
+.wordmark span { font-size: 14px; font-weight: 500; letter-spacing: 0; margin-left: 6px; }
+.build-label { font-size: 12px; color: var(--accent); border: 1px solid var(--line); border-radius: 4px; padding: 5px 10px; white-space: nowrap; }
+.hero { padding: 76px 0 65px; }
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--accent); margin: 0 0 23px; }
+h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: clamp(38px, 5.6vw, 72px); line-height: 1.12; letter-spacing: -2.4px; margin: 0; }
+h1 em { font-weight: 400; color: var(--accent); }
+.intro { color: var(--muted); font-size: 17px; margin: 28px 0; line-height: 1.9; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.button { min-height: 48px; min-width: 158px; border: 1px solid var(--line); border-radius: 4px; padding: 10px 17px; display: flex; align-items: center; justify-content: space-between; gap: 24px; font-weight: 600; }
+.button:disabled { cursor: not-allowed; }
+.primary { background: #dce7dd; color: #48604e; border-color: #c5d5c8; }
+.secondary { background: transparent; color: var(--muted); }
+.availability { font-size: 12px; color: var(--muted); margin: 11px 0 24px; }
+.text-link { font-size: 14px; text-underline-offset: 5px; }
+.text-link span { margin-left: 12px; }
+.method { display: grid; grid-template-columns: 1fr 1.15fr; gap: 65px; padding: 48px 0; border-top: 1px solid var(--line); scroll-margin-top: 24px; }
+.section-heading h2 { font-weight: 500; font-size: 29px; line-height: 1.5; margin: 0 0 18px; }
+.section-heading > p:last-child { color: var(--muted); font-size: 14px; }
+.layers { list-style: none; padding: 0; margin: 0; }
+.layers li { display: grid; grid-template-columns: 42px 1fr; gap: 19px; border-bottom: 1px solid var(--line); padding: 21px 0; }
+.layers li:first-child { padding-top: 0; }
+.layers li:last-child { border-bottom: 0; padding-bottom: 0; }
+.layer-number { font-family: monospace; color: var(--accent); font-size: 13px; padding-top: 5px; }
+.layers h3 { display: inline; font-size: 22px; font-weight: 500; margin: 0; }
+.layers .layer-subtitle { display: inline; color: var(--accent); font-size: 12px; margin-left: 12px; }
+.layers p:last-child { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
+.development-note { border-left: 3px solid #98af9a; padding: 2px 0 2px 21px; margin: 20px 0 55px; max-width: 780px; }
+.development-note h2 { font-size: 16px; font-weight: 600; margin: 0 0 8px; }
+.development-note p { font-size: 13px; color: var(--muted); margin: 0; }
+.site-footer { border-top: 1px solid var(--line); padding: 22px 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 11px; }
+.skip-link { position: absolute; left: 12px; top: -100px; padding: 10px; background: var(--ink); color: white; z-index: 10; }
+.skip-link:focus { top: 12px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+@media (max-width: 650px) {
+  .page { width: calc(100% - 40px); }
+  .site-header { align-items: flex-start; flex-direction: column; gap: 12px; padding: 22px 0; }
+  .hero { padding: 44px 0; }
+  h1 { letter-spacing: -1.3px; }
+  .intro { font-size: 15px; }
+  .actions { gap: 10px; }
+  .button { min-width: 0; flex: 1; }
+  .method { grid-template-columns: 1fr; gap: 28px; padding: 35px 0; }
+  .section-heading h2 { font-size: 25px; }
+  .eyebrow { margin-bottom: 17px; }
+  .development-note { margin-bottom: 35px; }
+}
