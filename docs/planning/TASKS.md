@@ -4,9 +4,9 @@
 
 - 更新：2026-11-15 T00 执行；已从零创建首屏和独立 Git 仓库，尚无题库或练习功能。
 - 项目根目录：`E:\Project\stem\unscripted`；此前工作已复制迁入，旧目录不再维护。`git log -1` 查看实际提交。
-- 当前任务：T00 DOING（文件与 HTTP 验收完成；用户暂缓 Chrome 连接，浏览器验收 NOT RUN）。补验收后下一任务 T02。
-- T00 部分完成；T01–T13 全部 TODO。T06/T07 以 T05 成功为条件，T10 可选。
-- 已实测：Git、Python、Node、HTTP；未实测：浏览器视觉/交互、GitHub 权限、公开部署、供应商/额度/CORS。Devpost 规则已于本轮核验，见 MASTER_PLAN §9；Discord 具体安排未核实，用户尚未加入。
+- 当前任务：T00 DONE（HTTP、JS语法、Chrome桌面/390px移动视口、模块与交互、控制台/网络均已验收）。下一任务 T02。
+- T00 DONE；T01–T13 全部 TODO。T06/T07 以 T05 成功为条件，T10 可选。
+- 已实测：Git、Python、Node、HTTP、Chrome视觉/交互；未实测：GitHub 权限、公开部署、供应商/额度/CORS。Devpost 规则已于本轮核验，见 MASTER_PLAN §9；Discord 具体安排未核实，用户尚未加入。
 - 本轮 Subagent：0；未调用模型 API、未发布。T00 Git 提交结果见 SETUP_REPORT 和实际 git log。
 - 规划文件验证：14 张任务卡、8 段提示词、20 条测试矩阵；UTF-8 无替换字符，代码围栏成对。这里只验证文档结构，产品测试结果以 SETUP_REPORT 为准，后续测试矩阵未执行。
 
