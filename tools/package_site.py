@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FILES = [
     'index.html', 'styles.css', 'data/questions.json',
     'src/main.js', 'src/questions.js', 'src/storage.js', 'src/export.js', 'src/demo.js', 'src/i18n.js',
+    'src/lights.js', 'src/history.js',
 ]
 
 

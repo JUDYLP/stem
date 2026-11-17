@@ -29,5 +29,12 @@ export function createProgressStore(getStorage = () => window.localStorage) {
         catch { storage = null; warning = '本地保存失败。本次自评仅在内存中有效，请先导出复习单；刷新会丢失本次更改。'; }
       }
     },
+    clear() {
+      data = emptyProgress();
+      if (storage) {
+        try { storage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+        catch { storage = null; warning = '本地保存失败。本次自评仅在内存中有效，请先导出复习单；刷新会丢失本次更改。'; }
+      }
+    },
   };
 }
