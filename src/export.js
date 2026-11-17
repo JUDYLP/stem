@@ -16,7 +16,7 @@ export function buildCrashSheet(questions, progress, lang = 'zh', entries = []) 
   const tr = key => t(key, {}, lang);
   const latest = new Map();
   for (const entry of entries) latest.set(`${entry.questionId}::${entry.layer}`, entry);
-  const lines = ['# Unscripted · ' + tr('当前复习单'), '', tr('仅包含当前最后一次自评为 review 的题目层级；不是历史错误次数或能力评分。'), ''];
+  const lines = ['# Unscripted · ' + tr('当前复习单'), '', tr('仅包含当前最后一次判定为「需要复习」的题目层级；不是历史错误次数或能力评分。'), ''];
   if (!items.length) lines.push(tr('当前没有需要复习的条目。'));
   for (const { question, layer } of items) {
     const entry = latest.get(`${question.id}::${layer.id}`);

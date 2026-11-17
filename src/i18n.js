@@ -156,7 +156,7 @@ export const messages = {
     "en": "Give a counterexample, then explain why your fix works."
   },
   "适合谁：准备面试的学生 / 用 AI 写代码的人 / 带新人的 reviewer": {
-    "zh": "适合谁：准备面试的学生 / 用 AI 写代码的人 / 带新人的 reviewer",
+    "zh": "适合谁：准备面试的学生 / 用 AI 写代码的人 / 带新人的评审者",
     "en": "For students preparing for interviews, people coding with AI, and reviewers mentoring new developers."
   },
   "DEMO PREVIEW · NO API KEY NEEDED": {
@@ -556,7 +556,7 @@ export const messages = {
     "en": "Replay example"
   },
   "模拟示例 · Simulated": {
-    "zh": "模拟示例 · Simulated",
+    "zh": "模拟示例",
     "en": "Simulated example"
   },
   "volatile 的写对后续读可见。": {
@@ -734,6 +734,71 @@ export const messages = {
   "漏掉的要点：": {
     "zh": "漏掉的要点：",
     "en": "Missed points:"
+  }
+,
+  "解释练习": {
+    "zh": "解释练习",
+    "en": "Explanation practice"
+  },
+  "模拟示例 — 不调用真实 AI": {
+    "zh": "模拟示例 — 不调用真实 AI",
+    "en": "Simulated example — no live AI call"
+  },
+  "逐条判断这一层讲得怎么样。": {
+    "zh": "逐条判断这一层讲得怎么样。",
+    "en": "Judge how well this level was explained, point by point."
+  },
+  "点灯切换，也可按 1 / 2 / 3": {
+    "zh": "点灯切换，也可按 1 / 2 / 3",
+    "en": "Click a lamp to switch; 1 / 2 / 3 also work."
+  },
+  "再解释一次": {
+    "zh": "再解释一次",
+    "en": "Explain again"
+  },
+  "首次解释": {
+    "zh": "首次解释",
+    "en": "First explanation"
+  },
+  "修改后": {
+    "zh": "修改后",
+    "en": "Revised explanation"
+  },
+  "只有全绿才算讲清；琥珀和红会进复习单。": {
+    "zh": "只有全绿才算讲清；琥珀和红会进复习单。",
+    "en": "Only all-green counts as clear; almost and missed go to the review list."
+  },
+  "先完成一次判定，才能导出复习单": {
+    "zh": "先完成一次判定，才能导出复习单",
+    "en": "Complete one rating before exporting the crash sheet."
+  },
+  "默认关闭。只保存开启之后的回答，之前的判定没有原文；关闭时会删除已存回答。": {
+    "zh": "默认关闭。只保存开启之后的回答，之前的判定没有原文；关闭时会删除已存回答。",
+    "en": "Off by default. Only answers saved while it is on are kept; earlier ratings have no text. Turning it off deletes saved answers."
+  },
+  "热力矩阵、时间线和已保存的回答都会被删除，清空后无法恢复。": {
+    "zh": "热力矩阵、时间线和已保存的回答都会被删除，清空后无法恢复。",
+    "en": "The heat matrix, timeline, and saved answers will be deleted. This cannot be undone."
+  },
+  "先导出复习单": {
+    "zh": "先导出复习单",
+    "en": "Export crash sheet first"
+  },
+  "已加载 {count} 道题": {
+    "zh": "已加载 {count} 道题",
+    "en": "{count} questions loaded"
+  },
+  "第 {n} 条：当前{current}，点击切换为{next}": {
+    "zh": "第 {n} 条：当前{current}，点击切换为{next}",
+    "en": "Point {n}: currently {current}. Activate to switch to {next}."
+  },
+  "第 {n} 条已设为{light}": {
+    "zh": "第 {n} 条已设为{light}",
+    "en": "Point {n} set to {light}."
+  },
+  "仅包含当前最后一次判定为「需要复习」的题目层级；不是历史错误次数或能力评分。": {
+    "zh": "仅包含当前最后一次判定为「需要复习」的题目层级；不是历史错误次数或能力评分。",
+    "en": "Only levels whose latest rating is Review are included. This is not a history of errors or a skill score."
   }
 };
 export const LANGUAGE_KEY = 'unscripted.language';
