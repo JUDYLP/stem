@@ -6,6 +6,7 @@
 
 ## 已实现
 
+- 390px窄屏完整题目提示、平衡标题换行与居中单列页脚；1440px/390px中英文截图验收见QA_REPORT。
 - 中英切换、独立语言偏好、浏览器语言初选及 ?lang=en；题目、参考要点、提示和复习单均支持英文。
 
 - 首页示例、三层框架和默认练习统一使用 volatile/i++；空复习单提示、5行自动增高输入框与接近上限才显示的计数。
@@ -61,8 +62,10 @@ node --check src/demo.js
 - tests/：Node 内置测试。
 - docs/planning/：后续唯一维护的计划、任务与决策。
 
-后续需要：用户人工审校、公开 HTTPS 部署、真实浏览器 API/CORS 实验（有 Key 且已授权才执行）、正式提交材料。用户指定远程为 https://github.com/JUDYLP/stem 。Pages workflow 与静态资源打包已准备，发布结果以 docs/DEPLOYMENT.md 和实际工作流状态为准。
+后续需要：用户人工审校、有效Key下的浏览器AI成功响应/JSON补验（需授权）、正式提交材料。公开HTTPS已上线。用户指定远程为 https://github.com/JUDYLP/stem 。Pages workflow 与静态资源打包已准备，发布结果以 docs/DEPLOYMENT.md 和实际工作流状态为准。
 
 ## AI 辅助开发披露
 
 由用户指导 Codex 编写和测试。未启动 Subagent，具体底层模型子型号无法从本次工具回执核实。产品没有 Live AI；开发使用 AI 与产品集成 AI 分开陈述。题目来源和人工审校状态已记录，不冒称用户已掌握所有技术。
+
+英文评审入口：https://judylp.github.io/stem/?lang=en 。语言优先级为有效URL参数、已保存偏好、浏览器语言；语言偏好使用独立键unscripted.language，进度v1结构不变。

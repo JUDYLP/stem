@@ -93,3 +93,14 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - PASS：真实浏览器默认题为juc-volatile-atomicity-v2；首屏6行Java代码、L2追问/错误回答与英文Demo对应同一丢失更新案例。
 - PASS：空复习单按钮disabled且提示可见；标记Review后按钮启用且提示隐藏。
 - PASS：输入框初始clientHeight 157px（5行），30行文本增至843px；7001字符才显示计数，短文本隐藏。英文页面未发现中文（产品名除外）。
+
+## 2026-11-17 P2 最终双语视觉与回归
+
+- PASS：P2后20/20 Node测试；语法与diff空白检查通过。保持原配色、字体栈、桌面首屏双栏；修复翻译span引入的Logo字号/边框继承问题。
+- PASS：使用本机已安装Chrome的独立headless配置，Node内置WebSocket调用CDP，无第三方依赖、无关闭安全机制。原连接器截图保存因工作区限制失败，随后内联截图及列表卡住，未计通过；独立Chrome补齐验收。
+- PASS：1440×1000和390×844，各执行中文/英文首页与练习区截图，共8张，已逐张查看；最终Logo修复后重拍并复查首页。桌面scrollWidth=1425<1440，移动scrollWidth=390，无横向溢出。
+- 截图及去敏结果仅在本地忽略目录work/qa-bilingual-20261117/，不提交/部署。文件：{zh,en}-{1440,390}-{home,practice}.png，results.json。headless非真实手机，不能宣称跨浏览器通过。
+- PASS：移动端完整题名额外显示、footer flex-direction=column；h2 text-wrap=balance。英文首页/练习可见文本无汉字（产品名脱稿除外）。用户自行输入的内容不会被翻译。
+- PASS：英文作答→rubric→Retry→Review→导出真实Blob→Demo；导出全文无中文，Demo无中文，语言切换不改变草稿/Retry/进度。实际Blob文本保存为本地english-crash-sheet.md供查看，不等同于浏览器下载落盘确认。
+- PASS：移除URL参数后重新打开，恢复保存的en语言和Review记录。独立Chrome捕获Runtime.exceptionThrown与Log error，结果为空。
+- NOT RUN：真实iOS/Android、Safari/Firefox、真实用户试用、参赛者对技术内容的最终人工审校；Live AI仍不在本轮范围。

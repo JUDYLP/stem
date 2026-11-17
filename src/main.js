@@ -71,6 +71,7 @@ $('export-review').addEventListener('click', () => {
 function renderLayer() {
   const q = current(), layer = q.layers[layerIndex], d = draft();
   $('question-title').textContent = localized(q, 'title');
+  $('question-full').textContent = localized(q, 'title');
   $('layer-label').textContent = `${q.category} / ${layer.id} ${layer.label}`;
   $('layer-prompt').textContent = localized(layer, 'prompt');
   $('answer').value = d.text; updateAnswerSize();

@@ -13,7 +13,7 @@
     <a class="skip-link" href="#main"><span data-i18n="跳到主要内容">跳到主要内容</span></a>
     <div class="page">
       <header class="site-header">
-        <a class="wordmark" href="#main" aria-label="Unscripted（脱稿）首页" data-i18n-aria-label="Unscripted（脱稿）首页"><span data-i18n="Unscripted">Unscripted</span><span><span data-i18n="脱稿">脱稿</span></span></a>
+        <a class="wordmark" href="#main" aria-label="Unscripted（脱稿）首页" data-i18n-aria-label="Unscripted（脱稿）首页">Unscripted<span data-i18n="脱稿">脱稿</span></a>
         <nav class="header-nav" aria-label="主导航" data-i18n-aria-label="主导航"><a href="#method"><span data-i18n="方法">方法</span></a><a href="#preview"><span data-i18n="示例">示例</span></a><a href="https://github.com/JUDYLP/stem"><span data-i18n="GitHub">GitHub</span></a><div class="language-switch" role="group" aria-label="语言" data-i18n-aria-label="语言"><button type="button" data-lang="zh"><span data-i18n="中">中</span></button><span aria-hidden="true"><span data-i18n="/">/</span></span><button type="button" data-lang="en"><span data-i18n="EN">EN</span></button></div></nav>
       </header>
 
@@ -102,9 +102,10 @@
             <p id="storage-warning" class="warning" role="status" hidden></p>
             <div class="selectors">
               <label><span><span data-i18n="分类">分类</span></span><select id="category"><option value="" data-i18n="全部分类">全部分类</option></select></label>
-              <label class="question-selector"><span><span data-i18n="题目">题目</span></span><select id="question"></select></label>
+              <label class="question-selector"><span><span data-i18n="题目">题目</span></span><select id="question" aria-describedby="question-full"></select></label>
               <button id="random-question" class="button secondary" type="button"><span data-i18n="随机选题">随机选题</span></button>
             </div>
+            <p id="question-full" class="question-full"></p>
             <nav id="depth-meter" class="depth-meter" aria-label="选择题目层级" data-i18n-aria-label="选择题目层级"></nav>
             <article class="answer-card" aria-labelledby="question-title">
               <p id="layer-label" class="eyebrow"></p>

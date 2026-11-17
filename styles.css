@@ -132,7 +132,7 @@ h2 { font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, s
 .scope-note, .simulation-note { font-size: 11px; color: var(--muted); }
 .preview-body blockquote { margin: 16px 0; padding: 12px; border-left: 2px solid var(--accent); background: #edf1e9; font-size: 13px; }
 .sample-meter { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--accent); }
-.sample-meter span { background: #eaf0e5; padding: 4px 10px; border-radius: 3px; }
+.sample-meter > span { background: #eaf0e5; padding: 4px 10px; border-radius: 3px; }
 .sample-meter .needs-work { background: #fff0d4; color: #745019; }
 .preview-comment { font-size: 13px; margin-bottom: 10px; }
 .preview-followup { padding: 0; margin: 0; background: transparent; font-size: 12px; color: var(--accent); }
@@ -168,3 +168,10 @@ h2 { font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, s
 
 #answer { min-height: 0; resize: none; overflow-y: hidden; }
 .button:disabled { opacity: .65; }
+
+h2 { text-wrap: balance; }
+.question-full { display: none; overflow-wrap: anywhere; }
+@media (max-width: 650px) {
+  .question-full { display: block; margin: -12px 0 22px; color: var(--ink); font-size: 14px; }
+  .site-footer { flex-direction: column; align-items: center; text-align: center; }
+}
