@@ -415,6 +415,7 @@ $('confirm-rating').addEventListener('click', () => {
     answer: d.submitted,
   });
   d.confirmed = light;
+  $('export-message').textContent = '';
   renderLayer();
   renderRecords({ changed: cellKey(question.id, layer.id) });
   $('rating-status').textContent = t('已记录：{light}。', { light: lightLabel(light) });
