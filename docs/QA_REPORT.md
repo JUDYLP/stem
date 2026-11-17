@@ -104,3 +104,9 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - PASS：英文作答→rubric→Retry→Review→导出真实Blob→Demo；导出全文无中文，Demo无中文，语言切换不改变草稿/Retry/进度。实际Blob文本保存为本地english-crash-sheet.md供查看，不等同于浏览器下载落盘确认。
 - PASS：移除URL参数后重新打开，恢复保存的en语言和Review记录。独立Chrome捕获Runtime.exceptionThrown与Log error，结果为空。
 - NOT RUN：真实iOS/Android、Safari/Firefox、真实用户试用、参赛者对技术内容的最终人工审校；Live AI仍不在本轮范围。
+
+### 本轮部署确认
+
+2026-11-17：Actions https://github.com/JUDYLP/stem/actions/runs/44043753475 completed/success，部署b72d769f4df63a84dd8a6d67a8964a232b9af63b（P0 d7ed2b3、P1 7f2e152、P2 b72d769）。独立Chrome打开https://judylp.github.io/stem/?lang=en，lang=en、3题、无中文（产品名除外）、390px无溢出、Runtime/Log错误为空。9项静态资源HTTP 200/MIME正确，SHA-256全部与git show HEAD:路径的提交内容一致。与Windows工作树首次比对不一致，进一步实证仅CRLF/LF换行差异，未误写“本地原始字节一致”。
+
+页面地址：https://judylp.github.io/stem/；英文评审入口：https://judylp.github.io/stem/?lang=en 。未引入Live AI或第三方依赖，progress v1保持不变。
