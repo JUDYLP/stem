@@ -117,7 +117,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 
 ### 自动测试
 
-- `node --test tests/*.test.mjs`：32/32 PASS（Node v24.18.0，WSL）。新增 `tests/lights.test.mjs`（5 项：灯色汇总、Pass 映射、循环顺序、外部建议校验、旧 progress 兼容）与 `tests/history.test.mjs`（7 项：200 条裁剪、默认不存原文、关闭开关删除原文、坏数据不改写、非法条目丢弃、最近灯色、清空保留开关）。
+- `node --test tests/*.test.mjs`：33/33 PASS（Node v24.18.0，WSL）。新增 `tests/lights.test.mjs`（5 项：灯色汇总、Pass 映射、循环顺序、外部建议校验、旧 progress 兼容）与 `tests/history.test.mjs`（7 项：200 条裁剪、默认不存原文、关闭开关删除原文、坏数据不改写、非法条目丢弃、最近灯色、清空保留开关）。
 - `node --check src/main.js`、`src/history.js`、`src/demo.js`、`src/export.js`：PASS。
 
 ### 浏览器流程（Chrome 157 headless，CDP 独立上下文，http://127.0.0.1:5177）
@@ -153,3 +153,41 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 ### 本轮部署确认
 
 2026-11-17：Actions https://github.com/JUDYLP/stem/actions/runs/44051497681 completed/success，部署最终代码 `4c0e52f`（7964d98 灯组件、ea029e2 history、b3e28e4 UI、4c0e52f 收尾修复；此前 44051220377 已成功部署 bf104ab）。独立 Chrome 打开 https://judylp.github.io/stem/ ：body 背景为 `rgb(0,0,0)`、9 个热力格、首屏三灯 绿/绿/红 且追问出现；11 个静态资源 HTTP 200、MIME 正确、SHA-256 与 `git show HEAD:` 逐项一致；英文站无中文（产品名除外）；1440/390 均无横向溢出；Console 无错误。线上首页为全暗灰空状态，符合未作答预期。
+
+## 2026-11-17 信号灯版修正（热力格、文案与可发现性）
+
+范围：只修 P0/P1/P2 与可发现性问题，不新增功能，不改 localStorage 结构，不接模型。执行者 Codex，无 Subagent；无新依赖或字体。
+
+### 自动测试
+
+- `node --test tests/*.test.mjs`：33/33 PASS（Node v24.18.0）。新增「1/2/3 键映射与 aria-label 文案」测试；history 的「关闭保存时不写入原文」与「关闭后删除已有原文」继续通过；旧 progress 映射为绿/红仍通过。
+
+### 浏览器验证（Chrome 157 headless，CDP，127.0.0.1:5177）
+
+| 场景 | 实际观察 | 结果 |
+|---|---|---|
+| 热力格尺寸与对齐 | 桌面 60×60，3 格列宽 60，矩阵总宽 504，左对齐；表头 L1/L2/L3 与格子左边缘一致 | PASS |
+| 整格填充 | 判定格背景 `rgb(14,35,22)` / `rgb(36,15,14)` 等低饱和底色，同色细边框，内发光；✓ ! ✗ 居中；未作答深灰 | PASS |
+| L1 红 / L2 琥珀 / L3 绿 | 同一行三格同时显示红/琥珀/绿，统计 绿2/琥珀2/红1/未作答4；截图 `heat-showcase.png` | PASS |
+| 波纹与过渡 | 确认后整格加 `is-changed`，背景/边框/阴影 600ms 过渡，涟漪从该格向外传播，位移距离按 80ms 递增 | PASS |
+| 热力图移动端 | 390px 下表头隐藏，题名独占一行（最多两行），下方一排三个 103×64 格，无横向溢出 | PASS |
+| 练习框架 | 三盏中性白圈灯，无判定色；卡片间箭头表示 L1→L2→L3；「适合谁」与卡片底部间距 34px，无重叠 | PASS |
+| 中文残留英文 | 页面文本不再出现 Retry / Before / After / Pass / Review / Simulated；「API Key」仅首屏按钮下一处；`reviewer` 改为「评审者」 | PASS |
+| 图例与灯按钮 | 参考要点下常驻三灯图例与「点灯切换，也可按 1 / 2 / 3」；每盏灯是 button，aria-label 为「第 N 条：当前…，点击切换为…」 | PASS |
+| 键盘 | 焦点在灯上按 3 → 红，按 1 → 绿，空格循环到下一状态；aria-live 播报「第 N 条已设为…」 | PASS |
+| 导出禁用态 | 空记录时透明底、深灰细边框与文字；不再出现灰色实心块 | PASS |
+| 加载与表单间距 | 「已加载 3 道题」与「分类 / 题目」之间 20px，层级可辨 | PASS |
+| 清空弹窗 | 新增「先导出复习单」，有 review 时可用；文案含「清空后无法恢复」；390px 下三个按钮竖排全宽，无重叠 | PASS |
+| 回答对比 | 未开启保存时判定无原文、时间线无展开入口；开启后仅最新且带原文的条目显示对比 | PASS |
+| 格子详情 | 点击红/琥珀格跳到对应题层（Redis L1 验证），题名在行标题完整显示，tooltip 仅补充时间 | PASS |
+| 控制台 | 上述流程 Runtime exception 与 Log error 为空 | PASS |
+
+证据（本地忽略目录 `work/qa-signal-20261117/`，不提交）：`final-{zh,en}-{1440,390}.png`、`heat-showcase.png`、`old-records.png` / `new-records.png`、`old-matrix.png` / `new-matrix.png`、`compare3.png`、`mobile-dialog.png`、`round3-check.json`、`round3-flow.json`。
+
+### 未验证与限制
+
+- 真实 iOS/Android 与 Safari/Firefox：NOT RUN；390px 为 headless 视口模拟。
+- 触屏点按 tooltip、真实读屏软件播报：NOT RUN；只验证了 aria 属性、live region 文本和键盘路径。
+- 下载文件实际落盘：NOT RUN（仍只核对 Blob 与下载触发）。
+- 动效流畅度：用截图与帧序列检查状态，不做真实 60fps 录屏承诺。
+- 题目技术内容仍待参赛者人工审校；Live AI 未接入。
