@@ -31,24 +31,22 @@
           </div>
           <aside id="preview" class="preview-card" aria-labelledby="preview-title">
             <div class="preview-top"><span><span data-i18n="一次解释，三层追问">一次解释，三层追问</span></span><span class="simulation-label"><span data-i18n="模拟示例">模拟示例</span></span></div>
-            <div class="code-caption"><span data-i18n="AI 生成代码示例 · JavaScript">AI 生成代码示例 · JavaScript</span></div>
-            <pre class="code-sample"><code><span class="syntax-key">let</span> pending;
-<span class="syntax-key">function</span> <span class="syntax-fn">load</span>() {
-  <span class="syntax-key">if</span> (!pending) {
-    pending = <span class="syntax-fn">fetch</span>(<span class="syntax-string">'/api/data'</span>)
-      .<span class="syntax-fn">finally</span>(() =&gt; { pending = <span class="syntax-key">null</span>; });
+            <div class="code-caption"><span data-i18n="AI 生成代码示例 · Java">AI 生成代码示例 · Java</span></div>
+            <pre class="code-sample"><code><span class="syntax-key">class</span> Counter {
+  <span class="syntax-key">volatile int</span> i = 5;
+  <span class="syntax-key">void</span> <span class="syntax-fn">increment</span>() {
+    i++;
   }
-  <span class="syntax-key">return</span> pending;
 }</code></pre>
             <div class="preview-body">
               <p class="eyebrow"><span data-i18n="面试官问 / L2">面试官问 / L2</span></p>
-              <h2 id="preview-title"><span data-i18n="这段代码为什么不会重复请求？">这段代码为什么不会重复请求？</span></h2>
-              <p class="scope-note"><span data-i18n="前提：同一页面、同一函数实例，前一次请求尚未结束。">前提：同一页面、同一函数实例，前一次请求尚未结束。</span></p>
-              <blockquote><span data-i18n="“第一次调用保存了 Promise，后面的调用会复用它，不会再执行 fetch。”">“第一次调用保存了 Promise，后面的调用会复用它，不会再执行 fetch。”</span></blockquote>
-              <div class="sample-meter" aria-label="模拟反馈，非真实评分" data-i18n-aria-label="模拟反馈，非真实评分"><span><span data-i18n="L1 ✓">L1 ✓</span></span><span><span data-i18n="L2 ✓">L2 ✓</span></span><span class="needs-work"><span data-i18n="L3 待补充">L3 待补充</span></span></div>
-              <p class="preview-comment"><span data-i18n="机制说清了。那请求结束后，再调用一次呢？">机制说清了。那请求结束后，再调用一次呢？</span></p>
-              <details class="preview-followup"><summary><span data-i18n="换个条件，继续追问">换个条件，继续追问</span></summary><p><span data-i18n="finally 会清空 pending，下一次调用会重新请求。这是“进行中的请求合并”，并不是永久缓存，也不会跨标签页去重。">finally 会清空 pending，下一次调用会重新请求。这是“进行中的请求合并”，并不是永久缓存，也不会跨标签页去重。</span></p></details>
-              
+              <h2 id="preview-title"><span data-i18n="两个线程各加一次，为什么少了一次？">两个线程各加一次，为什么少了一次？</span></h2>
+              <p class="scope-note"><span data-i18n="前提：两个线程共享同一个 Counter，各执行一次 increment()。">前提：两个线程共享同一个 Counter，各执行一次 increment()。</span></p>
+              <blockquote><span data-i18n="“volatile 让每个线程看到最新的值，所以 i++ 是线程安全的。”">“volatile 让每个线程看到最新的值，所以 i++ 是线程安全的。”</span></blockquote>
+              <div class="sample-meter" aria-label="模拟反馈，非真实评分" data-i18n-aria-label="模拟反馈，非真实评分"><span><span data-i18n="L1 ✓">L1 ✓</span></span><span><span data-i18n="L2 待补充">L2 待补充</span></span><span class="needs-work"><span data-i18n="L3 未尝试">L3 未尝试</span></span></div>
+              <p class="preview-comment"><span data-i18n="如果两个线程都先读到了 5，再各自写回，会怎样？">如果两个线程都先读到了 5，再各自写回，会怎样？</span></p>
+              <details class="preview-followup"><summary><span data-i18n="展开推演，检查你的解释">展开推演，检查你的解释</span></summary><p><span data-i18n="两个线程都可能读到 5、计算 6、写回 6。可见性不会让整个读—改—写变成原子操作；可以使用原子增量，或用同一把锁保护整个操作。">两个线程都可能读到 5、计算 6、写回 6。可见性不会让整个读—改—写变成原子操作；可以使用原子增量，或用同一把锁保护整个操作。</span></p></details>
+
             </div>
           </aside>
         </section>
@@ -114,8 +112,8 @@
               <p id="layer-prompt"></p>
               <form id="answer-form">
                 <label for="answer"><span data-i18n="我的解释">我的解释</span></label>
-                <textarea id="answer" rows="6" maxlength="8000" aria-describedby="draft-note answer-count" placeholder="先写下你的理解，不必一次就完整。" data-i18n-placeholder="先写下你的理解，不必一次就完整。"></textarea>
-                <div class="answer-meta"><p id="draft-note"><span data-i18n="回答仅留在本页内存中，刷新会清空；自评单独保存于本浏览器。">回答仅留在本页内存中，刷新会清空；自评单独保存于本浏览器。</span></p><span id="answer-count"><span data-i18n="0 / 8000">0 / 8000</span></span></div>
+                <textarea id="answer" rows="5" maxlength="8000" aria-describedby="draft-note answer-count" placeholder="先写下你的理解，不必一次就完整。" data-i18n-placeholder="先写下你的理解，不必一次就完整。"></textarea>
+                <div class="answer-meta"><p id="draft-note"><span data-i18n="回答仅留在本页内存中，刷新会清空；自评单独保存于本浏览器。">回答仅留在本页内存中，刷新会清空；自评单独保存于本浏览器。</span></p><span id="answer-count" hidden><span data-i18n="0 / 8000">0 / 8000</span></span></div>
                 <button class="button primary" type="submit"><span data-i18n="提交解释，查看参考要点">提交解释，查看参考要点</span></button>
                 <p id="answer-message" role="status"></p>
               </form>
@@ -140,6 +138,7 @@
               <p id="review-count" role="status"></p>
               <ul id="review-list"></ul>
               <button id="export-review" class="button primary" type="button" disabled><span data-i18n="导出复习单 .md">导出复习单 .md</span></button>
+              <p id="export-hint" class="fine-print" data-i18n="先把一层标记为 Review">先把一层标记为 Review</p>
               <p id="export-message" class="fine-print" role="status"></p>
             </section>
           </div>

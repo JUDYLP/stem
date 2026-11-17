@@ -13,6 +13,18 @@ const store = createProgressStore();
 const drafts = new Map();
 let questions = [], questionId = '', layerIndex = 0;
 const current = () => questions.find(q => q.id === questionId);
+function resizeAnswer() {
+  const input = $('answer');
+  if (!input.getClientRects().length) return;
+  input.style.height = 'auto';
+  input.style.height = `${input.scrollHeight + 2}px`;
+}
+function updateAnswerSize() {
+  $('answer-count').textContent = `${$('answer').value.length} / 8000`;
+  $('answer-count').hidden = $('answer').value.length <= 7000;
+  resizeAnswer();
+}
+window.addEventListener('resize', resizeAnswer);
 const key = () => `${questionId}::L${layerIndex + 1}`;
 const statusText = status => t({pass:'自评通过',review:'需要复习'}[status] || '未评价');
 function draft() {
@@ -49,6 +61,7 @@ function renderReview() {
     li.append(button); return li;
   }));
   $('export-review').disabled = !items.length;
+  $('export-hint').hidden = !!items.length;
 }
 $('export-review').addEventListener('click', () => {
   const text = buildCrashSheet(questions, store.snapshot(), getLanguage());
@@ -60,7 +73,7 @@ function renderLayer() {
   $('question-title').textContent = localized(q, 'title');
   $('layer-label').textContent = `${q.category} / ${layer.id} ${layer.label}`;
   $('layer-prompt').textContent = localized(layer, 'prompt');
-  $('answer').value = d.text; $('answer-count').textContent = `${d.text.length} / 8000`;
+  $('answer').value = d.text; updateAnswerSize();
   $('answer-message').textContent = ''; $('self-check').hidden = d.submitted === null;
   $('rubric-details').open = false; $('rubric').replaceChildren();
   $('before-answer').textContent = d.submitted || '';
@@ -87,7 +100,7 @@ $('random-question').addEventListener('click', () => {
 });
 $('answer').addEventListener('input', () => {
   const d = draft(); d.text = $('answer').value; d.submitted = null; d.retry = '';
-  $('answer-count').textContent = `${d.text.length} / 8000`;
+  updateAnswerSize();
   $('self-check').hidden = true; $('rubric').replaceChildren();
   $('answer-message').textContent = t('修改后请重新提交，再进行自评。');
 });
@@ -111,7 +124,7 @@ async function boot() {
   try {
     questions = await loadQuestions();
     $('category').replaceChildren(option('',t('全部分类')), ...[...new Set(questions.map(q => q.category))].map(c => option(c,c)));
-    renderOptions(); $('practice-body').hidden = false;
+    renderOptions(); $('practice-body').hidden = false; resizeAnswer();
     $('load-message').textContent = t('已加载 {count} 道题 · 无需 API Key', {count:questions.length});
 
   } catch {

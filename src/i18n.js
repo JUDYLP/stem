@@ -83,25 +83,9 @@ export const messages = {
     "zh": "模拟示例",
     "en": "Simulated example"
   },
-  "AI 生成代码示例 · JavaScript": {
-    "zh": "AI 生成代码示例 · JavaScript",
-    "en": "AI-generated example · JavaScript"
-  },
   "面试官问 / L2": {
     "zh": "面试官问 / L2",
     "en": "INTERVIEW QUESTION / L2"
-  },
-  "这段代码为什么不会重复请求？": {
-    "zh": "这段代码为什么不会重复请求？",
-    "en": "Why does this code avoid duplicate requests?"
-  },
-  "前提：同一页面、同一函数实例，前一次请求尚未结束。": {
-    "zh": "前提：同一页面、同一函数实例，前一次请求尚未结束。",
-    "en": "Assume the same page and function instance, with the previous request still pending."
-  },
-  "“第一次调用保存了 Promise，后面的调用会复用它，不会再执行 fetch。”": {
-    "zh": "“第一次调用保存了 Promise，后面的调用会复用它，不会再执行 fetch。”",
-    "en": "“The first call stores a Promise. Later calls reuse it without running fetch again.”"
   },
   "模拟反馈，非真实评分": {
     "zh": "模拟反馈，非真实评分",
@@ -110,26 +94,6 @@ export const messages = {
   "L1 ✓": {
     "zh": "L1 ✓",
     "en": "L1 ✓"
-  },
-  "L2 ✓": {
-    "zh": "L2 ✓",
-    "en": "L2 ✓"
-  },
-  "L3 待补充": {
-    "zh": "L3 待补充",
-    "en": "L3 Needs work"
-  },
-  "机制说清了。那请求结束后，再调用一次呢？": {
-    "zh": "机制说清了。那请求结束后，再调用一次呢？",
-    "en": "You explained the mechanism. What if you call it again after the request finishes?"
-  },
-  "换个条件，继续追问": {
-    "zh": "换个条件，继续追问",
-    "en": "Change a condition. Go deeper."
-  },
-  "finally 会清空 pending，下一次调用会重新请求。这是“进行中的请求合并”，并不是永久缓存，也不会跨标签页去重。": {
-    "zh": "finally 会清空 pending，下一次调用会重新请求。这是“进行中的请求合并”，并不是永久缓存，也不会跨标签页去重。",
-    "en": "finally clears pending, so the next call makes a new request. This merges in-flight requests; it is not a permanent cache and does not deduplicate across tabs."
   },
   "THE PRACTICE FRAMEWORK": {
     "zh": "THE PRACTICE FRAMEWORK",
@@ -169,7 +133,7 @@ export const messages = {
   },
   "两个线程各加一次，为什么少了一次？": {
     "zh": "两个线程各加一次，为什么少了一次？",
-    "en": "Two threads increment once each. Why can one update be lost?"
+    "en": "Why can two increments lose an update?"
   },
   "列出读、改、写的交错，证明你的判断。": {
     "zh": "列出读、改、写的交错，证明你的判断。",
@@ -526,6 +490,38 @@ export const messages = {
   "Demo Crash Sheet: no current review items. This is not proof of mastery.": {
     "zh": "Demo Crash Sheet: no current review items. This is not proof of mastery.",
     "en": "Demo Crash Sheet: no current review items. This is not proof of mastery."
+  },
+  "AI 生成代码示例 · Java": {
+    "zh": "AI 生成代码示例 · Java",
+    "en": "AI-generated example · Java"
+  },
+  "前提：两个线程共享同一个 Counter，各执行一次 increment()。": {
+    "zh": "前提：两个线程共享同一个 Counter，各执行一次 increment()。",
+    "en": "Assume two threads share one Counter and each call increment() once."
+  },
+  "“volatile 让每个线程看到最新的值，所以 i++ 是线程安全的。”": {
+    "zh": "“volatile 让每个线程看到最新的值，所以 i++ 是线程安全的。”",
+    "en": "“Volatile makes i++ thread-safe because every thread sees the latest value.”"
+  },
+  "L2 待补充": {
+    "zh": "L2 待补充",
+    "en": "L2 Needs work"
+  },
+  "L3 未尝试": {
+    "zh": "L3 未尝试",
+    "en": "L3 Not tried"
+  },
+  "如果两个线程都先读到了 5，再各自写回，会怎样？": {
+    "zh": "如果两个线程都先读到了 5，再各自写回，会怎样？",
+    "en": "If both threads read 5 before either writes back, what could happen?"
+  },
+  "展开推演，检查你的解释": {
+    "zh": "展开推演，检查你的解释",
+    "en": "Trace the steps. Check your explanation."
+  },
+  "两个线程都可能读到 5、计算 6、写回 6。可见性不会让整个读—改—写变成原子操作；可以使用原子增量，或用同一把锁保护整个操作。": {
+    "zh": "两个线程都可能读到 5、计算 6、写回 6。可见性不会让整个读—改—写变成原子操作；可以使用原子增量，或用同一把锁保护整个操作。",
+    "en": "Both threads can read 5, calculate 6, and write 6. Visibility does not make read-modify-write atomic. Use an atomic increment or protect the entire operation with the same lock."
   }
 };
 export const LANGUAGE_KEY = 'unscripted.language';

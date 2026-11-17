@@ -86,3 +86,10 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - 语言优先级：有效URL lang > 已保存语言 > navigator.language；偏好独立存unscripted.language，不改进度schema。
 - 已删除开发状态块/练习内部备注；审校状态保留README与QUESTION_REVIEW。技术语义为对照翻译，仍待参赛者人工审校。
 - 桌面/移动截图留至P2最终版统一执行，本组不冒称截图通过。
+
+## 2026-11-17 P1 示例与输入体验
+
+- PASS：20/20 Node测试、main.js语法检查、git diff --check。P0提交中遗留的一行HTML尾随空格已在本组清理。
+- PASS：真实浏览器默认题为juc-volatile-atomicity-v2；首屏6行Java代码、L2追问/错误回答与英文Demo对应同一丢失更新案例。
+- PASS：空复习单按钮disabled且提示可见；标记Review后按钮启用且提示隐藏。
+- PASS：输入框初始clientHeight 157px（5行），30行文本增至843px；7001字符才显示计数，短文本隐藏。英文页面未发现中文（产品名除外）。
