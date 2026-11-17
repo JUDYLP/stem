@@ -7,7 +7,7 @@
 - 已实现三题九层、手动解释/自评、持久化、Depth Meter、复习单、Retry、独立英文模拟Demo。
 - 测试：15项Node测试通过；浏览器正常路径/故障注入结果见 docs/QA_REPORT.md，未测项明确保留。
 - commits：2613321（题库），a5d1b89（手动练习/存储），d5e7b92（复习单），9246dbf（Retry/Demo）。
-- T01公开预览DONE：https://judylp.github.io/stem/；仓库Public，Actions 43706124478 attempt 2成功，部署752dd3f。独立浏览器三题加载、8资源200/MIME/哈希一致、390px Demo与存储隔离通过。Discord具体安排仍待核实。T05–T07未执行；未接入Live API。
+- T01公开预览DONE：https://judylp.github.io/stem/；仓库Public，Actions 43706124478 attempt 2成功，部署752dd3f。独立浏览器三题加载、8资源200/MIME/哈希一致、390px Demo与存储隔离通过。Discord具体安排仍待核实。T05已完成无凭证实测，认证成功/JSON验收BLOCKED（用户延后配置Key）；T06/T07未执行，未接入Live API。
 - T10–T13待办。优先补验收并准备部署；无Key不影响当前练习与模拟Demo。
 - 本轮Subagent 0，已发布静态HTTPS预览，无模型API请求。原始“零代码”是启动事实，不再描述当前状态。
 
@@ -81,6 +81,9 @@
 - 学习：当前复习项和历史失败次数有何区别？为什么不能只靠红绿色？导出如何保证对应正确题层？
 
 ## T05｜浏览器 API/CORS Spike（Sol；禁止 Subagent）
+
+- 2026-11-17状态：BLOCKED（认证成功与结构化输出待Key），无凭证调查已完成。基线b8c3443、main干净，15/15测试通过。真实HTTPS origin预检200，浏览器无效测试令牌POST得到可读401；Python无认证请求401。断网/过期AbortSignal为受控测试，429与供应商真实超时NOT RUN。用户要求Key后续配置，真实生成0次，临时面板已移除。结论C，T06/T07不开工。仅改本报告及API_SPIKE_REPORT；无Subagent，实际底层模型子型号未核实。详情与最小补验步骤见 docs/API_SPIKE_REPORT.md。
+
 
 - 目标/价值：用证据决定是否投入 Live；依赖 T01，优先不拖慢 T04/T09；主动排查 60–90 分钟。
 - 读取：SETUP_REPORT、MASTER_PLAN AI 契约、D05/D07；供应商官方说明。
