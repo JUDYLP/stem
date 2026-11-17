@@ -231,3 +231,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - 4ms 目标是绘制耗时（canvas 2D 指令），不含浏览器合成与样式动画；headless 数字不能直接等同真机。
 - 面板保持不透明，因此位于面板内部的灯主要靠 CSS 内发光，点阵染色只在面板外的间隙可见。
 - 题目人工审校、Live AI 仍未进行。
+
+### 本轮部署确认
+
+2026-11-17：Actions https://github.com/JUDYLP/stem/actions/runs/44070234739 completed/success，部署 `67ad40e`（e15f81f 点阵模块、f4791fb 点阵与灯、67ad40e 文档）。独立 Chrome 打开 https://judylp.github.io/stem/ ：12 个静态资源 HTTP 200、MIME 正确、SHA-256 与 `git show HEAD:` 一致；canvas 1440×1000、间距 28、`window.__dotfield` 存在，5 秒窗口 30fps（平均间隔 33.3ms）、绘制平均 0.6ms / 最大 2.1ms；示例灯 32px，点阵有 840 个已染色像素；body 透明、无横向溢出、Console 无错误。英文站无中文。
