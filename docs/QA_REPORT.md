@@ -117,7 +117,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 
 ### 自动测试
 
-- `node --test tests/*.test.mjs`：33/33 PASS（Node v24.18.0，WSL）。新增 `tests/lights.test.mjs`（5 项：灯色汇总、Pass 映射、循环顺序、外部建议校验、旧 progress 兼容）与 `tests/history.test.mjs`（7 项：200 条裁剪、默认不存原文、关闭开关删除原文、坏数据不改写、非法条目丢弃、最近灯色、清空保留开关）。
+- `node --test tests/*.test.mjs`：37/37 PASS（Node v24.18.0，WSL）。新增 `tests/lights.test.mjs`（5 项：灯色汇总、Pass 映射、循环顺序、外部建议校验、旧 progress 兼容）与 `tests/history.test.mjs`（7 项：200 条裁剪、默认不存原文、关闭开关删除原文、坏数据不改写、非法条目丢弃、最近灯色、清空保留开关）。
 - `node --check src/main.js`、`src/history.js`、`src/demo.js`、`src/export.js`：PASS。
 
 ### 浏览器流程（Chrome 157 headless，CDP 独立上下文，http://127.0.0.1:5177）
@@ -160,7 +160,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 
 ### 自动测试
 
-- `node --test tests/*.test.mjs`：33/33 PASS（Node v24.18.0）。新增「1/2/3 键映射与 aria-label 文案」测试；history 的「关闭保存时不写入原文」与「关闭后删除已有原文」继续通过；旧 progress 映射为绿/红仍通过。
+- `node --test tests/*.test.mjs`：37/37 PASS（Node v24.18.0）。新增「1/2/3 键映射与 aria-label 文案」测试；history 的「关闭保存时不写入原文」与「关闭后删除已有原文」继续通过；旧 progress 映射为绿/红仍通过。
 
 ### 浏览器验证（Chrome 157 headless，CDP，127.0.0.1:5177）
 
@@ -195,3 +195,39 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 ### 修正部署确认
 
 2026-11-17：Actions https://github.com/JUDYLP/stem/actions/runs/44058487591 completed/success，部署 `caf3a7c`（741eed3 键盘与标签、2bea3c6 文案、783969f 热力格与灯语义、caf3a7c 文档）。独立 Chrome 打开 https://judylp.github.io/stem/ ：11 个静态资源 HTTP 200、MIME 正确、SHA-256 与 `git show HEAD:` 一致；空状态热力格 60×60、矩阵宽 504、三盏中性灯无 data-state、页面「API Key」1 处、无 Retry/Before/After/Pass/Review/Simulated 残留；英文站无中文；1440/390 无横向溢出；Console 无错误。线上空状态的导出按钮为透明底深灰细边框并禁用。
+
+## 2026-11-17 动态点阵与灯的表現力
+
+范围：只做固定全屏点阵背景与灯的视觉表现，不新增功能、不改存储结构、不接模型。执行者 Codex，无 Subagent；无新依赖或字体。
+
+### 自动测试
+
+- `node --test tests/*.test.mjs`：37/37 PASS。新增 `tests/dotfield.test.mjs` 4 项：衰减 0→1 与 160px 边界、单调性、0.5 染色上限、0.06–0.10 呼吸与 30% 静音、28/32px 间距。
+
+### 浏览器测量（Chrome 157 headless，CDP，127.0.0.1:5177）
+
+| 项目 | 结果 |
+|---|---|
+| 画布与点阵 | 固定 canvas，1440×1000（dpr1）/ 2880×2000（dpr2）；间距 28；390px 下 780×1688、间距 32；`pointer-events:none`、`aria-hidden` |
+| 每帧耗时 | 1440 dpr1 平均 0.35ms、最大 1.6ms；1440 dpr2 平均 0.36ms、最大 1.4ms；390 平均 0.07ms、最大 0.3ms |
+| 帧率 | 5 秒窗口 30fps，平均间隔 33.3ms（`FRAME_BUDGET` 31.3ms 避免 60Hz 下掉到 50ms） |
+| 灯照亮点阵 | 样例灯 160px 内 417 个点全部染色；近灯最大 alpha 147/255≈0.58，40px 处 0.58，80px 0.53，120px 0.47；颜色取最强灯 |
+| 点阵波纹 | `lamp:lit` 事件触发，1.2s、300px 扩散；点阵波纹在面板外可见（截图 `tint-crop.png`） |
+| 书写静音 | #answer 聚焦后 `quiet=true`，波纹/染色/呼吸强度按 0.3 缩放；失焦恢复 |
+| 减少动态 | reduced-motion 下首帧绘制后帧数不再增长（1.2s 内保持 1 帧）；恢复偏好后自动续跑 |
+| 灯尺寸 | 示例 32px、要点灯 24px + 44px 按钮、层级/本层 18px、热力图标 22px、logo 8px |
+| 灯结构 | 白→灯色径向亮芯、1px 内圈高光、左上反光点、4/14/36px 三层光晕；未亮深色玻璃；焦点为灯外 2px 白环 |
+| 面板光 | 要点行左侧同色渐隐（0.10–0.12）与同色边框；热力格径向内发光 + 同色边框 |
+| 方法区 | L1/L2/L3 标签黑底内边距，连线不再压字；中性灯 + 向右箭头 |
+| 时间线 | 漏点改为分条 `<ul>`，每条前 12px 红灯 |
+| 溢出 | 1440 / 390 全页无横向溢出；中英文站点 Console 无错误 |
+
+证据（本地忽略目录 `work/qa-signal-20261117/`，不提交）：`final2-zh-1440-lit.png`（含红/琥珀/绿参考要点与热力格）、`final2-{zh,en}-{1440,390}.png`、`dotseq-01..10.png`（5 秒帧序列）、`compare4.png`、`tint-crop.png`、`hero-old/new.png`、`final2-report.json`。
+
+### 未验证与限制
+
+- 真实 60Hz/120Hz 屏幕、Safari/Firefox、真实手机：NOT RUN；390 为 headless 视口。
+- `visibilitychange` 暂停路径已实现但未在真实切后台测量帧数；只做了 reduced-motion 的帧数静止验证。
+- 4ms 目标是绘制耗时（canvas 2D 指令），不含浏览器合成与样式动画；headless 数字不能直接等同真机。
+- 面板保持不透明，因此位于面板内部的灯主要靠 CSS 内发光，点阵染色只在面板外的间隙可见。
+- 题目人工审校、Live AI 仍未进行。

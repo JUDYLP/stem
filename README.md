@@ -14,6 +14,8 @@
 ## 已实现
 
 - 黑色信号灯视觉系统：`#000` 背景、`#0E0E10` 面板、三色灯（绿 `#22C55E` / 琥珀 `#F5A524` / 红 `#FF453A`）与多层光晕；正文 `#EDEDED`，次要文字 `#A1A1AA`。
+- 动态点阵背景：固定全屏 canvas，桌面 28px / 390px 32px 点阵，慢波呼吸；视口内已亮灯在 160px 内染色点阵，点亮时扩散 1.2s 点阵波纹；答题框聚焦时动效降到 30%；dpr≤2、30fps、页面隐藏暂停，`prefers-reduced-motion` 只画一帧静态点阵。面板保持不透明，点阵只在面板之外可见。
+- 灯的表现力：示例灯 32px、参考要点灯 24px（44px 点击区）、热力格图标 22px、层级灯与本层灯色 18px；亮芯为白到灯色的径向渐变，带灯罩内高光与左上方反光点、4/14/36px 三层光晕；未亮灯是深色玻璃。要点行与热力格有同色低亮度内发光；键盘焦点显示 2px 白色环。
 - 整站中英双语，语言优先级为有效 `?lang=`、已保存偏好、浏览器语言；偏好独立存 `unscripted.language`。
 - 三题九层（JUC / Redis / MySQL），每题 L1 Explain / L2 Reason / L3 Stress-test，每题每层 2–4 条参考要点。
 - 灯判定：参考要点下有常驻图例，每条要点的灯是 button，默认琥珀；空格/回车循环，1/2/3 直接设为 绿/琥珀/红，aria-label 写明当前与下一个状态，切换后 aria-live 播报。该层规则为全绿→绿、有红→红、其余→琥珀；确认后映射到既有 Pass/Review（只有全绿是 Pass），旧 `unscripted.progress.v1` 记录仍可读取。
@@ -49,7 +51,7 @@ node --check src/history.js
 node --check src/demo.js
 ```
 
-33 项自动测试：题库 schema 与双语对齐、本地记录降级、灯色汇总规则、history 200 条裁剪、关闭开关不写原文、旧 progress 兼容、导出过滤与转义、英文导出。浏览器实际结果与未测项见 docs/QA_REPORT.md。
+37 项自动测试：题库 schema 与双语对齐、本地记录降级、灯色汇总规则、history 200 条裁剪、关闭开关不写原文、旧 progress 兼容、导出过滤与转义、英文导出。浏览器实际结果与未测项见 docs/QA_REPORT.md。
 
 ## 数据与隐私
 
@@ -70,6 +72,7 @@ node --check src/demo.js
 - `index.html` / `styles.css`：页面结构、信号灯 token 与动效。
 - `data/questions.json`：三层题库（中英）。
 - `src/lights.js`：灯色规则、灯组件、外部建议接口。
+- `src/dotfield.js`：点阵纯计算（衰减/呼吸/间距）与 canvas 渲染。
 - `src/history.js`：判定历史、200 条上限、回答开关。
 - `src/questions.js`：加载与 schema 校验。
 - `src/storage.js`：自评记录、清空与故障降级。
