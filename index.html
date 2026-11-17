@@ -39,7 +39,7 @@
       <main id="main">
         <section class="hero" aria-labelledby="hero-title">
           <div class="hero-copy">
-            <p class="kicker"><span data-i18n="解释练习 · 无需 API Key">解释练习 · 无需 API Key</span></p>
+            <p class="kicker"><span data-i18n="解释练习">解释练习</span></p>
             <h1 id="hero-title"><span data-i18n="AI 写完了，">AI 写完了，</span><br><em data-i18n="你讲得清吗？">你讲得清吗？</em></h1>
             <p class="intro"><span data-i18n="AI 写的代码，你能讲清楚吗？用自己的话讲出概念、机制和边界，像面试官就坐在对面。">AI 写的代码，你能讲清楚吗？用自己的话讲出概念、机制和边界，像面试官就坐在对面。</span></p>
             <div class="actions">
@@ -69,7 +69,7 @@
                 <li><span class="lamp" data-state="off" aria-hidden="true"></span><span><span data-i18n="两个线程可能读到同一个 5，交错后丢失一次更新。">两个线程可能读到同一个 5，交错后丢失一次更新。</span></span></li>
               </ul>
               <p id="demo-followup" class="followup" hidden><span data-i18n="追问：如果两个线程都先读到了 5？">追问：如果两个线程都先读到了 5？</span></p>
-              <p class="sim-note mono"><span data-i18n="Simulated example — no live AI call">Simulated example — no live AI call</span></p>
+              <p class="sim-note mono"><span data-i18n="模拟示例 — 不调用真实 AI">模拟示例 — 不调用真实 AI</span></p>
             </div>
           </aside>
         </section>
@@ -82,7 +82,7 @@
           </div>
           <ol class="layers">
             <li class="layer-card">
-              <div class="layer-head"><span class="lamp" data-state="green" aria-hidden="true"></span><span class="mono">L1</span><span class="layer-verdict"><span data-i18n="讲清了">讲清了</span></span></div>
+              <div class="layer-head"><span class="lamp neutral" aria-hidden="true"></span><span class="mono">L1</span></div>
               <div class="layer-body">
                 <h3 lang="en">Explain</h3>
                 <p class="layer-q"><span data-i18n="volatile 保证了什么？">volatile 保证了什么？</span></p>
@@ -90,7 +90,7 @@
               </div>
             </li>
             <li class="layer-card">
-              <div class="layer-head"><span class="lamp" data-state="amber" aria-hidden="true"></span><span class="mono">L2</span><span class="layer-verdict"><span data-i18n="还差一点">还差一点</span></span></div>
+              <div class="layer-head"><span class="lamp neutral" aria-hidden="true"></span><span class="mono">L2</span></div>
               <div class="layer-body">
                 <h3 lang="en">Reason</h3>
                 <p class="layer-q"><span data-i18n="两个线程各加一次，为什么少了一次？">两个线程各加一次，为什么少了一次？</span></p>
@@ -98,7 +98,7 @@
               </div>
             </li>
             <li class="layer-card">
-              <div class="layer-head"><span class="lamp" data-state="red" aria-hidden="true"></span><span class="mono">L3</span><span class="layer-verdict"><span data-i18n="漏掉了">漏掉了</span></span></div>
+              <div class="layer-head"><span class="lamp neutral" aria-hidden="true"></span><span class="mono">L3</span></div>
               <div class="layer-body">
                 <h3 lang="en">Stress-test</h3>
                 <p class="layer-q"><span data-i18n="换成原子计数器，库存就安全了吗？">换成原子计数器，库存就安全了吗？</span></p>
@@ -150,21 +150,28 @@
                 <div id="self-check" hidden>
                   <div class="check-head">
                     <h4><span data-i18n="参考要点">参考要点</span></h4>
-                    <p><span data-i18n="点一下灯，自己判断这一条：讲清了、还差一点、漏掉了。">点一下灯，自己判断这一条：讲清了、还差一点、漏掉了。</span></p>
+                    <p><span data-i18n="逐条判断这一层讲得怎么样。">逐条判断这一层讲得怎么样。</span></p>
                   </div>
+                  <div class="light-legend">
+                    <span class="legend-item"><span class="lamp" data-state="green" aria-hidden="true"></span><span data-i18n="讲清了">讲清了</span></span>
+                    <span class="legend-item"><span class="lamp" data-state="amber" aria-hidden="true"></span><span data-i18n="还差一点">还差一点</span></span>
+                    <span class="legend-item"><span class="lamp" data-state="red" aria-hidden="true"></span><span data-i18n="漏掉了">漏掉了</span></span>
+                    <span class="legend-hint"><span data-i18n="点灯切换，也可按 1 / 2 / 3">点灯切换，也可按 1 / 2 / 3</span></span>
+                  </div>
+                  <p id="light-live" class="visually-hidden" role="status" aria-live="polite"></p>
                   <p id="suggestion-bar" class="suggestion" hidden><span data-i18n="有一条外部建议，还没有生效。">有一条外部建议，还没有生效。</span><button id="apply-suggestion" class="text-button" type="button"><span data-i18n="采用建议">采用建议</span></button></p>
                   <ul id="rubric" class="point-list rubric"></ul>
                   <div class="retry-area">
-                    <h4><span data-i18n="Retry · 再解释一次">Retry · 再解释一次</span></h4>
+                    <h4><span data-i18n="再解释一次">再解释一次</span></h4>
                     <p class="fine-print"><span data-i18n="对照参考要点，再用自己的话解释一次。">对照参考要点，再用自己的话解释一次。</span></p>
-                    <details><summary><span data-i18n="Before · 首次解释">Before · 首次解释</span></summary><p id="before-answer" class="answer-text"></p></details>
-                    <label for="retry-answer"><span data-i18n="After · 我的修正">After · 我的修正</span></label>
+                    <details><summary><span data-i18n="首次解释">首次解释</span></summary><p id="before-answer" class="answer-text"></p></details>
+                    <label for="retry-answer"><span data-i18n="修改后">修改后</span></label>
                     <textarea id="retry-answer" rows="4" maxlength="8000" placeholder="哪里需要补充？重新用自己的话解释。" data-i18n-placeholder="哪里需要补充？重新用自己的话解释。"></textarea>
                     <p class="fine-print"><span data-i18n="修正文本仅留在本页内存中。填写不会自动改动自评。">修正文本仅留在本页内存中。填写不会自动改动自评。</span></p>
                   </div>
                   <div class="confirm-row">
                     <button id="confirm-rating" class="button primary" type="button"><span data-i18n="确认判定">确认判定</span></button>
-                    <p class="fine-print"><span data-i18n="只有全绿才是 Pass；琥珀和红都会进入复习单。">只有全绿才是 Pass；琥珀和红都会进入复习单。</span></p>
+                    <p class="fine-print"><span data-i18n="只有全绿才算讲清；琥珀和红会进复习单。">只有全绿才算讲清；琥珀和红会进复习单。</span></p>
                   </div>
                 </div>
                 <p id="rating-status" class="rating-status" role="status"></p>
@@ -183,11 +190,12 @@
             <div class="records-block">
               <div class="block-head"><h3><span data-i18n="热力矩阵">热力矩阵</span></h3><p class="mono" id="heat-caption"><span data-i18n="每个格子是最近一次判定">每个格子是最近一次判定</span></p></div>
               <div class="heat-scroll">
-                <table class="heatmap" id="heatmap">
-                  <caption class="visually-hidden"><span data-i18n="题目与层级的最近灯色">题目与层级的最近灯色</span></caption>
-                  <thead><tr><th scope="col"><span data-i18n="题目">题目</span></th><th scope="col">L1</th><th scope="col">L2</th><th scope="col">L3</th></tr></thead>
-                  <tbody id="heat-body"></tbody>
-                </table>
+                <div class="heatmap" id="heatmap" role="group" aria-label="题目与层级的最近灯色" data-i18n-aria-label="题目与层级的最近灯色">
+                  <div class="heat-head" aria-hidden="true">
+                    <span><span data-i18n="题目">题目</span></span><span>L1</span><span>L2</span><span>L3</span>
+                  </div>
+                  <div id="heat-body" class="heat-body"></div>
+                </div>
               </div>
               <p id="heat-stats" class="heat-stats mono"></p>
             </div>
@@ -200,13 +208,13 @@
               <label class="switch-row" for="save-answers">
                 <input type="checkbox" id="save-answers">
                 <span class="switch-track" aria-hidden="true"></span>
-                <span class="switch-text"><span data-i18n="在本机保存我的回答，用于前后对比">在本机保存我的回答，用于前后对比</span><small><span data-i18n="默认关闭。关闭时会删除已保存的回答，判定记录不受影响。">默认关闭。关闭时会删除已保存的回答，判定记录不受影响。</span></small></span>
+                <span class="switch-text"><span data-i18n="在本机保存我的回答，用于前后对比">在本机保存我的回答，用于前后对比</span><small><span data-i18n="默认关闭。只保存开启之后的回答，之前的判定没有原文；关闭时会删除已存回答。">默认关闭。只保存开启之后的回答，之前的判定没有原文；关闭时会删除已存回答。</span></small></span>
               </label>
               <div class="actions records-buttons">
                 <button id="export-review" class="button primary" type="button" disabled><span data-i18n="导出复习单 .md">导出复习单 .md</span></button>
                 <button id="clear-history" class="button danger" type="button"><span data-i18n="清空记录">清空记录</span></button>
               </div>
-              <p id="export-hint" class="fine-print"><span data-i18n="先把一层标记为 Review">先把一层标记为 Review</span></p>
+              <p id="export-hint" class="fine-print"><span data-i18n="先完成一次判定，才能导出复习单">先完成一次判定，才能导出复习单</span></p>
               <p id="export-message" class="fine-print" role="status"></p>
             </div>
           </div>
@@ -222,8 +230,9 @@
 
     <dialog id="clear-dialog" class="dialog" aria-labelledby="clear-title">
       <h2 id="clear-title"><span data-i18n="清空所有练习记录？">清空所有练习记录？</span></h2>
-      <p><span data-i18n="热力矩阵、时间线和已保存的回答都会被删除，无法恢复。">热力矩阵、时间线和已保存的回答都会被删除，无法恢复。</span></p>
-      <div class="actions">
+      <p><span data-i18n="热力矩阵、时间线和已保存的回答都会被删除，清空后无法恢复。">热力矩阵、时间线和已保存的回答都会被删除，清空后无法恢复。</span></p>
+      <div class="actions dialog-actions">
+        <button id="clear-export" class="button secondary" type="button"><span data-i18n="先导出复习单">先导出复习单</span></button>
         <button id="clear-cancel" class="button secondary" type="button"><span data-i18n="取消">取消</span></button>
         <button id="clear-confirm" class="button danger" type="button"><span data-i18n="清空记录">清空记录</span></button>
       </div>

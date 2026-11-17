@@ -5,8 +5,9 @@ import { createHistoryStore, latestByCell } from './history.js';
 import { reviewItems, buildCrashSheet, downloadCrashSheet } from './export.js';
 import { initDemo } from './demo.js';
 import {
-  createLamp, setLampState, ignite, nextLight, summarizeLights,
-  statusForLight, lightForStatus, lightLabel, getSuggestion, clearSuggestion, suggestLights,
+  createLamp, createLightIcon, setLampState, ignite, nextLight, summarizeLights,
+  statusForLight, lightForStatus, lightLabel, keyToLight, pointLabel, pointAnnouncement,
+  getSuggestion, clearSuggestion, suggestLights,
 } from './lights.js';
 
 const $ = id => document.getElementById(id);
@@ -95,30 +96,45 @@ function renderLayerLight() {
   $('layer-light-slot').replaceChildren(lamp);
 }
 
+function announcePoint(index, light) {
+  const live = $('light-live');
+  live.textContent = '';
+  setTimeout(() => { live.textContent = pointAnnouncement(index, light); }, 30);
+}
+
 function fillRubric() {
   const d = draft();
   const layer = currentLayer();
   $('rubric').replaceChildren(...localized(layer, 'rubric').map((text, index) => {
-    const item = byId('li');
+    const item = byId('li', 'point-row');
     item.style.setProperty('--i', String(index));
-    const button = byId('button', 'point');
+    const current = d.lights[index] || 'amber';
+    const button = byId('button', 'point-lamp');
     button.type = 'button';
-    const lamp = createLamp(d.lights[index] || 'amber');
+    button.setAttribute('aria-label', pointLabel(index, current));
+    const lamp = createLamp(current, { label: false });
     lamp.dataset.point = String(index);
+    button.append(lamp);
     const body = byId('span', 'point-text', text);
-    button.append(lamp, body);
-    button.setAttribute('aria-label', `${text} · ${lightLabel(d.lights[index] || 'amber')}`);
-    button.addEventListener('click', () => {
-      d.lights[index] = nextLight(d.lights[index] || 'amber');
-      setLampState(lamp, d.lights[index]);
+    const update = light => {
+      d.lights[index] = light;
+      setLampState(lamp, light);
       ignite(lamp);
-      if (d.lights[index] === 'red') lamp.classList.add('is-flash');
-      button.setAttribute('aria-label', `${text} · ${lightLabel(d.lights[index])}`);
+      if (light === 'red') lamp.classList.add('is-flash');
+      button.setAttribute('aria-label', pointLabel(index, light));
       d.confirmed = null;
       renderLayerLight();
       $('rating-status').textContent = t('灯变了，记得再点确认判定。');
+      announcePoint(index, light);
+    };
+    button.addEventListener('click', () => update(nextLight(d.lights[index] || 'amber')));
+    button.addEventListener('keydown', event => {
+      const light = keyToLight(event.key);
+      if (!light) return;
+      event.preventDefault();
+      update(light);
     });
-    item.append(button);
+    item.append(button, body);
     return item;
   }));
 }
@@ -205,53 +221,52 @@ function renderRecords({ changed = null } = {}) {
   const counts = { green: 0, amber: 0, red: 0, off: 0 };
 
   $('heat-body').replaceChildren(...questions.map((question, row) => {
-    const tr = byId('tr');
-    const th = byId('th');
-    th.scope = 'row';
-    th.append(byId('span', 'mono', question.category), byId('span', 'heat-title', localized(question, 'title')));
-    tr.append(th);
+    const rowEl = byId('div', 'heat-row');
+    const label = byId('div', 'heat-question');
+    label.append(byId('span', 'mono', question.category), byId('span', 'heat-title', localized(question, 'title')));
+    rowEl.append(label);
     question.layers.forEach((layer, column) => {
-      const td = byId('td');
       const entry = data.latest.get(cellKey(question.id, layer.id));
       const light = lightOf(data, question.id, layer.id);
       counts[light] += 1;
       const button = byId('button', 'heat-cell');
       button.type = 'button';
+      button.dataset.state = light;
+      button.dataset.row = String(row);
+      button.dataset.column = String(column);
       button.dataset.tip = heatTooltip(question, layer, entry);
       button.setAttribute('aria-label', `${localized(question, 'title')} · ${layer.id} ${layer.label} · ${lightLabel(light)}`);
       button.style.setProperty('--reveal-delay', `${(row + column) * 90}ms`);
       button.style.setProperty('--wave-delay', '0ms');
-      button.append(createLamp(light, { label: false }));
-      if (changed === cellKey(question.id, layer.id)) {
-        button.classList.add('is-changed');
-        ignite(button.firstElementChild);
-      }
+      button.append(byId('span', 'heat-layer', layer.id));
+      if (light === 'off') button.append(byId('span', 'heat-empty'));
+      else button.append(createLightIcon(light));
+      if (changed === cellKey(question.id, layer.id)) button.classList.add('is-changed');
       button.addEventListener('click', () => openCell(question.id, layer.id));
-      td.append(button);
-      tr.append(td);
+      rowEl.append(button);
     });
-    return tr;
+    return rowEl;
   }));
 
   if (changed) {
-    const cells = [...$('heat-body').querySelectorAll('.heat-cell')];
     const target = $('heat-body').querySelector('.heat-cell.is-changed');
     if (target) {
       // Ripple outwards from the updated cell, one faint wave per distance.
-      cells.forEach(cell => {
-        const row = cell.closest('tr').rowIndex - 1;
-        const column = cell.cellIndex - 1;
-        const distance = Math.abs(row - (target.closest('tr').rowIndex - 1)) + Math.abs(column - (target.cellIndex - 1));
-        if (distance === 0) return;
+      const row = Number(target.dataset.row);
+      const column = Number(target.dataset.column);
+      for (const cell of $('heat-body').querySelectorAll('.heat-cell')) {
+        const distance = Math.abs(Number(cell.dataset.row) - row) + Math.abs(Number(cell.dataset.column) - column);
+        if (!distance) continue;
         cell.classList.add('is-wave');
         cell.style.setProperty('--wave-delay', `${distance * 80}ms`);
-      });
+      }
     }
   }
 
   $('heat-stats').textContent = t('绿 {green} / 琥珀 {amber} / 红 {red} / 未作答 {off}', counts);
   $('save-answers').checked = log.saveAnswers;
   $('export-review').disabled = !review.length;
+  $('clear-export').disabled = !review.length;
   $('export-hint').hidden = review.length > 0;
   $('storage-warning').textContent = [store.warning, log.warning].filter(Boolean).join(' ');
   $('storage-warning').hidden = !$('storage-warning').textContent;
@@ -448,6 +463,12 @@ $('clear-history').addEventListener('click', () => {
   else if (window.confirm(t('清空所有练习记录？'))) confirmClear();
 });
 $('clear-cancel').addEventListener('click', () => $('clear-dialog').close());
+$('clear-export').addEventListener('click', () => {
+  if (!reviewItems(questions, store.snapshot()).length) return;
+  downloadCrashSheet(buildCrashSheet(questions, store.snapshot(), getLanguage(), log.snapshot().entries));
+  $('clear-dialog').close();
+  $('export-message').textContent = t('已生成 Markdown 复习单，请在浏览器下载列表中查看。');
+});
 
 function confirmClear() {
   log.clear();
@@ -471,7 +492,7 @@ document.querySelectorAll('[data-lang]').forEach(button => button.addEventListen
     for (const option of $('question').options) option.textContent = localized(questions.find(question => question.id === option.value), 'title');
     renderLayer();
     renderRecords();
-    $('load-message').textContent = t('已加载 {count} 道题 · 无需 API Key', { count: questions.length });
+    $('load-message').textContent = t('已加载 {count} 道题', { count: questions.length });
     $('rating-status').textContent = draft().confirmed
       ? t('已记录：{light}。', { light: lightLabel(draft().confirmed) })
       : t('该层最近一次判定：{light}。', { light: lightLabel(lightOf(index(), questionId, currentLayer().id)) });
@@ -491,7 +512,7 @@ async function boot() {
     $('category').replaceChildren(option('', t('全部分类')), ...[...new Set(questions.map(question => question.category))].map(category => option(category, category)));
     renderOptions();
     $('practice-body').hidden = false;
-    $('load-message').textContent = t('已加载 {count} 道题 · 无需 API Key', { count: questions.length });
+    $('load-message').textContent = t('已加载 {count} 道题', { count: questions.length });
     renderRecords();
   } catch {
     $('load-message').textContent = t('题库加载失败，请确认通过 HTTP 打开且题库文件有效，再重试。');
