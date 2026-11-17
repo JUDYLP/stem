@@ -104,6 +104,9 @@ export function ignite(lamp) {
   lamp.classList.remove('is-on', 'is-flash');
   void lamp.offsetWidth;
   lamp.classList.add('is-on');
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('lamp:lit', { detail: { element: lamp } }));
+  }
 }
 
 // Reserved for a future live-AI proposal. Suggestions never change a rating by

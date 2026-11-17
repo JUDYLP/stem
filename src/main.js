@@ -4,6 +4,7 @@ import { createProgressStore } from './storage.js';
 import { createHistoryStore, latestByCell } from './history.js';
 import { reviewItems, buildCrashSheet, downloadCrashSheet } from './export.js';
 import { initDemo } from './demo.js';
+import { initDotfield } from './dotfield.js';
 import {
   createLamp, createLightIcon, setLampState, ignite, nextLight, summarizeLights,
   statusForLight, lightForStatus, lightLabel, keyToLight, pointLabel, pointAnnouncement,
@@ -13,6 +14,7 @@ import {
 const $ = id => document.getElementById(id);
 initLanguage(location.search, navigator.language);
 applyLanguage();
+initDotfield($('dotfield'));
 initDemo();
 
 const store = createProgressStore();
@@ -109,6 +111,7 @@ function fillRubric() {
     const item = byId('li', 'point-row');
     item.style.setProperty('--i', String(index));
     const current = d.lights[index] || 'amber';
+    item.dataset.state = current;
     const button = byId('button', 'point-lamp');
     button.type = 'button';
     button.setAttribute('aria-label', pointLabel(index, current));
@@ -118,6 +121,7 @@ function fillRubric() {
     const body = byId('span', 'point-text', text);
     const update = light => {
       d.lights[index] = light;
+      item.dataset.state = light;
       setLampState(lamp, light);
       ignite(lamp);
       if (light === 'red') lamp.classList.add('is-flash');
@@ -241,7 +245,10 @@ function renderRecords({ changed = null } = {}) {
       button.append(byId('span', 'heat-layer', layer.id));
       if (light === 'off') button.append(byId('span', 'heat-empty'));
       else button.append(createLightIcon(light));
-      if (changed === cellKey(question.id, layer.id)) button.classList.add('is-changed');
+      if (changed === cellKey(question.id, layer.id)) {
+        button.classList.add('is-changed');
+        window.dispatchEvent(new CustomEvent('lamp:lit', { detail: { element: button } }));
+      }
       button.addEventListener('click', () => openCell(question.id, layer.id));
       rowEl.append(button);
     });
@@ -306,9 +313,13 @@ function renderTimeline(data) {
       const rubric = localized(layer, 'rubric');
       const missed = entry.missedPoints.map(index => rubric[index]).filter(Boolean);
       if (missed.length) {
-        const note = byId('p', 'tl-missed');
-        note.append(createLamp('red', { label: false }), byId('span', '', missed.join(' / ')));
-        main.append(note);
+        const list = byId('ul', 'tl-missed-list');
+        for (const text of missed) {
+          const point = byId('li');
+          point.append(createLamp('red', { label: false }), byId('span', '', text));
+          list.append(point);
+        }
+        main.append(list);
       }
     }
 
