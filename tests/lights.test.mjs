@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   summarizeLights, statusForLight, lightForStatus, nextLight,
+  keyToLight, pointLabel, pointAnnouncement,
   suggestLights, getSuggestion, clearSuggestion,
 } from '../src/lights.js';
+import { setLanguage } from '../src/i18n.js';
 
 test('layer light: all green is clear, any red misses, the rest is almost', () => {
   assert.equal(summarizeLights(['green', 'green', 'green']), 'green');
@@ -53,4 +55,23 @@ test('legacy progress records stay readable and map to lights', async () => {
   assert.equal(parsed.items['juc-volatile-atomicity-v2::L2'].status, 'pass');
   assert.equal(lightForStatus(parsed.items['juc-volatile-atomicity-v2::L2'].status), 'green');
   assert.equal(lightForStatus(parsed.items['redis-expiration-v2::L1'].status), 'red');
+});
+
+
+test('number keys set a light directly and the label names the current and next state', () => {
+  assert.equal(keyToLight('1'), 'green');
+  assert.equal(keyToLight('2'), 'amber');
+  assert.equal(keyToLight('3'), 'red');
+  assert.equal(keyToLight('4'), null);
+  assert.equal(keyToLight('Enter'), null);
+
+  setLanguage('zh', () => null);
+  assert.equal(pointLabel(0, 'amber'), '第 1 条：当前还差一点，点击切换为讲清了');
+  assert.equal(pointLabel(1, 'red'), '第 2 条：当前漏掉了，点击切换为还差一点');
+  assert.equal(pointAnnouncement(0, 'green'), '第 1 条已设为讲清了');
+
+  setLanguage('en', () => null);
+  assert.equal(pointLabel(0, 'amber'), 'Point 1: currently Almost. Activate to switch to Clear.');
+  assert.equal(pointAnnouncement(2, 'red'), 'Point 3 set to Missed.');
+  setLanguage('zh', () => null);
 });

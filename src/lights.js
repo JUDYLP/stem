@@ -28,6 +28,23 @@ export function nextLight(light) {
   return light === 'amber' ? 'green' : light === 'green' ? 'red' : 'amber';
 }
 
+// Number keys map straight to a light, for keyboard users.
+export function keyToLight(key) {
+  return { '1': 'green', '2': 'amber', '3': 'red' }[key] || null;
+}
+
+export function pointLabel(index, current) {
+  return t('第 {n} 条：当前{current}，点击切换为{next}', {
+    n: index + 1,
+    current: lightLabel(current),
+    next: lightLabel(nextLight(current)),
+  });
+}
+
+export function pointAnnouncement(index, light) {
+  return t('第 {n} 条已设为{light}', { n: index + 1, light: lightLabel(light) });
+}
+
 export function lightLabel(light) {
   return t(LABELS[light] || LABELS.off);
 }
@@ -55,6 +72,18 @@ export function createLamp(light = 'off', { label = true } = {}) {
     lamp.append(svg);
   }
   return lamp;
+}
+
+export function createLightIcon(light) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'heat-icon');
+  svg.setAttribute('aria-hidden', 'true');
+  if (ICONS[light]) {
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', `#${ICONS[light]}`);
+    svg.append(use);
+  }
+  return svg;
 }
 
 export function setLampState(lamp, light) {
