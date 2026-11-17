@@ -149,3 +149,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - 首屏序列与热力动效只在 Chrome headless 下观察帧序列，未做真实 60fps 录屏；帧间隔 110ms 的截图能确认涟漪与波纹存在，不能据此宣称逐帧流畅。
 - 题目技术内容仍待参赛者人工审校。
 - Live AI 仍为 BLOCKED；外部建议接口只验证了本地模块调用，没有真实模型接入。
+
+### 本轮部署确认
+
+2026-11-17：Actions https://github.com/JUDYLP/stem/actions/runs/44051220377 completed/success，部署 `bf104ab`（7964d98 灯组件、ea029e2 history、b3e28e4 UI、bf104ab 文档）。独立 Chrome 打开 https://judylp.github.io/stem/ ：body 背景为 `rgb(0,0,0)`、9 个热力格、首屏三灯 绿/绿/红 且追问出现；11 个静态资源 HTTP 200、MIME 正确、SHA-256 与 `git show HEAD:` 逐项一致；英文站无中文（产品名除外）；1440/390 均无横向溢出；Console 无错误。线上首页为全暗灰空状态，符合未作答预期。
