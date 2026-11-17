@@ -5,7 +5,7 @@
 - 更新：2026-11-17。项目根目录 E:/Project/stem/unscripted。原目录不再维护。
 - T00 DONE；T02工程完成、用户人工审校待办；T03 DONE；T04核心完成、下载落盘待确认；T08 DONE；T09交互和退出完成、桌面视觉通过，最终移动截图已在公开HTTPS补验收通过。
 - 已实现三题九层、手动解释/自评、持久化、Depth Meter、复习单、Retry、独立英文模拟Demo。
-- 测试：31项Node测试通过（新增灯色规则、history裁剪、回答开关、旧数据兼容）；浏览器流程、动效与未测项见 docs/QA_REPORT.md。
+- 测试：32项Node测试通过（新增灯色规则、history裁剪、回答开关、旧数据兼容）；浏览器流程、动效与未测项见 docs/QA_REPORT.md。
 - commits：2613321（题库），a5d1b89（手动练习/存储），d5e7b92（复习单），9246dbf（Retry/Demo）。
 - T01公开预览DONE：https://judylp.github.io/stem/；仓库Public，Actions 43706124478 attempt 2成功，部署752dd3f。独立浏览器三题加载、8资源200/MIME/哈希一致、390px Demo与存储隔离通过。Discord具体安排仍待核实。T05已完成无凭证实测，认证成功/JSON验收BLOCKED（用户延后配置Key）；T06/T07未执行，未接入Live API。
 - T10–T13待办。优先补验收并准备部署；无Key不影响当前练习与模拟Demo。
@@ -17,7 +17,7 @@
 
 ## 2026-11-17 信号灯视觉重做
 
-按用户本轮要求把整站重做为黑色仪表盘：三色信号灯（绿/琥珀/红 + 形状图标）、逐点自评、确认判定、`unscripted.history.v1`、热力矩阵、作答时间线、回答保存开关（默认关闭）、清空记录与带灯色的导出。31/31 Node 测试通过；1440/390 中英文全页截图、提交流程帧序列、reduced-motion、旧 progress 兼容与外部建议接口已验证。已推送并部署 bf104ab（Actions 44051220377 success），线上 11 个资源哈希与提交一致。无新依赖、无 Live AI、无 Subagent。设计与数据决定见 D18/D19。视觉证据在本地忽略目录 work/qa-signal-20261117/，不提交。
+按用户本轮要求把整站重做为黑色仪表盘：三色信号灯（绿/琥珀/红 + 形状图标）、逐点自评、确认判定、`unscripted.history.v1`、热力矩阵、作答时间线、回答保存开关（默认关闭）、清空记录与带灯色的导出。32/32 Node 测试通过；1440/390 中英文全页截图、提交流程帧序列、reduced-motion、旧 progress 兼容与外部建议接口已验证。已推送并部署 bf104ab（Actions 44051220377 success），线上 11 个资源哈希与提交一致。无新依赖、无 Live AI、无 Subagent。设计与数据决定见 D18/D19。视觉证据在本地忽略目录 work/qa-signal-20261117/，不提交。
 
 ## 2026-11-17 页面体验打磨
 

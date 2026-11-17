@@ -49,7 +49,7 @@ node --check src/history.js
 node --check src/demo.js
 ```
 
-31 项自动测试：题库 schema 与双语对齐、本地记录降级、灯色汇总规则、history 200 条裁剪、关闭开关不写原文、旧 progress 兼容、导出过滤与转义、英文导出。浏览器实际结果与未测项见 docs/QA_REPORT.md。
+32 项自动测试：题库 schema 与双语对齐、本地记录降级、灯色汇总规则、history 200 条裁剪、关闭开关不写原文、旧 progress 兼容、导出过滤与转义、英文导出。浏览器实际结果与未测项见 docs/QA_REPORT.md。
 
 ## 数据与隐私
 

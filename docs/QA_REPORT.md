@@ -117,7 +117,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 
 ### 自动测试
 
-- `node --test tests/*.test.mjs`：31/31 PASS（Node v24.18.0，WSL）。新增 `tests/lights.test.mjs`（4 项：灯色汇总、Pass 映射、循环顺序、外部建议校验）与 `tests/history.test.mjs`（7 项：200 条裁剪、默认不存原文、关闭开关删除原文、坏数据不改写、非法条目丢弃、最近灯色、清空保留开关）。
+- `node --test tests/*.test.mjs`：32/32 PASS（Node v24.18.0，WSL）。新增 `tests/lights.test.mjs`（5 项：灯色汇总、Pass 映射、循环顺序、外部建议校验、旧 progress 兼容）与 `tests/history.test.mjs`（7 项：200 条裁剪、默认不存原文、关闭开关删除原文、坏数据不改写、非法条目丢弃、最近灯色、清空保留开关）。
 - `node --check src/main.js`、`src/history.js`、`src/demo.js`、`src/export.js`：PASS。
 
 ### 浏览器流程（Chrome 157 headless，CDP 独立上下文，http://127.0.0.1:5177）
