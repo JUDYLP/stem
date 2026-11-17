@@ -191,3 +191,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - 下载文件实际落盘：NOT RUN（仍只核对 Blob 与下载触发）。
 - 动效流畅度：用截图与帧序列检查状态，不做真实 60fps 录屏承诺。
 - 题目技术内容仍待参赛者人工审校；Live AI 未接入。
+
+### 修正部署确认
+
+2026-11-17：Actions https://github.com/JUDYLP/stem/actions/runs/44058487591 completed/success，部署 `caf3a7c`（741eed3 键盘与标签、2bea3c6 文案、783969f 热力格与灯语义、caf3a7c 文档）。独立 Chrome 打开 https://judylp.github.io/stem/ ：11 个静态资源 HTTP 200、MIME 正确、SHA-256 与 `git show HEAD:` 一致；空状态热力格 60×60、矩阵宽 504、三盏中性灯无 data-state、页面「API Key」1 处、无 Retry/Before/After/Pass/Review/Simulated 残留；英文站无中文；1440/390 无横向溢出；Console 无错误。线上空状态的导出按钮为透明底深灰细边框并禁用。
