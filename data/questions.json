@@ -13,6 +13,12 @@
           "对同一 volatile 字段的写与后续读建立 happens-before 关系，提供相应的可见性保证。",
           "单次读写的原子性不等于整个读-改-写表达式的原子性。",
           "volatile 不会自动让 i++ 这样的复合操作互斥执行。"
+        ],
+        "prompt_en": "What guarantees do reads and writes of a volatile field provide in Java? Do they make i++ atomic?",
+        "rubric_en": [
+          "A write to a volatile field happens-before a subsequent read of that field, providing the corresponding visibility guarantee.",
+          "Atomic individual reads and writes do not make an entire read-modify-write expression atomic.",
+          "volatile does not automatically make compound operations such as i++ mutually exclusive."
         ]
       },
       {
@@ -23,6 +29,12 @@
           "最终为 6：两个线程都先读取 5、各计算 6，再分别写回 6，发生丢失更新。",
           "最终为 7：一个线程先完成读 5、写 6，另一个随后读 6、写 7。",
           "volatile 的可见性没有把读、计算、写合并为一个不可交错的操作；主线程等待结束不阻止工作线程之间的竞争。"
+        ],
+        "prompt_en": "A volatile int i starts at 5. Two threads each execute i++ once, with no other writes. The main thread reads the result after both threads finish.\nGive legal execution orders that produce 6 and 7. Trace read → calculate → write rather than just saying “not thread-safe.”",
+        "rubric_en": [
+          "For 6: both threads read 5, each calculates 6, and both write 6. One update is lost.",
+          "For 7: one thread reads 5 and writes 6 before the other reads 6 and writes 7.",
+          "Visibility does not combine reading, calculating, and writing into one indivisible operation. Waiting for both workers to finish does not prevent them from racing."
         ]
       },
       {
@@ -34,9 +46,17 @@
           "get 和 decrementAndGet 各自原子，不代表“检查后扣减”整体原子；单独换原子类型不足以保护条件。",
           "可用同一锁包住检查和扣减，只有成功扣减者才发货；或循环读取正库存，以 compareAndSet(old, old-1) 成功作为发货资格，失败则重读重试。",
           "不能先无条件递减再仅检查是否非负来声称满足库存永不为负；修复必须同时解释库存约束与发货资格。"
+        ],
+        "prompt_en": "Now use an AtomicInteger stock initialized to 1. Two threads each execute:\nif (stock.get() > 0) { stock.decrementAndGet(); ship(); }\nThere are no other changes. Could two items ship? Show the interleaving, then propose a fix that keeps stock nonnegative and ships at most once. Assume shipping cannot fail.",
+        "rubric_en": [
+          "Yes. Both threads can read 1 and pass the check, then atomically decrement to 0 and -1 respectively and each ship an item.",
+          "get and decrementAndGet are individually atomic; the check-then-decrement sequence is not. Changing the type alone does not protect the condition.",
+          "Use the same lock around the check and decrement, allowing only a successful decrement to authorize shipping. Alternatively, repeatedly read positive stock and use compareAndSet(old, old-1); ship only on success, otherwise reread and retry.",
+          "Unconditionally decrementing first and only then checking for a nonnegative value does not keep stock nonnegative at all times. Explain both the stock invariant and permission to ship."
         ]
       }
-    ]
+    ],
+    "title_en": "Why does volatile not make i++ thread-safe?"
   },
   {
     "id": "redis-expiration-v2",
@@ -52,6 +72,12 @@
           "EXPIRE 为键设置以秒为单位的生存时间。",
           "普通新建键默认没有过期时间，除非写入时显式设置或随后添加。",
           "到期键会被过期机制移除；不能把过期时间当作精确的业务任务调度器。"
+        ],
+        "prompt_en": "What does EXPIRE key 60 do to an existing key? Do all keys have an expiration time by default?",
+        "rubric_en": [
+          "EXPIRE sets a key’s time to live in seconds.",
+          "A normally created key has no expiration unless one is explicitly set on creation or added later.",
+          "Expired keys are removed by the expiration mechanism; expiration is not a precise scheduler for business tasks."
         ]
       },
       {
@@ -62,6 +88,12 @@
           "只靠访问时的被动过期，长期无人读取的过期键可能继续占用内存。",
           "主动过期会周期性检查带过期时间的键并清理到期项；不是每次请求全量扫描所有键。",
           "键的逻辑到期与内存实际回收时刻不同；过期机制不是精确定时业务回调的保证。"
+        ],
+        "prompt_en": "A key with a TTL has expired, but no client reads it afterward.\nWhat would go wrong if expiration were checked only on GET? Why does Redis also need active expiration? Can expiration guarantee a business callback at that exact millisecond?",
+        "rubric_en": [
+          "With only access-triggered passive expiration, expired keys that are never read may continue occupying memory.",
+          "Active expiration periodically checks keys with expiration times and removes expired ones; it does not scan every key on every request.",
+          "Logical expiration and actual memory reclamation can happen at different times. Expiration does not guarantee precisely timed business callbacks."
         ]
       },
       {
@@ -73,9 +105,17 @@
           "INCR 后值为 2，原到期时刻保留，不会把倒计时重新开始。",
           "普通 SET hits 9 后值为 9，原 TTL 被清除，键不会再因原 TTL 到期。",
           "将最后一条改为 SET hits 9 KEEPTTL 可保留题设中的原到期时刻；重新 EXPIRE 60 是重设期限，不等同于保留原时刻。"
+        ],
+        "prompt_en": "Redis 7+, with no other client changes. All commands finish within 60 seconds, and the key has not expired before the last command:\nSET hits 1 → EXPIRE hits 60 → INCR hits → SET hits 9\nTrace the value and TTL state after each step; exact remaining seconds are not required. Why might the cache no longer expire after the last update? Change the last command to preserve the original expiration time.",
+        "rubric_en": [
+          "After SET hits 1, the value is 1 with no TTL. After EXPIRE, the value is still 1 with a 60-second lifetime.",
+          "After INCR, the value is 2. The original expiration time remains; the countdown does not restart.",
+          "After plain SET hits 9, the value is 9 and the previous TTL is cleared. The key will not expire because of that old TTL.",
+          "Use SET hits 9 KEEPTTL to retain the original expiration time in this scenario. EXPIRE 60 would set a new deadline, not preserve the original one."
         ]
       }
-    ]
+    ],
+    "title_en": "How does Redis expiration work, and what can change it?"
   },
   {
     "id": "mysql-consistent-read-v2",
@@ -91,6 +131,12 @@
           "一致性读利用多版本机制读取某个时间点的快照。",
           "快照不包含在该时间点之后提交的其他事务修改，也不读取其未提交修改。",
           "当前事务自身先前语句所做的修改是可见性规则的例外。"
+        ],
+        "prompt_en": "In MySQL 8.4 InnoDB, what does a plain SELECT using a consistent nonlocking read see? Must it see the latest value just committed by another transaction?",
+        "rubric_en": [
+          "A consistent read uses multiversioning to read a snapshot from a particular point in time.",
+          "The snapshot excludes other transactions’ changes committed after that point, as well as their uncommitted changes.",
+          "Changes made by earlier statements in the current transaction are an exception to this visibility rule."
         ]
       },
       {
@@ -101,6 +147,12 @@
           "RR 下第③步为 100：沿用 A 第一次一致性读所建立的快照。",
           "RC 下第③步为 80：每次一致性读建立新的快照，B 已提交。",
           "决定差别的是一致性读快照的建立时机，不是 B 是否成功提交；显式事务内普通 BEGIN 本身不等于已建立读快照。"
+        ],
+        "prompt_en": "MySQL 8.4 InnoDB: balance for id=1 initially equals 100. There are two explicit transactions and no other writes.\n1. A: BEGIN, then a plain SELECT reads balance as 100.\n2. B: UPDATE changes balance to 80, then COMMIT.\n3. A: another plain SELECT of balance, then COMMIT.\nA makes no changes itself. Predict step 3 under RR and RC, and identify when the snapshot is created.",
+        "rubric_en": [
+          "Under RR, step 3 reads 100, using the snapshot established by A’s first consistent read.",
+          "Under RC, step 3 reads 80: each consistent read gets a new snapshot, and B has committed.",
+          "The difference is when the consistent-read snapshot is created, not whether B committed successfully. An ordinary BEGIN alone does not establish a read snapshot."
         ]
       },
       {
@@ -111,8 +163,15 @@
           "读到 70：UPDATE 在 B 提交后的当前行值 80 上减 10，不是对旧快照的 100 减 10。",
           "普通一致性 SELECT 的快照规则不能直接推广到 UPDATE 等写语句或锁定读。",
           "A 自己刚做的修改对后续一致性读可见，因此读到自己的 70；这不意味着其他未修改行的快照也全部刷新。"
+        ],
+        "prompt_en": "Use the previous initial data with RR isolation. A’s first plain SELECT reads 100; B then changes the same row to 80 and commits.\nA now executes UPDATE account SET balance = balance - 10 WHERE id = 1, followed by a plain SELECT of that row. No other transactions act, and all statements succeed.\nDoes the last read return 90, 70, or 100? Explain why the claim “all statements in RR only see the old snapshot” is wrong.",
+        "rubric_en": [
+          "It reads 70. UPDATE subtracts 10 from the current value 80 after B’s commit, not from the old snapshot value 100.",
+          "The snapshot rules for plain consistent SELECT cannot be applied directly to writes such as UPDATE or to locking reads.",
+          "A’s own change is visible to its subsequent consistent read, so it sees its own 70. This does not mean the snapshots of all other, unchanged rows are refreshed."
         ]
       }
-    ]
+    ],
+    "title_en": "Why might an InnoDB consistent read miss a newly committed change?"
   }
 ]

@@ -1,8 +1,11 @@
+import { t, localized, getLanguage, initLanguage, setLanguage, applyLanguage } from './i18n.js';
 import { loadQuestions } from './questions.js';
 import { createProgressStore } from './storage.js';
 import { reviewItems, buildCrashSheet, downloadCrashSheet } from './export.js';
 import { initDemo } from './demo.js';
 
+initLanguage(location.search, navigator.language);
+applyLanguage();
 initDemo();
 
 const $ = id => document.getElementById(id);
@@ -11,7 +14,7 @@ const drafts = new Map();
 let questions = [], questionId = '', layerIndex = 0;
 const current = () => questions.find(q => q.id === questionId);
 const key = () => `${questionId}::L${layerIndex + 1}`;
-const statusText = status => ({pass:'自评通过',review:'需要复习'}[status] || '未评价');
+const statusText = status => t({pass:'自评通过',review:'需要复习'}[status] || '未评价');
 function draft() {
   if (!drafts.has(key())) drafts.set(key(), { text: '', submitted: null, retry: '' });
   return drafts.get(key());
@@ -28,17 +31,17 @@ function renderProgress() {
     button.addEventListener('click', () => { layerIndex = index; renderLayer(); });
     return button;
   }));
-  $('rating-status').textContent = `该层最后一次自评：${statusText(data.items[key()]?.status)}。编辑答案不会自动改变自评。`;
+  $('rating-status').textContent = t('该层最后一次自评：{status}。编辑答案不会自动改变自评。', {status:statusText(data.items[key()]?.status)});
   $('storage-warning').textContent = store.warning; $('storage-warning').hidden = !store.warning;
   renderReview();
 }
 function renderReview() {
   const items = reviewItems(questions, store.snapshot());
-  $('review-count').textContent = items.length ? `当前 ${items.length} 个题目层级需要复习（全分类）` : '当前没有待复习条目。完成解释后，可自行标记 Review。';
+  $('review-count').textContent = items.length ? t('当前 {count} 个题目层级需要复习（全分类）', {count:items.length}) : t('当前没有待复习条目。完成解释后，可自行标记 Review。');
   $('review-list').replaceChildren(...items.map(({question, layer}) => {
     const li = document.createElement('li'), button = document.createElement('button');
     button.type = 'button'; button.className = 'review-link';
-    button.textContent = `${question.category} / ${layer.id} · ${question.title}`;
+    button.textContent = `${question.category} / ${layer.id} · ${localized(question, 'title')}`;
     button.addEventListener('click', () => {
       $('category').value = ''; renderOptions(); selectQuestion(question.id); layerIndex = question.layers.indexOf(layer); renderLayer();
       $('question-title').scrollIntoView({block:'start'}); $('answer').focus({preventScroll:true});
@@ -48,15 +51,15 @@ function renderReview() {
   $('export-review').disabled = !items.length;
 }
 $('export-review').addEventListener('click', () => {
-  const text = buildCrashSheet(questions, store.snapshot());
+  const text = buildCrashSheet(questions, store.snapshot(), getLanguage());
   downloadCrashSheet(text);
-  $('export-message').textContent = '已生成 Markdown 复习单，请在浏览器下载列表中查看。';
+  $('export-message').textContent = t('已生成 Markdown 复习单，请在浏览器下载列表中查看。');
 });
 function renderLayer() {
   const q = current(), layer = q.layers[layerIndex], d = draft();
-  $('question-title').textContent = q.title;
+  $('question-title').textContent = localized(q, 'title');
   $('layer-label').textContent = `${q.category} / ${layer.id} ${layer.label}`;
-  $('layer-prompt').textContent = layer.prompt;
+  $('layer-prompt').textContent = localized(layer, 'prompt');
   $('answer').value = d.text; $('answer-count').textContent = `${d.text.length} / 8000`;
   $('answer-message').textContent = ''; $('self-check').hidden = d.submitted === null;
   $('rubric-details').open = false; $('rubric').replaceChildren();
@@ -66,14 +69,14 @@ function renderLayer() {
   renderProgress();
 }
 function fillRubric() {
-  $('rubric').replaceChildren(...current().layers[layerIndex].rubric.map(text => {
+  $('rubric').replaceChildren(...localized(current().layers[layerIndex], 'rubric').map(text => {
     const li = document.createElement('li'); li.textContent = text; return li;
   }));
 }
 function selectQuestion(id) { questionId = id; layerIndex = 0; $('question').value = id; renderLayer(); }
 function filtered() { return questions.filter(q => !$('category').value || q.category === $('category').value); }
 function renderOptions() {
-  const list = filtered(); $('question').replaceChildren(...list.map(q => option(q.id, q.title)));
+  const list = filtered(); $('question').replaceChildren(...list.map(q => option(q.id, localized(q, 'title'))));
   selectQuestion(list.some(q => q.id === questionId) ? questionId : list[0].id);
 }
 $('category').addEventListener('change', renderOptions);
@@ -86,16 +89,16 @@ $('answer').addEventListener('input', () => {
   const d = draft(); d.text = $('answer').value; d.submitted = null; d.retry = '';
   $('answer-count').textContent = `${d.text.length} / 8000`;
   $('self-check').hidden = true; $('rubric').replaceChildren();
-  $('answer-message').textContent = '修改后请重新提交，再进行自评。';
+  $('answer-message').textContent = t('修改后请重新提交，再进行自评。');
 });
 $('answer-form').addEventListener('submit', event => {
   event.preventDefault(); const d = draft(); d.text = $('answer').value;
   if (!d.text.trim() || d.text.length > 8000) {
-    $('answer-message').textContent = '请先写下 1–8000 个字符的解释（不能只有空白）。'; $('answer').focus(); return;
+    $('answer-message').textContent = t('请先写下 1–8000 个字符的解释（不能只有空白）。'); $('answer').focus(); return;
   }
   d.submitted = d.text; fillRubric(); $('self-check').hidden = false; $('rubric-details').open = true;
   $('before-answer').textContent = d.submitted; $('retry-answer').value = d.retry;
-  $('answer-message').textContent = '已提交。对照要点后，请选择自己的评价。';
+  $('answer-message').textContent = t('已提交。对照要点后，请选择自己的评价。');
 });
 for (const status of ['pass','review']) $('rate-' + status).addEventListener('click', () => {
   if (draft().submitted === null) return;
@@ -104,17 +107,31 @@ for (const status of ['pass','review']) $('rate-' + status).addEventListener('cl
 $('retry-answer').addEventListener('input', () => { draft().retry = $('retry-answer').value; });
 async function boot() {
   $('reload-questions').hidden = true; $('practice-body').hidden = true;
-  $('load-message').textContent = '正在加载题库…';
+  $('load-message').textContent = t('正在加载题库…');
   try {
     questions = await loadQuestions();
-    $('category').replaceChildren(option('','全部分类'), ...[...new Set(questions.map(q => q.category))].map(c => option(c,c)));
+    $('category').replaceChildren(option('',t('全部分类')), ...[...new Set(questions.map(q => q.category))].map(c => option(c,c)));
     renderOptions(); $('practice-body').hidden = false;
-    $('load-message').textContent = `已加载 ${questions.length} 道题 · 无需 API Key`;
-    $('page-status').textContent = '手动练习 · 回答不上传';
+    $('load-message').textContent = t('已加载 {count} 道题 · 无需 API Key', {count:questions.length});
+
   } catch {
-    $('load-message').textContent = '题库加载失败，请确认通过 HTTP 打开且题库文件有效，再重试。';
+    $('load-message').textContent = t('题库加载失败，请确认通过 HTTP 打开且题库文件有效，再重试。');
     $('reload-questions').hidden = false;
   }
 }
+document.querySelectorAll('[data-lang]').forEach(button => button.addEventListener('click', () => {
+  setLanguage(button.dataset.lang);
+  const url = new URL(location.href); url.searchParams.set('lang', getLanguage());
+  history.replaceState(null, '', url);
+  const open = $('rubric-details').open;
+  applyLanguage();
+  if (questions.length) {
+    $('category').options[0].textContent = t('全部分类');
+    for (const option of $('question').options) option.textContent = localized(questions.find(q => q.id === option.value), 'title');
+    renderLayer(); $('rubric-details').open = open;
+    $('load-message').textContent = t('已加载 {count} 道题 · 无需 API Key', {count:questions.length});
+  } else if (!$('reload-questions').hidden) $('load-message').textContent = t('题库加载失败，请确认通过 HTTP 打开且题库文件有效，再重试。');
+  $('export-message').textContent = '';
+}));
 $('reload-questions').addEventListener('click', boot);
 boot();

@@ -160,3 +160,8 @@ h2 { font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, s
   .header-nav { gap: 18px; font-size: 13px; }
   .section-heading h2 { font-size: 27px; }
 }
+
+.language-switch { display: inline-flex; align-items: center; gap: 5px; }
+.language-switch button { border: 0; background: transparent; color: var(--muted); padding: 0 3px; cursor: pointer; }
+.language-switch button[aria-pressed="true"] { color: var(--accent); font-weight: 750; text-decoration: underline; text-underline-offset: 5px; }
+.header-nav { flex-wrap: wrap; align-items: center; }

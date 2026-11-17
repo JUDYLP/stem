@@ -77,3 +77,12 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 
 
 2026-11-15 v2公开发布复验：Actions https://github.com/JUDYLP/stem/actions/runs/43707943812 completed/success，部署提交2510c80bae45af9a159e6e94d996b95f2569eb3b。Chrome打开https://judylp.github.io/stem/确认模拟卡存在、开始练习中文CTA、8行代码及三个-v2题ID。
+
+## 2026-11-17 P0 双语与文案清理
+
+- PASS：node --test tests/*.test.mjs，20/20；新增语言优先级、持久化失败降级、字典、双语schema、英文导出测试。
+- PASS：真实Chrome http://127.0.0.1:5177/?lang=en，首页→空输入错误→作答→rubric→Retry→Review→实际下载触发及Blob文本；英文页面/导出无中文（产品名除外）。下载落盘仍未单独核实。
+- PASS：中英来回切换后回答/Retry保持原值，unscripted.progress.v1内容不变；英文Demo展开/示例/Review无中文；Console无消息。
+- 语言优先级：有效URL lang > 已保存语言 > navigator.language；偏好独立存unscripted.language，不改进度schema。
+- 已删除开发状态块/练习内部备注；审校状态保留README与QUESTION_REVIEW。技术语义为对照翻译，仍待参赛者人工审校。
+- 桌面/移动截图留至P2最终版统一执行，本组不冒称截图通过。

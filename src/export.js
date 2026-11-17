@@ -1,15 +1,17 @@
+import { t, localized } from './i18n.js';
 export function reviewItems(questions, progress) {
   return questions.flatMap(question => question.layers
     .filter(layer => progress.items[`${question.id}::${layer.id}`]?.status === 'review')
     .map(layer => ({ question, layer })));
 }
 const markdown = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/[\\`*_\[\]#]/g, '\\$&');
-export function buildCrashSheet(questions, progress) {
+export function buildCrashSheet(questions, progress, lang = 'zh') {
   const items = reviewItems(questions, progress);
-  const lines = ['# Unscripted · 当前复习单', '', '仅包含当前最后一次自评为 review 的题目层级；不是历史错误次数或能力评分。', '题目仍待参赛者人工审校。', ''];
-  if (!items.length) lines.push('当前没有需要复习的条目。');
+  const tr = key => t(key, {}, lang);
+  const lines = ['# Unscripted · ' + tr('当前复习单'), '', tr('仅包含当前最后一次自评为 review 的题目层级；不是历史错误次数或能力评分。'), ''];
+  if (!items.length) lines.push(tr('当前没有需要复习的条目。'));
   for (const {question, layer} of items) {
-    lines.push(`## ${markdown(question.category)} / ${layer.id} · ${markdown(question.title)}`, '', markdown(layer.prompt), '', '再次解释时检查：', ...layer.rubric.map(point => `- ${markdown(point)}`), '', '未经过 AI 诊断，可对照参考要点自查。', '');
+    lines.push(`## ${markdown(question.category)} / ${layer.id} · ${markdown(localized(question, 'title', lang))}`, '', markdown(localized(layer, 'prompt', lang)), '', tr('再次解释时检查：'), ...localized(layer, 'rubric', lang).map(point => `- ${markdown(point)}`), '', tr('用参考要点自行检查解释。'), '');
   }
   return lines.join('\n') + '\n';
 }

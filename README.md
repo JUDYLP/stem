@@ -6,6 +6,8 @@
 
 ## 已实现
 
+- 中英切换、独立语言偏好、浏览器语言初选及 ?lang=en；题目、参考要点、提示和复习单均支持英文。
+
 - 三道题、每题 L1 Explain / L2 Reason / L3 Stress-test；分类、选题与随机选题。
 - 先回答再查看参考要点；自评 Pass / Review 由用户主动选择。
 - Depth Meter 显示当前层和最后自评；当前 review 可跳回练习或导出 Markdown。
@@ -35,7 +37,7 @@ node --check src/main.js
 node --check src/demo.js
 ```
 
-15 项自动测试已通过。浏览器实际结果、mock 边界和未测项见 docs/QA_REPORT.md；T00 历史基线见 docs/SETUP_REPORT.md。
+20 项自动测试已通过。浏览器实际结果、mock 边界和未测项见 docs/QA_REPORT.md；T00 历史基线见 docs/SETUP_REPORT.md。
 
 ## 数据与隐私
 

@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 export const STORAGE_KEY = 'unscripted.progress.v1';
 export const emptyProgress = () => ({ schemaVersion: 1, items: {} });
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
@@ -19,7 +20,7 @@ export function createProgressStore(getStorage = () => window.localStorage) {
   catch { storage = null; warning = '本地记录不可读、已损坏或版本不兼容。原记录未覆盖；本次仅在内存中练习，刷新会丢失新自评。'; }
   return {
     snapshot: () => structuredClone(data),
-    get warning() { return warning; },
+    get warning() { return warning ? t(warning) : ''; },
     rate(key, status) {
       if (!/^[a-z0-9-]+::L[123]$/.test(key) || !['pass', 'review'].includes(status)) throw new Error('无效自评');
       data.items[key] = { status, updatedAt: new Date().toISOString() };

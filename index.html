@@ -10,28 +10,28 @@
     <script type="module" src="./src/main.js"></script>
   </head>
   <body>
-    <a class="skip-link" href="#main">跳到主要内容</a>
+    <a class="skip-link" href="#main"><span data-i18n="跳到主要内容">跳到主要内容</span></a>
     <div class="page">
       <header class="site-header">
-        <a class="wordmark" href="#main" aria-label="Unscripted（脱稿）首页">Unscripted<span>脱稿</span></a>
-        <nav class="header-nav" aria-label="主导航"><a href="#method">方法</a><a href="#preview">示例</a><a href="https://github.com/JUDYLP/stem">GitHub</a></nav>
+        <a class="wordmark" href="#main" aria-label="Unscripted（脱稿）首页" data-i18n-aria-label="Unscripted（脱稿）首页"><span data-i18n="Unscripted">Unscripted</span><span><span data-i18n="脱稿">脱稿</span></span></a>
+        <nav class="header-nav" aria-label="主导航" data-i18n-aria-label="主导航"><a href="#method"><span data-i18n="方法">方法</span></a><a href="#preview"><span data-i18n="示例">示例</span></a><a href="https://github.com/JUDYLP/stem"><span data-i18n="GitHub">GitHub</span></a><div class="language-switch" role="group" aria-label="语言" data-i18n-aria-label="语言"><button type="button" data-lang="zh"><span data-i18n="中">中</span></button><span aria-hidden="true"><span data-i18n="/">/</span></span><button type="button" data-lang="en"><span data-i18n="EN">EN</span></button></div></nav>
       </header>
 
       <main id="main">
         <section class="hero" aria-labelledby="hero-title">
           <div class="hero-copy">
-            <p class="eyebrow">EXPLAIN WHAT YOU SHIP.</p>
-            <h1 id="hero-title" lang="en">AI can write your code.<br><em>Can you explain it?</em></h1>
-            <p class="intro">AI 写的代码，你能讲清楚吗？用自己的话讲出概念、机制和边界，像面试官就坐在对面。</p>
+            <p class="eyebrow"><span data-i18n="EXPLAIN WHAT YOU SHIP.">EXPLAIN WHAT YOU SHIP.</span></p>
+            <h1 id="hero-title" lang="en"><span data-i18n="AI can write your code.">AI can write your code.</span><br><em><span data-i18n="Can you explain it?">Can you explain it?</span></em></h1>
+            <p class="intro"><span data-i18n="AI 写的代码，你能讲清楚吗？用自己的话讲出概念、机制和边界，像面试官就坐在对面。">AI 写的代码，你能讲清楚吗？用自己的话讲出概念、机制和边界，像面试官就坐在对面。</span></p>
             <div class="actions" aria-describedby="availability">
-              <a class="button primary" href="#practice">开始练习</a>
-              <button id="open-demo" class="button secondary" type="button">看一个示例</button>
+              <a class="button primary" href="#practice"><span data-i18n="开始练习">开始练习</span></a>
+              <button id="open-demo" class="button secondary" type="button"><span data-i18n="看一个示例">看一个示例</span></button>
             </div>
-            <p id="availability" class="availability">免费 · 无需注册 · 无需 API Key</p>
+            <p id="availability" class="availability"><span data-i18n="免费 · 无需注册 · 无需 API Key">免费 · 无需注册 · 无需 API Key</span></p>
           </div>
           <aside id="preview" class="preview-card" aria-labelledby="preview-title">
-            <div class="preview-top"><span>一次解释，三层追问</span><span class="simulation-label">模拟示例</span></div>
-            <div class="code-caption">AI 生成代码示例 · JavaScript</div>
+            <div class="preview-top"><span><span data-i18n="一次解释，三层追问">一次解释，三层追问</span></span><span class="simulation-label"><span data-i18n="模拟示例">模拟示例</span></span></div>
+            <div class="code-caption"><span data-i18n="AI 生成代码示例 · JavaScript">AI 生成代码示例 · JavaScript</span></div>
             <pre class="code-sample"><code><span class="syntax-key">let</span> pending;
 <span class="syntax-key">function</span> <span class="syntax-fn">load</span>() {
   <span class="syntax-key">if</span> (!pending) {
@@ -41,117 +41,112 @@
   <span class="syntax-key">return</span> pending;
 }</code></pre>
             <div class="preview-body">
-              <p class="eyebrow">面试官问 / L2</p>
-              <h2 id="preview-title">这段代码为什么不会重复请求？</h2>
-              <p class="scope-note">前提：同一页面、同一函数实例，前一次请求尚未结束。</p>
-              <blockquote>“第一次调用保存了 Promise，后面的调用会复用它，不会再执行 fetch。”</blockquote>
-              <div class="sample-meter" aria-label="模拟反馈，非真实评分"><span>L1 ✓</span><span>L2 ✓</span><span class="needs-work">L3 待补充</span></div>
-              <p class="preview-comment">机制说清了。那请求结束后，再调用一次呢？</p>
-              <details class="preview-followup"><summary>换个条件，继续追问</summary><p>finally 会清空 pending，下一次调用会重新请求。这是“进行中的请求合并”，并不是永久缓存，也不会跨标签页去重。</p></details>
-              <p class="simulation-note">固定回答与模拟反馈 · 未调用实时 AI</p>
+              <p class="eyebrow"><span data-i18n="面试官问 / L2">面试官问 / L2</span></p>
+              <h2 id="preview-title"><span data-i18n="这段代码为什么不会重复请求？">这段代码为什么不会重复请求？</span></h2>
+              <p class="scope-note"><span data-i18n="前提：同一页面、同一函数实例，前一次请求尚未结束。">前提：同一页面、同一函数实例，前一次请求尚未结束。</span></p>
+              <blockquote><span data-i18n="“第一次调用保存了 Promise，后面的调用会复用它，不会再执行 fetch。”">“第一次调用保存了 Promise，后面的调用会复用它，不会再执行 fetch。”</span></blockquote>
+              <div class="sample-meter" aria-label="模拟反馈，非真实评分" data-i18n-aria-label="模拟反馈，非真实评分"><span><span data-i18n="L1 ✓">L1 ✓</span></span><span><span data-i18n="L2 ✓">L2 ✓</span></span><span class="needs-work"><span data-i18n="L3 待补充">L3 待补充</span></span></div>
+              <p class="preview-comment"><span data-i18n="机制说清了。那请求结束后，再调用一次呢？">机制说清了。那请求结束后，再调用一次呢？</span></p>
+              <details class="preview-followup"><summary><span data-i18n="换个条件，继续追问">换个条件，继续追问</span></summary><p><span data-i18n="finally 会清空 pending，下一次调用会重新请求。这是“进行中的请求合并”，并不是永久缓存，也不会跨标签页去重。">finally 会清空 pending，下一次调用会重新请求。这是“进行中的请求合并”，并不是永久缓存，也不会跨标签页去重。</span></p></details>
+              
             </div>
           </aside>
         </section>
 
         <section class="method" id="method" aria-labelledby="method-title">
           <div class="section-heading">
-            <p class="eyebrow">THE PRACTICE FRAMEWORK</p>
-            <h2 id="method-title">不止说出答案，也说清为什么。</h2>
-            <p>以一道并发题为例：从概念出发，沿着执行顺序，一直问到方案的边界。</p>
+            <p class="eyebrow"><span data-i18n="THE PRACTICE FRAMEWORK">THE PRACTICE FRAMEWORK</span></p>
+            <h2 id="method-title"><span data-i18n="不止说出答案，也说清为什么。">不止说出答案，也说清为什么。</span></h2>
+            <p><span data-i18n="以一道并发题为例：从概念出发，沿着执行顺序，一直问到方案的边界。">以一道并发题为例：从概念出发，沿着执行顺序，一直问到方案的边界。</span></p>
           </div>
           <ol class="layers">
-            <li><span class="layer-number">L1 / 讲清概念</span><h3 lang="en">Explain</h3><p>volatile 保证了什么？</p><p class="layer-detail">区分可见性与复合操作的原子性。</p></li>
-            <li><span class="layer-number">L2 / 推演机制</span><h3 lang="en">Reason</h3><p>两个线程各加一次，为什么少了一次？</p><p class="layer-detail">列出读、改、写的交错，证明你的判断。</p></li>
-            <li><span class="layer-number">L3 / 挑战边界</span><h3 lang="en">Stress-test</h3><p>换成原子计数器，库存就安全了吗？</p><p class="layer-detail">给出反例，再解释修复为什么有效。</p></li>
+            <li><span class="layer-number"><span data-i18n="L1 / 讲清概念">L1 / 讲清概念</span></span><h3 lang="en"><span data-i18n="Explain">Explain</span></h3><p><span data-i18n="volatile 保证了什么？">volatile 保证了什么？</span></p><p class="layer-detail"><span data-i18n="区分可见性与复合操作的原子性。">区分可见性与复合操作的原子性。</span></p></li>
+            <li><span class="layer-number"><span data-i18n="L2 / 推演机制">L2 / 推演机制</span></span><h3 lang="en"><span data-i18n="Reason">Reason</span></h3><p><span data-i18n="两个线程各加一次，为什么少了一次？">两个线程各加一次，为什么少了一次？</span></p><p class="layer-detail"><span data-i18n="列出读、改、写的交错，证明你的判断。">列出读、改、写的交错，证明你的判断。</span></p></li>
+            <li><span class="layer-number"><span data-i18n="L3 / 挑战边界">L3 / 挑战边界</span></span><h3 lang="en"><span data-i18n="Stress-test">Stress-test</span></h3><p><span data-i18n="换成原子计数器，库存就安全了吗？">换成原子计数器，库存就安全了吗？</span></p><p class="layer-detail"><span data-i18n="给出反例，再解释修复为什么有效。">给出反例，再解释修复为什么有效。</span></p></li>
           </ol>
-          <p class="audience">适合谁：准备面试的学生 / 用 AI 写代码的人 / 带新人的 reviewer</p>
+          <p class="audience"><span data-i18n="适合谁：准备面试的学生 / 用 AI 写代码的人 / 带新人的 reviewer">适合谁：准备面试的学生 / 用 AI 写代码的人 / 带新人的 reviewer</span></p>
         </section>
 
         <section id="demo" class="practice" lang="en" aria-labelledby="demo-title" hidden>
-          <p class="eyebrow">DEMO PREVIEW · NO API KEY NEEDED</p>
-          <h2 id="demo-title" tabindex="-1">Explain. Reflect. Try again.</h2>
-          <p class="warning">Simulated example — no live AI call. Nothing here changes your practice records.</p>
-          <p>L1 Explain → <strong>L2 Reason</strong> → L3 Stress-test</p>
-          <h3>Why can two increments lose an update?</h3>
-          <p>In Java, two threads increment the same volatile integer. How can one update be lost?</p>
-          <h4>Example first explanation</h4>
-          <p class="sample-answer">“Volatile makes i++ thread-safe because every thread sees the latest value.”</p>
-          <button id="demo-feedback-button" type="button" class="button primary">Show simulated feedback</button>
+          <p class="eyebrow"><span data-i18n="DEMO PREVIEW · NO API KEY NEEDED">DEMO PREVIEW · NO API KEY NEEDED</span></p>
+          <h2 id="demo-title" tabindex="-1"><span data-i18n="Explain. Reflect. Try again.">Explain. Reflect. Try again.</span></h2>
+          <p class="warning"><span data-i18n="Simulated example — no live AI call. Nothing here changes your practice records.">Simulated example — no live AI call. Nothing here changes your practice records.</span></p>
+          <p><span data-i18n="L1 Explain →">L1 Explain →</span> <strong><span data-i18n="L2 Reason">L2 Reason</span></strong> <span data-i18n="→ L3 Stress-test">→ L3 Stress-test</span></p>
+          <h3><span data-i18n="Why can two increments lose an update?">Why can two increments lose an update?</span></h3>
+          <p><span data-i18n="In Java, two threads increment the same volatile integer. How can one update be lost?">In Java, two threads increment the same volatile integer. How can one update be lost?</span></p>
+          <h4><span data-i18n="Example first explanation">Example first explanation</span></h4>
+          <p class="sample-answer"><span data-i18n="“Volatile makes i++ thread-safe because every thread sees the latest value.”">“Volatile makes i++ thread-safe because every thread sees the latest value.”</span></p>
+          <button id="demo-feedback-button" type="button" class="button primary"><span data-i18n="Show simulated feedback">Show simulated feedback</span></button>
           <div id="demo-feedback" hidden>
-            <p class="warning">Simulated example — no live AI call</p>
-            <p><strong>Reasoning gap:</strong> Visibility does not make a read-modify-write operation atomic.</p>
-            <p><strong>One follow-up:</strong> If both threads read 5 before either writes back, what could happen?</p>
-            <label for="demo-retry">Retry in your own words</label>
-            <textarea id="demo-retry" rows="4" maxlength="8000" placeholder="Explain the steps and what you would change."></textarea>
-            <button id="demo-use-example" type="button" class="button secondary">Use a sample retry</button>
-            <p><strong>After:</strong> <span id="demo-after">Your retry will appear here.</span></p>
-            <p>This retry is not automatically evaluated. Choose a self-rating for this demo:</p>
-            <div class="actions"><button id="demo-pass" type="button" class="button secondary">Pass</button><button id="demo-review" type="button" class="button secondary">Review</button></div>
-            <p id="demo-status" role="status">Not rated.</p>
-            <p id="demo-sheet" class="fine-print">A review item will appear here only if you choose Review.</p>
+            <p class="warning"><span data-i18n="Simulated example — no live AI call">Simulated example — no live AI call</span></p>
+            <p><strong><span data-i18n="Reasoning gap:">Reasoning gap:</span></strong> <span data-i18n="Visibility does not make a read-modify-write operation atomic.">Visibility does not make a read-modify-write operation atomic.</span></p>
+            <p><strong><span data-i18n="One follow-up:">One follow-up:</span></strong> <span data-i18n="If both threads read 5 before either writes back, what could happen?">If both threads read 5 before either writes back, what could happen?</span></p>
+            <label for="demo-retry"><span data-i18n="Retry in your own words">Retry in your own words</span></label>
+            <textarea id="demo-retry" rows="4" maxlength="8000" placeholder="Explain the steps and what you would change." data-i18n-placeholder="Explain the steps and what you would change."></textarea>
+            <button id="demo-use-example" type="button" class="button secondary"><span data-i18n="Use a sample retry">Use a sample retry</span></button>
+            <p><strong><span data-i18n="After:">After:</span></strong> <span id="demo-after"><span data-i18n="Your retry will appear here.">Your retry will appear here.</span></span></p>
+            <p><span data-i18n="This retry is not automatically evaluated. Choose a self-rating for this demo:">This retry is not automatically evaluated. Choose a self-rating for this demo:</span></p>
+            <div class="actions"><button id="demo-pass" type="button" class="button secondary"><span data-i18n="Pass">Pass</span></button><button id="demo-review" type="button" class="button secondary"><span data-i18n="Review">Review</span></button></div>
+            <p id="demo-status" role="status"><span data-i18n="Not rated.">Not rated.</span></p>
+            <p id="demo-sheet" class="fine-print"><span data-i18n="A review item will appear here only if you choose Review.">A review item will appear here only if you choose Review.</span></p>
           </div>
-          <div class="actions demo-actions"><button id="demo-reset" type="button" class="button secondary">Restart example</button><button id="close-demo" type="button" class="button secondary">Exit demo / 返回练习</button></div>
+          <div class="actions demo-actions"><button id="demo-reset" type="button" class="button secondary"><span data-i18n="Restart example">Restart example</span></button><button id="close-demo" type="button" class="button secondary"><span data-i18n="Exit demo">Exit demo</span></button></div>
         </section>
 
         <section id="practice" class="practice" aria-labelledby="practice-title">
-          <p class="eyebrow">PRACTICE / 用自己的话解释</p>
-          <h2 id="practice-title">先回答，再对照。</h2>
-          <p class="fine-print">3 道场景推演题 · 新版题目需重新自评，旧版记录保留但不套用。题目待参赛者人工审校。参考要点只在提交后展开。自评由您决定，不是能力认证。</p>
-          <p id="load-message" role="status">正在加载题库…</p>
-          <button id="reload-questions" class="button secondary" type="button" hidden>重试加载</button>
-          <noscript><p>请启用 JavaScript 以加载题库和开始练习。</p></noscript>
+          <p class="eyebrow"><span data-i18n="PRACTICE / 用自己的话解释">PRACTICE / 用自己的话解释</span></p>
+          <h2 id="practice-title"><span data-i18n="先回答，再对照。">先回答，再对照。</span></h2>
+          <p class="fine-print"><span data-i18n="3 道题 · 先写解释，再看参考要点 · 自评由你决定">3 道题 · 先写解释，再看参考要点 · 自评由你决定</span></p>
+          <p id="load-message" role="status"><span data-i18n="正在加载题库…">正在加载题库…</span></p>
+          <button id="reload-questions" class="button secondary" type="button" hidden><span data-i18n="重试加载">重试加载</span></button>
+          <noscript><p>Enable JavaScript to load questions and start practicing.</p></noscript>
           <div id="practice-body" hidden>
             <p id="storage-warning" class="warning" role="status" hidden></p>
             <div class="selectors">
-              <label>分类<select id="category"><option value="">全部分类</option></select></label>
-              <label class="question-selector">题目<select id="question"></select></label>
-              <button id="random-question" class="button secondary" type="button">随机选题</button>
+              <label><span><span data-i18n="分类">分类</span></span><select id="category"><option value="" data-i18n="全部分类">全部分类</option></select></label>
+              <label class="question-selector"><span><span data-i18n="题目">题目</span></span><select id="question"></select></label>
+              <button id="random-question" class="button secondary" type="button"><span data-i18n="随机选题">随机选题</span></button>
             </div>
-            <nav id="depth-meter" class="depth-meter" aria-label="选择题目层级"></nav>
+            <nav id="depth-meter" class="depth-meter" aria-label="选择题目层级" data-i18n-aria-label="选择题目层级"></nav>
             <article class="answer-card" aria-labelledby="question-title">
               <p id="layer-label" class="eyebrow"></p>
               <h3 id="question-title"></h3>
               <p id="layer-prompt"></p>
               <form id="answer-form">
-                <label for="answer">我的解释</label>
-                <textarea id="answer" rows="6" maxlength="8000" aria-describedby="draft-note answer-count" placeholder="先写下你的理解，不必一次就完整。"></textarea>
-                <div class="answer-meta"><p id="draft-note">回答仅留在本页内存中，刷新会清空；自评单独保存于本浏览器。</p><span id="answer-count">0 / 8000</span></div>
-                <button class="button primary" type="submit">提交解释，查看参考要点</button>
+                <label for="answer"><span data-i18n="我的解释">我的解释</span></label>
+                <textarea id="answer" rows="6" maxlength="8000" aria-describedby="draft-note answer-count" placeholder="先写下你的理解，不必一次就完整。" data-i18n-placeholder="先写下你的理解，不必一次就完整。"></textarea>
+                <div class="answer-meta"><p id="draft-note"><span data-i18n="回答仅留在本页内存中，刷新会清空；自评单独保存于本浏览器。">回答仅留在本页内存中，刷新会清空；自评单独保存于本浏览器。</span></p><span id="answer-count"><span data-i18n="0 / 8000">0 / 8000</span></span></div>
+                <button class="button primary" type="submit"><span data-i18n="提交解释，查看参考要点">提交解释，查看参考要点</span></button>
                 <p id="answer-message" role="status"></p>
               </form>
               <div id="self-check" hidden>
-                <details id="rubric-details"><summary>对照参考要点 / Self-check</summary><ul id="rubric"></ul></details>
+                <details id="rubric-details"><summary><span data-i18n="对照参考要点 / Self-check">对照参考要点 / Self-check</span></summary><ul id="rubric"></ul></details>
                 <div class="retry-area">
-                  <h4>Retry · 再解释一次</h4>
-                  <p>针对参考要点自行修正。这里不会调用 AI，也不会自动判定进步。</p>
-                  <details><summary>Before · 首次解释</summary><p id="before-answer" class="answer-text"></p></details>
-                  <label for="retry-answer">After · 我的修正</label>
-                  <textarea id="retry-answer" rows="4" maxlength="8000" placeholder="哪里需要补充？重新用自己的话解释。"></textarea>
-                  <p class="fine-print">修正文本仅留在本页内存中。填写不会自动改动自评。</p>
+                  <h4><span data-i18n="Retry · 再解释一次">Retry · 再解释一次</span></h4>
+                  <p><span data-i18n="对照参考要点，再用自己的话解释一次。">对照参考要点，再用自己的话解释一次。</span></p>
+                  <details><summary><span data-i18n="Before · 首次解释">Before · 首次解释</span></summary><p id="before-answer" class="answer-text"></p></details>
+                  <label for="retry-answer"><span data-i18n="After · 我的修正">After · 我的修正</span></label>
+                  <textarea id="retry-answer" rows="4" maxlength="8000" placeholder="哪里需要补充？重新用自己的话解释。" data-i18n-placeholder="哪里需要补充？重新用自己的话解释。"></textarea>
+                  <p class="fine-print"><span data-i18n="修正文本仅留在本页内存中。填写不会自动改动自评。">修正文本仅留在本页内存中。填写不会自动改动自评。</span></p>
                 </div>
-                <p>请自行判断当前这一层；参考要点不是自动评分。</p>
-                <div class="actions"><button id="rate-pass" class="button secondary" type="button">Pass · 自评通过</button><button id="rate-review" class="button secondary" type="button">Review · 需要复习</button></div>
+                <p><span data-i18n="请自行判断当前这一层；参考要点不是自动评分。">请自行判断当前这一层；参考要点不是自动评分。</span></p>
+                <div class="actions"><button id="rate-pass" class="button secondary" type="button"><span data-i18n="Pass · 自评通过">Pass · 自评通过</span></button><button id="rate-review" class="button secondary" type="button"><span data-i18n="Review · 需要复习">Review · 需要复习</span></button></div>
               </div>
               <p id="rating-status" class="rating-status" role="status"></p>
             </article>
             <section class="review-sheet" aria-labelledby="review-title">
-              <p class="eyebrow">CRASH SHEET / 下一次复习</p>
-              <h3 id="review-title">把还没讲清的，带到下一次。</h3>
+              <p class="eyebrow"><span data-i18n="CRASH SHEET / 下一次复习">CRASH SHEET / 下一次复习</span></p>
+              <h3 id="review-title"><span data-i18n="把还没讲清的，带到下一次。">把还没讲清的，带到下一次。</span></h3>
               <p id="review-count" role="status"></p>
               <ul id="review-list"></ul>
-              <button id="export-review" class="button primary" type="button" disabled>导出复习单 .md</button>
+              <button id="export-review" class="button primary" type="button" disabled><span data-i18n="导出复习单 .md">导出复习单 .md</span></button>
               <p id="export-message" class="fine-print" role="status"></p>
             </section>
           </div>
         </section>
-
-        <aside class="development-note" aria-labelledby="development-title">
-          <h2 id="development-title">一步一步，先把基础做实。</h2>
-          <p>当前支持手动练习、自评、再次解释和复习单；英文 Demo 为固定模拟示例。未接入 Live AI，不会请求 API Key。题目仍待人工审校。</p>
-        </aside>
       </main>
 
-      <footer class="site-footer"><span>Unscripted · Explain what you ship.</span><span>手动练习版 · 示例反馈为模拟</span><span id="page-status" role="status">静态首屏</span></footer>
+      <footer class="site-footer"><span><span data-i18n="Unscripted · 脱稿">Unscripted · 脱稿</span></span><a href="https://github.com/JUDYLP/stem"><span data-i18n="GitHub">GitHub</span></a><span><span data-i18n="回答不上传">回答不上传</span></span></footer>
     </div>
   </body>
 </html>

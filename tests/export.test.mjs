@@ -12,7 +12,7 @@ test('five rated layers include only latest review, independent of unrelated key
   assert.equal(reviewItems(questions,progress).length,3);
   const output=buildCrashSheet(questions,progress);
   assert.equal((output.match(/^## /gm)||[]).length,3);
-  assert.ok(output.includes('未经过 AI 诊断'));
+  assert.ok(output.includes('用参考要点自行检查解释。'));
   assert.ok(!output.includes('removed-question'));
 });
 test('empty and all-pass exports have truthful empty state', () => {
