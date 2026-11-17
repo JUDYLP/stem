@@ -18,13 +18,13 @@ AI-assisted coding can produce working code before a learner can explain its mec
 
 ### What it does
 
-The current prototype contains three technical questions with three layers each. Learners write an explanation before viewing reference points, retry in their own words, and choose Pass or Review themselves. The browser stores the latest self-rating. A Markdown Crash Sheet includes only the layers currently marked for review.
+The current prototype contains three technical questions with three layers each. Each reference point is a signal light: learners write an explanation before seeing the checklist, then set a green, amber, or red light per point and confirm the level. Only an all-green level is a Pass; amber and red stay in review. The browser keeps the latest rating per question and level, plus a 200-entry history that drives a heat matrix and a timeline with light changes. Answers are kept only if the learner turns on an opt-in switch, and the Markdown crash sheet now includes the light and missed points.
 
-An English demo illustrates the flow using fixed, explicitly simulated feedback. It does not call an AI model and does not modify practice records.
+A bilingual signal-light demo on the landing page illustrates the flow using fixed, explicitly simulated feedback. It does not call an AI model and does not modify practice records.
 
 ### How it is built
 
-HTML, CSS, native JavaScript modules, a JSON question bank, and browser localStorage. No account, backend, database, third-party frontend library, or API key is required. Node's built-in test runner checks the data contract, persistence fallback, and review export. Python's standard library serves local files during development.
+HTML, CSS, native JavaScript modules, a JSON question bank, and browser localStorage. No account, backend, database, third-party frontend library, or API key is required. Lights are CSS plus inline SVG, and motion respects the reduced-motion preference. Node's built-in test runner checks the data contract, light aggregation, history trimming, answer-switch privacy, persistence fallback, and review export. Python's standard library serves local files during development.
 
 ### AI use and limitations
 
@@ -45,7 +45,7 @@ Finish participant review of the questions, validate public deployment, collect 
 1. Show the tagline and explain the target learner's difficulty.
 2. Pick one question and show the three layers.
 3. Type an explanation, reveal reference points, and retry.
-4. Mark Review, export the current Crash Sheet, then demonstrate that Pass removes it.
+4. Set red and green lights, confirm a review level, show the heat matrix and timeline, then export the Crash Sheet and demonstrate that an all-green Pass removes it.
 5. If showing the English demo, keep Simulated visible and say no live AI call is made.
 6. Explain one real technical lesson and current limits.
 

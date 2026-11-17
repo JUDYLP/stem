@@ -110,3 +110,42 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 2026-11-17：Actions https://github.com/JUDYLP/stem/actions/runs/44043753475 completed/success，部署b72d769f4df63a84dd8a6d67a8964a232b9af63b（P0 d7ed2b3、P1 7f2e152、P2 b72d769）。独立Chrome打开https://judylp.github.io/stem/?lang=en，lang=en、3题、无中文（产品名除外）、390px无溢出、Runtime/Log错误为空。9项静态资源HTTP 200/MIME正确，SHA-256全部与git show HEAD:路径的提交内容一致。与Windows工作树首次比对不一致，进一步实证仅CRLF/LF换行差异，未误写“本地原始字节一致”。
 
 页面地址：https://judylp.github.io/stem/；英文评审入口：https://judylp.github.io/stem/?lang=en 。未引入Live AI或第三方依赖，progress v1保持不变。
+
+## 2026-11-17 信号灯视觉重做与练习记录
+
+范围：整站视觉重做（黑色仪表盘 + 三色信号灯）、灯判定、`unscripted.history.v1`、热力矩阵、时间线、回答保存开关、清空记录。执行者 Codex，无 Subagent；纯静态，无新依赖。
+
+### 自动测试
+
+- `node --test tests/*.test.mjs`：31/31 PASS（Node v24.18.0，WSL）。新增 `tests/lights.test.mjs`（4 项：灯色汇总、Pass 映射、循环顺序、外部建议校验）与 `tests/history.test.mjs`（7 项：200 条裁剪、默认不存原文、关闭开关删除原文、坏数据不改写、非法条目丢弃、最近灯色、清空保留开关）。
+- `node --check src/main.js`、`src/history.js`、`src/demo.js`、`src/export.js`：PASS。
+
+### 浏览器流程（Chrome 157 headless，CDP 独立上下文，http://127.0.0.1:5177）
+
+| 场景 | 实际观察 | 结果 |
+|---|---|---|
+| 首屏示例序列 | 加载后依次点亮 绿/绿/红，随后显示追问；Simulated 标注常驻；`Replay example` 可重播 | PASS |
+| 提交与逐条出现 | 提交后 3 条要点按 70ms 间隔出现，默认琥珀；层灯琥珀呼吸 | PASS |
+| 点灯与确认 | 绿/绿/红 → 层灯红；写入 history light=red、missed=[2]；progress=review；热量与时间线同步 | PASS |
+| 重做转绿 | 同一题层再次确认全绿：history 2 条（红→绿），progress=pass，热力格转绿，变化条显示红→绿 | PASS（截图） |
+| Ctrl+Enter | Redis L1 用 Ctrl+Enter 提交成功，rubric 展开 | PASS |
+| 导出 | 真实 Blob 文本含「灯色：漏掉了」「漏掉的要点：」，review 项与题目正确；pass 项不导出 | PASS（生成/触发） |
+| 回答开关 | 开启后条目带 answer；关闭后 localStorage 中 answer 全部删除，判定保留，提示文案正确 | PASS |
+| 刷新 | 判定、热力、时间线保留；回答与草稿清空 | PASS |
+| 清空记录 | 取消保留数据；确认后 history/progress 为空、热力全暗、导出禁用 | PASS |
+| 旧数据兼容 | 仅写入旧 progress（pass/review）时，热力按 绿/红 显示，统计正确，导出可用，时间线为空 | PASS |
+| 外部建议接口 | `Unscripted.suggestLights` 只显示提示条；progress/history 不变；点「采用建议」后才改灯，仍需确认 | PASS |
+| 悬停提示 | 格子 `::after` 显示题目、层级、最近时间；1440 桌面可见 | PASS |
+| 减少动态效果 | `prefers-reduced-motion: reduce` 下首屏三灯立即就位、追问直接显示，动画时长约 0 | PASS |
+| 对角线亮起 | 首次滚动到热力矩阵时格子按 (行+列)×90ms 依次出现，结束后移除类名不重复播放 | PASS（帧序列） |
+| 溢出 | 1440 scrollWidth=1440；390 scrollWidth=390；中英文各 1440/390 全页截图无横向滚动 | PASS |
+
+证据：本地忽略目录 `work/qa-signal-20261117/`（before/after 全页截图、flow 帧序列、motion.json、compat.json、flow/results.json）。截图与录帧不提交、不部署。
+
+### 未验证与限制
+
+- 真实 iOS/Android、Safari/Firefox、触屏点按提示、真实用户试用：NOT RUN。
+- 下载文件实际落盘：NOT RUN（只核对 Blob 内容与下载触发）。
+- 首屏序列与热力动效只在 Chrome headless 下观察帧序列，未做真实 60fps 录屏；帧间隔 110ms 的截图能确认涟漪与波纹存在，不能据此宣称逐帧流畅。
+- 题目技术内容仍待参赛者人工审校。
+- Live AI 仍为 BLOCKED；外部建议接口只验证了本地模块调用，没有真实模型接入。

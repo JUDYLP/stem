@@ -3,21 +3,30 @@
 **AI can write your code. Can you explain it?**
 
 纯前端解释训练器。公开预览：https://judylp.github.io/stem/ 。无需登录或 API Key；尚未接入 Live AI。
+英文入口：https://judylp.github.io/stem/?lang=en
+
+## 产品是什么
+
+每条参考要点是一盏信号灯：讲清楚了灯亮绿，讲到一半是琥珀，漏掉了是红，未作答是不发光的暗灰。整站是一块黑色仪表盘，颜色只来自灯。灯同时带 ✓ / ! / ✗ 形状，色弱用户不靠颜色也能分辨。
+
+练习闭环：读题 → 用自己的话解释 → 提交后逐条对照参考要点 → 点灯自评 → 确认判定 → 换一个说法 Retry → 在练习记录里看热力矩阵和时间线 → 导出 Markdown 复习单。
 
 ## 已实现
 
-- 390px窄屏完整题目提示、平衡标题换行与居中单列页脚；1440px/390px中英文截图验收见QA_REPORT。
-- 中英切换、独立语言偏好、浏览器语言初选及 ?lang=en；题目、参考要点、提示和复习单均支持英文。
+- 黑色信号灯视觉系统：`#000` 背景、`#0E0E10` 面板、三色灯（绿 `#22C55E` / 琥珀 `#F5A524` / 红 `#FF453A`）与多层光晕；正文 `#EDEDED`，次要文字 `#A1A1AA`。
+- 整站中英双语，语言优先级为有效 `?lang=`、已保存偏好、浏览器语言；偏好独立存 `unscripted.language`。
+- 三题九层（JUC / Redis / MySQL），每题 L1 Explain / L2 Reason / L3 Stress-test，每题每层 2–4 条参考要点。
+- 灯判定：每条要点可在 绿 / 琥珀 / 红 之间切换，默认琥珀待判定；该层规则为全绿→绿、有红→红、其余→琥珀。确认后映射到既有 Pass/Review（只有全绿是 Pass），旧 `unscripted.progress.v1` 记录仍可读取。
+- 练习记录：3×3 热力矩阵（悬停或聚焦显示题目与最近时间，点击跳转）、倒序时间线（灯色竖条、漏掉的要点、同题层灯色变化条）、绿/琥珀/红/未作答统计。
+- 「在本机保存我的回答，用于前后对比」默认关闭；开启后同一题层可展开对比首次与最近一次回答，关闭时删除已保存原文。
+- 循环判定写入 `unscripted.history.v1`，最多 200 条，超出删除最早；不改 `unscripted.progress.v1` 结构。
+- 导出当前 review 的 UTF-8 Markdown 复习单，含灯色与漏掉的要点。
+- 「清空记录」二次确认，同时清空 history 与 progress。
+- 独立英文模拟示例（首屏面板）依次点亮 绿、绿、红，再浮现追问；持续标注 Simulated，不写正式记录、不发请求。
+- 动效只由事件触发：点亮 300ms、红灯闪一次、琥珀待判定呼吸、热力格 600ms 过渡与按距离传播的波纹、首次进入视口按对角线亮起；`prefers-reduced-motion` 下全部直接切换。
+- Ctrl / Cmd + Enter 提交；回答仅存本页内存，刷新清空；存储损坏或禁用时保留原数据、降级为内存练习并提示。
 
-- 首页示例、三层框架和默认练习统一使用 volatile/i++；空复习单提示、5行自动增高输入框与接近上限才显示的计数。
-- 三道题、每题 L1 Explain / L2 Reason / L3 Stress-test；分类、选题与随机选题。
-- 先回答再查看参考要点；自评 Pass / Review 由用户主动选择。
-- Depth Meter 显示当前层和最后自评；当前 review 可跳回练习或导出 Markdown。
-- Retry 保留首次提交与修正文本在本页内存中，不调用模型、不自动判通过。
-- 独立英文 Demo，持续标注 Simulated，完全不使用正式练习存储或 AI 请求。
-- 损坏或禁用存储时保留原数据，改为内存练习并提示。
-
-题目已对照官方资料核验，**尚待参赛者人工审校**，见 docs/QUESTION_REVIEW.md。不得据此声称测量掌握程度或学习提升。
+题目已对照官方资料核验，**仍待参赛者人工审校**，见 docs/QUESTION_REVIEW.md。不得据此声称测量掌握程度或学习提升。
 
 ## Windows 启动
 
@@ -27,7 +36,7 @@
 python -m http.server 5174 --bind 127.0.0.1
 ```
 
-访问 http://127.0.0.1:5174/ ，练习入口为 #practice。按 Ctrl+C 停止服务。本机 python 为 3.14.2；py 启动器不可用，使用 python。无 npm 依赖和构建步骤；不要用 file:// 正式测试。
+访问 http://127.0.0.1:5174/ ，练习入口为 #practice 。按 Ctrl+C 停止服务。本机 python 为 3.14.2；py 启动器不可用，使用 python。无 npm 依赖和构建步骤；不要用 file:// 正式测试。
 
 ## 测试
 
@@ -36,36 +45,45 @@ python -m http.server 5174 --bind 127.0.0.1
 ```powershell
 node --test tests/*.test.mjs
 node --check src/main.js
+node --check src/history.js
 node --check src/demo.js
 ```
 
-20 项自动测试已通过。浏览器实际结果、mock 边界和未测项见 docs/QA_REPORT.md；T00 历史基线见 docs/SETUP_REPORT.md。
+31 项自动测试：题库 schema 与双语对齐、本地记录降级、灯色汇总规则、history 200 条裁剪、关闭开关不写原文、旧 progress 兼容、导出过滤与转义、英文导出。浏览器实际结果与未测项见 docs/QA_REPORT.md。
 
 ## 数据与隐私
 
-回答与 Retry 仅保存在页面内存，切题保留，刷新清空。localStorage 的 unscripted.progress.v1 仅保存题目×层级最后一次人工评价和更新时间，不存回答、Key 或身份信息。记录只属于当前浏览器与站点 origin；换端口/域名后不会自动同步。请避免多标签同时修改同一份记录，当前没有跨标签冲突合并。
+回答与 Retry 仅保存在页面内存，切题保留，刷新清空。localStorage 有三个键：
 
-默认页面只请求同源静态文件。没有账号、数据库、后端、遥测或第三方模型调用。英文 Demo 为固定模拟示例，不能称作真实 AI 诊断。
+- `unscripted.progress.v1`：题目×层级最后一次人工评价（pass/review）和更新时间，结构未变。
+- `unscripted.history.v1`：每次确认的判定 `{questionId, layer, ts, light, pointLights, missedPoints}`，最多 200 条；只有开启保存回答开关时才附加 `answer`，默认不保存，关闭时删除已存原文。
+- `unscripted.language`：语言偏好。
 
-导出内容仅包括当前 review，改为 pass 后移除；不统计历史失败次数。浏览器下载策略可能阻止保存：测试已核对 Blob 的 UTF-8 Markdown 内容和下载触发，当前隔离测试环境未核实磁盘落盘，请在实际浏览器确认下载。
+记录只属于当前浏览器与站点 origin；换端口/域名后不会自动同步。没有账号、数据库、后端、遥测或第三方模型调用；页面只请求同源静态文件。
 
-加载完成后 Demo 可断网操作；首次无缓存离线打开或断网刷新不保证可用。
+导出内容仅包括当前 review，改为 pass 后移除；灯色与漏点来自最近一次判定。浏览器下载策略可能阻止保存：测试已核对 Blob 的 UTF-8 Markdown 内容和下载触发，当前隔离测试环境未核实磁盘落盘，请在实际浏览器确认下载。
 
-## 文件与后续
+加载完成后示例可断网操作；首次无缓存离线打开或断网刷新不保证可用。
 
-- data/questions.json：三层题库。
-- src/questions.js：加载与 schema 校验。
-- src/storage.js：自评记录与故障降级。
-- src/main.js：手动练习 UI 与事件。
-- src/export.js：当前复习单。
-- src/demo.js：固定英文模拟交互，与正式存储隔离。
-- tests/：Node 内置测试。
-- docs/planning/：后续唯一维护的计划、任务与决策。
+## 文件
 
-后续需要：用户人工审校、有效Key下的浏览器AI成功响应/JSON补验（需授权）、正式提交材料。公开HTTPS已上线。用户指定远程为 https://github.com/JUDYLP/stem 。Pages workflow 与静态资源打包已准备，发布结果以 docs/DEPLOYMENT.md 和实际工作流状态为准。
+- `index.html` / `styles.css`：页面结构、信号灯 token 与动效。
+- `data/questions.json`：三层题库（中英）。
+- `src/lights.js`：灯色规则、灯组件、外部建议接口。
+- `src/history.js`：判定历史、200 条上限、回答开关。
+- `src/questions.js`：加载与 schema 校验。
+- `src/storage.js`：自评记录、清空与故障降级。
+- `src/main.js`：练习、判定、热力矩阵、时间线。
+- `src/i18n.js`：双语字典与语言解析。
+- `src/export.js`：复习单 Markdown。
+- `src/demo.js`：首屏模拟示例的点亮序列。
+- `tests/`：Node 内置测试。
+- `docs/planning/`：维护中的计划、任务与决策。
+
+## 后续
+
+T05 API Spike 因缺少有效 Key 为 BLOCKED，T06/T07 Live 未开工；T02 题目待人工审校；下载落盘、真实手机与其他浏览器未验证；视频与 Devpost 提交未完成。远程为 https://github.com/JUDYLP/stem ，Pages 由 `.github/workflows/pages.yml` 打包 11 个静态资源发布。
 
 ## AI 辅助开发披露
 
 由用户指导 Codex 编写和测试。未启动 Subagent，具体底层模型子型号无法从本次工具回执核实。产品没有 Live AI；开发使用 AI 与产品集成 AI 分开陈述。题目来源和人工审校状态已记录，不冒称用户已掌握所有技术。
-
-英文评审入口：https://judylp.github.io/stem/?lang=en 。语言优先级为有效URL参数、已保存偏好、浏览器语言；语言偏好使用独立键unscripted.language，进度v1结构不变。
