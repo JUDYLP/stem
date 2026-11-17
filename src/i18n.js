@@ -538,6 +538,202 @@ export const messages = {
   "未作答": {
     "zh": "未作答",
     "en": "Not answered"
+  },
+  "解释练习 · 无需 API Key": {
+    "zh": "解释练习 · 无需 API Key",
+    "en": "Explanation practice · No API key"
+  },
+  "AI 写完了，": {
+    "zh": "AI 写完了，",
+    "en": "AI wrote it."
+  },
+  "你讲得清吗？": {
+    "zh": "你讲得清吗？",
+    "en": "Can you explain it?"
+  },
+  "重播示例": {
+    "zh": "重播示例",
+    "en": "Replay example"
+  },
+  "模拟示例 · Simulated": {
+    "zh": "模拟示例 · Simulated",
+    "en": "Simulated example"
+  },
+  "volatile 的写对后续读可见。": {
+    "zh": "volatile 的写对后续读可见。",
+    "en": "A volatile write is visible to later reads."
+  },
+  "i++ 是读、算、写三步。": {
+    "zh": "i++ 是读、算、写三步。",
+    "en": "i++ is a read, a calculation, and a write."
+  },
+  "两个线程可能读到同一个 5，交错后丢失一次更新。": {
+    "zh": "两个线程可能读到同一个 5，交错后丢失一次更新。",
+    "en": "Both threads can read the same 5 and lose one update."
+  },
+  "追问：如果两个线程都先读到了 5？": {
+    "zh": "追问：如果两个线程都先读到了 5？",
+    "en": "Follow-up: what if both threads read 5 first?"
+  },
+  "练习框架": {
+    "zh": "练习框架",
+    "en": "Practice framework"
+  },
+  "练习": {
+    "zh": "练习",
+    "en": "Practice"
+  },
+  "3 道题 · 先写解释，再看参考要点 · 自己点灯判定": {
+    "zh": "3 道题 · 先写解释，再看参考要点 · 自己点灯判定",
+    "en": "3 questions · Explain before the checklist · You set the lights"
+  },
+  "本层灯色": {
+    "zh": "本层灯色",
+    "en": "Level light"
+  },
+  "参考要点": {
+    "zh": "参考要点",
+    "en": "Checklist"
+  },
+  "点一下灯，自己判断这一条：讲清了、还差一点、漏掉了。": {
+    "zh": "点一下灯，自己判断这一条：讲清了、还差一点、漏掉了。",
+    "en": "Click a lamp to judge each point: clear, almost, or missed."
+  },
+  "有一条外部建议，还没有生效。": {
+    "zh": "有一条外部建议，还没有生效。",
+    "en": "An external suggestion is waiting. It is not applied."
+  },
+  "采用建议": {
+    "zh": "采用建议",
+    "en": "Use suggestion"
+  },
+  "确认判定": {
+    "zh": "确认判定",
+    "en": "Confirm rating"
+  },
+  "只有全绿才是 Pass；琥珀和红都会进入复习单。": {
+    "zh": "只有全绿才是 Pass；琥珀和红都会进入复习单。",
+    "en": "Only all-green is a Pass. Almost and missed go to the review list."
+  },
+  "练习记录": {
+    "zh": "练习记录",
+    "en": "Practice log"
+  },
+  "灯亮在哪里。": {
+    "zh": "灯亮在哪里。",
+    "en": "Where the lights landed."
+  },
+  "每次判定留一盏灯：绿是讲清了，琥珀是还差一点，红是漏掉了。": {
+    "zh": "每次判定留一盏灯：绿是讲清了，琥珀是还差一点，红是漏掉了。",
+    "en": "Every rating leaves a light: green is clear, amber is almost, red is missed."
+  },
+  "热力矩阵": {
+    "zh": "热力矩阵",
+    "en": "Heat matrix"
+  },
+  "每个格子是最近一次判定": {
+    "zh": "每个格子是最近一次判定",
+    "en": "Each cell is the latest rating"
+  },
+  "题目与层级的最近灯色": {
+    "zh": "题目与层级的最近灯色",
+    "en": "Latest light per question and level"
+  },
+  "作答时间线": {
+    "zh": "作答时间线",
+    "en": "Rating timeline"
+  },
+  "还没有判定。提交一次解释并点灯确认，这里就会出现记录。": {
+    "zh": "还没有判定。提交一次解释并点灯确认，这里就会出现记录。",
+    "en": "No ratings yet. Submit an explanation, set the lights, and confirm."
+  },
+  "在本机保存我的回答，用于前后对比": {
+    "zh": "在本机保存我的回答，用于前后对比",
+    "en": "Keep my answers on this device for comparison"
+  },
+  "默认关闭。关闭时会删除已保存的回答，判定记录不受影响。": {
+    "zh": "默认关闭。关闭时会删除已保存的回答，判定记录不受影响。",
+    "en": "Off by default. Turning it off deletes saved answers; ratings stay."
+  },
+  "清空记录": {
+    "zh": "清空记录",
+    "en": "Clear records"
+  },
+  "取消": {
+    "zh": "取消",
+    "en": "Cancel"
+  },
+  "清空所有练习记录？": {
+    "zh": "清空所有练习记录？",
+    "en": "Clear all practice records?"
+  },
+  "热力矩阵、时间线和已保存的回答都会被删除，无法恢复。": {
+    "zh": "热力矩阵、时间线和已保存的回答都会被删除，无法恢复。",
+    "en": "The heat matrix, timeline, and saved answers will be deleted. This cannot be undone."
+  },
+  "已提交。对照要点，点灯判断每一条。": {
+    "zh": "已提交。对照要点，点灯判断每一条。",
+    "en": "Submitted. Compare with the checklist and set a light for each point."
+  },
+  "该层最近一次判定：{light}。": {
+    "zh": "该层最近一次判定：{light}。",
+    "en": "Latest rating for this level: {light}."
+  },
+  "已记录：{light}。": {
+    "zh": "已记录：{light}。",
+    "en": "Saved: {light}."
+  },
+  "灯变了，记得再点确认判定。": {
+    "zh": "灯变了，记得再点确认判定。",
+    "en": "Lights changed. Confirm the rating again."
+  },
+  "建议已采用，仍需你确认判定。": {
+    "zh": "建议已采用，仍需你确认判定。",
+    "en": "Suggestion applied. You still confirm the rating."
+  },
+  "绿 {green} / 琥珀 {amber} / 红 {red} / 未作答 {off}": {
+    "zh": "绿 {green} / 琥珀 {amber} / 红 {red} / 未作答 {off}",
+    "en": "Green {green} / Almost {amber} / Missed {red} / Untouched {off}"
+  },
+  "{count} 次判定": {
+    "zh": "{count} 次判定",
+    "en": "{count} ratings"
+  },
+  "同一题层的灯色变化": {
+    "zh": "同一题层的灯色变化",
+    "en": "Light history for this level"
+  },
+  "对比首次与最近一次回答": {
+    "zh": "对比首次与最近一次回答",
+    "en": "Compare the first and latest answers"
+  },
+  "首次": {
+    "zh": "首次",
+    "en": "First"
+  },
+  "最近一次": {
+    "zh": "最近一次",
+    "en": "Latest"
+  },
+  "已开启：之后的判定会保存回答原文，仅在本机。": {
+    "zh": "已开启：之后的判定会保存回答原文，仅在本机。",
+    "en": "On: future ratings also keep the answer text on this device."
+  },
+  "已关闭：已保存的回答原文已删除。": {
+    "zh": "已关闭：已保存的回答原文已删除。",
+    "en": "Off: saved answer text has been deleted."
+  },
+  "记录已清空。": {
+    "zh": "记录已清空。",
+    "en": "Records cleared."
+  },
+  "灯色": {
+    "zh": "灯色",
+    "en": "Light"
+  },
+  "漏掉的要点：": {
+    "zh": "漏掉的要点：",
+    "en": "Missed points:"
   }
 };
 export const LANGUAGE_KEY = 'unscripted.language';
