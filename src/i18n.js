@@ -522,6 +522,22 @@ export const messages = {
   "两个线程都可能读到 5、计算 6、写回 6。可见性不会让整个读—改—写变成原子操作；可以使用原子增量，或用同一把锁保护整个操作。": {
     "zh": "两个线程都可能读到 5、计算 6、写回 6。可见性不会让整个读—改—写变成原子操作；可以使用原子增量，或用同一把锁保护整个操作。",
     "en": "Both threads can read 5, calculate 6, and write 6. Visibility does not make read-modify-write atomic. Use an atomic increment or protect the entire operation with the same lock."
+  },
+  "讲清了": {
+    "zh": "讲清了",
+    "en": "Clear"
+  },
+  "还差一点": {
+    "zh": "还差一点",
+    "en": "Almost"
+  },
+  "漏掉了": {
+    "zh": "漏掉了",
+    "en": "Missed"
+  },
+  "未作答": {
+    "zh": "未作答",
+    "en": "Not answered"
   }
 };
 export const LANGUAGE_KEY = 'unscripted.language';
