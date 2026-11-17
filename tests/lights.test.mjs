@@ -40,3 +40,17 @@ test('external light suggestions are validated and never applied by themselves',
   clearSuggestion('q', 'L1');
   assert.equal(getSuggestion('q', 'L1'), null);
 });
+
+test('legacy progress records stay readable and map to lights', async () => {
+  const { parseProgress } = await import('../src/storage.js');
+  const parsed = parseProgress(JSON.stringify({
+    schemaVersion: 1,
+    items: {
+      'juc-volatile-atomicity-v2::L2': { status: 'pass', updatedAt: '2026-11-15T08:00:00.000Z' },
+      'redis-expiration-v2::L1': { status: 'review', updatedAt: '2026-11-15T09:00:00.000Z' },
+    },
+  }));
+  assert.equal(parsed.items['juc-volatile-atomicity-v2::L2'].status, 'pass');
+  assert.equal(lightForStatus(parsed.items['juc-volatile-atomicity-v2::L2'].status), 'green');
+  assert.equal(lightForStatus(parsed.items['redis-expiration-v2::L1'].status), 'red');
+});
