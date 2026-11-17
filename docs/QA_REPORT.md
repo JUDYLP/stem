@@ -152,4 +152,4 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 
 ### 本轮部署确认
 
-2026-11-17：Actions https://github.com/JUDYLP/stem/actions/runs/44051220377 completed/success，部署 `bf104ab`（7964d98 灯组件、ea029e2 history、b3e28e4 UI、bf104ab 文档）。独立 Chrome 打开 https://judylp.github.io/stem/ ：body 背景为 `rgb(0,0,0)`、9 个热力格、首屏三灯 绿/绿/红 且追问出现；11 个静态资源 HTTP 200、MIME 正确、SHA-256 与 `git show HEAD:` 逐项一致；英文站无中文（产品名除外）；1440/390 均无横向溢出；Console 无错误。线上首页为全暗灰空状态，符合未作答预期。
+2026-11-17：Actions https://github.com/JUDYLP/stem/actions/runs/44051497681 completed/success，部署最终代码 `4c0e52f`（7964d98 灯组件、ea029e2 history、b3e28e4 UI、4c0e52f 收尾修复；此前 44051220377 已成功部署 bf104ab）。独立 Chrome 打开 https://judylp.github.io/stem/ ：body 背景为 `rgb(0,0,0)`、9 个热力格、首屏三灯 绿/绿/红 且追问出现；11 个静态资源 HTTP 200、MIME 正确、SHA-256 与 `git show HEAD:` 逐项一致；英文站无中文（产品名除外）；1440/390 均无横向溢出；Console 无错误。线上首页为全暗灰空状态，符合未作答预期。
