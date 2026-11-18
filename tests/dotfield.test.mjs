@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  falloff, tintStrength, waveAlpha, spacingFor,
+  falloff, tintStrength, waveAlpha, spacingFor, spillAllowed,
   LAMP_RADIUS, MAX_TINT, BASE_MIN, BASE_MAX,
   SPACING_DESKTOP, SPACING_NARROW,
 } from '../src/dotfield.js';
@@ -29,14 +29,14 @@ test('tint strength never exceeds the 0.5 ceiling', () => {
   assert.ok(tintStrength(120) < MAX_TINT * 0.2);
 });
 
-test('dot breathing stays inside 0.06-0.10 and quietens to 30%', () => {
+test('dot breathing stays inside 0.12-0.20 and quietens to 30%', () => {
   for (let time = 0; time < 30000; time += 250) {
     const alpha = waveAlpha(120, 80, time);
     assert.ok(alpha >= BASE_MIN - 1e-9 && alpha <= BASE_MAX + 1e-9, `alpha ${alpha} at ${time}`);
   }
   const loud = waveAlpha(120, 80, 5000, 1);
   const quiet = waveAlpha(120, 80, 5000, 0.3);
-  assert.ok(Math.abs(quiet - 0.08) < Math.abs(loud - 0.08));
+  assert.ok(Math.abs(quiet - 0.16) < Math.abs(loud - 0.16));
   assert.notEqual(waveAlpha(0, 0, 0), waveAlpha(0, 0, 4000));
 });
 
@@ -45,4 +45,12 @@ test('dot spacing is 28px on desktop and 32px on a 390px screen', () => {
   assert.equal(spacingFor(481), SPACING_DESKTOP);
   assert.equal(spacingFor(480), SPACING_NARROW);
   assert.equal(spacingFor(390), SPACING_NARROW);
+});
+
+test('only lamps near the hero panel edge spill onto the page background', () => {
+  assert.equal(spillAllowed(0, true), true);
+  assert.equal(spillAllowed(80, true), true);
+  assert.equal(spillAllowed(81, true), false);
+  assert.equal(spillAllowed(10, false), false);
+  assert.equal(spillAllowed(Number.NaN, true), false);
 });

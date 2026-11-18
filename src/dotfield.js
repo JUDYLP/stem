@@ -7,10 +7,10 @@ export const NARROW_MAX = 480;
 export const LAMP_RADIUS = 160;
 export const MAX_TINT = 0.5;
 export const RIPPLE_MS = 1200;
-export const RIPPLE_SPREAD = 300;
-export const RIPPLE_BAND = 46;
-export const BASE_MIN = 0.06;
-export const BASE_MAX = 0.10;
+export const RIPPLE_SPREAD = 320;
+export const RIPPLE_BAND = 56;
+export const BASE_MIN = 0.12;
+export const BASE_MAX = 0.20;
 
 export function spacingFor(width) {
   return width <= NARROW_MAX ? SPACING_NARROW : SPACING_DESKTOP;
@@ -29,6 +29,13 @@ export function falloff(distance, radius = LAMP_RADIUS) {
 
 export function tintStrength(distance, radius = LAMP_RADIUS) {
   return falloff(distance, radius) * MAX_TINT;
+}
+
+// Only the hero example panel is a page-level light source. Other lamps live
+// inside opaque panels: if they sit more than 80px from that panel edge they
+// must not paint stray dots outside it.
+export function spillAllowed(distanceToEdge, isHeroPanel = false, limit = 80) {
+  return isHeroPanel && Number.isFinite(distanceToEdge) && distanceToEdge <= limit;
 }
 
 // Two slow sines keep the surface alive without moving a single dot.
@@ -51,6 +58,7 @@ const LEVELS = 16;
 const MAX_DRAW_ALPHA = 0.8;
 // A little under 33.3ms so a 60Hz display always gets every second frame.
 const FRAME_BUDGET = 1000 / 30 - 2;
+const PANEL_SELECTOR = '.example-panel, .practice-panel, .records-panel, .answer-card, .layer-body';
 const LAMP_SELECTOR = [
   '.lamp[data-state="green"]', '.lamp[data-state="amber"]', '.lamp[data-state="red"]',
   '.heat-cell[data-state="green"]', '.heat-cell[data-state="amber"]', '.heat-cell[data-state="red"]',
@@ -100,13 +108,22 @@ export function initDotfield(canvas) {
 
   function collectLamps() {
     const found = [];
-    for (const element of document.querySelectorAll(LAMP_SELECTOR)) {
+    const root = document.querySelector('main') || document;
+    for (const element of root.querySelectorAll(LAMP_SELECTOR)) {
       const rect = element.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) continue;
       if (rect.bottom < -40 || rect.top > height + 40 || rect.right < -40 || rect.left > width + 40) continue;
       const color = element.dataset.state;
       if (!STATE_INDEX[color]) continue;
-      found.push({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, color });
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const panel = element.closest(PANEL_SELECTOR);
+      if (panel) {
+        const panelRect = panel.getBoundingClientRect();
+        const distanceToEdge = Math.min(x - panelRect.left, panelRect.right - x, y - panelRect.top, panelRect.bottom - y);
+        if (!spillAllowed(distanceToEdge, panel.classList.contains('example-panel'))) continue;
+      }
+      found.push({ x, y, color });
     }
     lamps = found;
   }
@@ -145,7 +162,8 @@ export function initDotfield(canvas) {
         const dy = dot.y - ripple.y;
         const distance = Math.hypot(dx, dy);
         if (Math.abs(distance - radius) > RIPPLE_BAND) continue;
-        const strength = 0.34 * (1 - age / RIPPLE_MS) * falloff(Math.abs(distance - radius), RIPPLE_BAND) * intensity;
+        const fade = Math.pow(1 - age / RIPPLE_MS, 0.6);
+        const strength = 0.8 * fade * falloff(Math.abs(distance - radius), RIPPLE_BAND) * intensity;
         if (strength > bestTint) {
           bestTint = strength;
           alpha = Math.min(0.7, alpha + strength);
@@ -274,6 +292,7 @@ export function initDotfield(canvas) {
     get lampCount() { return lamps.length; },
     get quiet() { return quiet; },
     get reduced() { return reduced; },
+    get rippleCount() { return ripples.length; },
   };
   window.__dotfield = api;
   return api;
