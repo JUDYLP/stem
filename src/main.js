@@ -8,14 +8,38 @@ import { initDotfield } from './dotfield.js';
 import {
   createLamp, createLightIcon, setLampState, ignite, nextLight, summarizeLights,
   statusForLight, lightForStatus, lightLabel, keyToLight, pointLabel, pointAnnouncement,
-  getSuggestion, clearSuggestion, suggestLights,
+  getSuggestion, clearSuggestion, suggestLights, LIGHT_RGB,
 } from './lights.js';
 
 const $ = id => document.getElementById(id);
 initLanguage(location.search, navigator.language);
 applyLanguage();
 initDotfield($('dotfield'));
+initPanelGlow();
 initDemo();
+
+const edgeTimers = new WeakMap();
+const EDGE_PANEL = '.example-panel, .practice-panel, .records-panel, .answer-card';
+
+function initPanelGlow() {
+  window.addEventListener('lamp:lit', event => {
+    const element = event.detail && event.detail.element;
+    if (!element || typeof element.closest !== 'function') return;
+    const panel = element.closest(EDGE_PANEL);
+    const color = LIGHT_RGB[element.dataset.state];
+    if (!panel || !color) return;
+    const panelRect = panel.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
+    panel.style.setProperty('--edge-x', `${rect.left + rect.width / 2 - panelRect.left}px`);
+    panel.style.setProperty('--edge-y', `${rect.top + rect.height / 2 - panelRect.top}px`);
+    panel.style.setProperty('--edge-color', `rgba(${color}, .7)`);
+    panel.classList.remove('edge-lit');
+    void panel.offsetWidth;
+    panel.classList.add('edge-lit');
+    clearTimeout(edgeTimers.get(panel));
+    edgeTimers.set(panel, setTimeout(() => panel.classList.remove('edge-lit'), 900));
+  });
+}
 
 const store = createProgressStore();
 const log = createHistoryStore();

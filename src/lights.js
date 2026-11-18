@@ -6,6 +6,7 @@ export const LIGHT_STATES = ['off', 'green', 'amber', 'red'];
 export const POINT_LIGHTS = ['green', 'amber', 'red'];
 const ICONS = { green: 'ic-check', amber: 'ic-bang', red: 'ic-x' };
 const LABELS = { green: '讲清了', amber: '还差一点', red: '漏掉了', off: '未作答' };
+export const LIGHT_RGB = { green: '34, 197, 94', amber: '245, 165, 36', red: '255, 69, 58' };
 
 // Layer light rule: every point green -> green; any red -> red; otherwise amber.
 export function summarizeLights(lights) {
