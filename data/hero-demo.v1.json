@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "pointIds": ["two-ops", "both-read-1", "fix"],
+  "options": [
+    {
+      "id": "comment-atomic",
+      "text": "注释说了是原子的，没问题",
+      "textEn": "The comment says atomic, so it's fine."
+    },
+    {
+      "id": "single-thread",
+      "text": "Redis 单线程，所以安全",
+      "textEn": "Redis is single-threaded, so it's safe."
+    },
+    {
+      "id": "gap-oversell",
+      "text": "可能超卖，因为读和写之间有空隙；应该用 DECR 并检查结果",
+      "textEn": "It could oversell: the read and write can interleave. Use DECR and check the result."
+    }
+  ],
+  "judgments": {
+    "comment-atomic": {
+      "followup": "如果两个请求都先读到 1，再各自写回 0，库存会变成几？",
+      "followupEn": "If both requests read 1 first and each writes 0, what is the stock?",
+      "points": [
+        {
+          "pointId": "two-ops",
+          "light": "red",
+          "reason": "GET 和 SET 是两次独立操作，注释不会让它们变成原子。",
+          "reasonEn": "GET and SET are two separate operations; a comment cannot make them atomic.",
+          "quote": "原子的",
+          "quoteEn": "atomic"
+        },
+        {
+          "pointId": "both-read-1",
+          "light": "red",
+          "reason": "两个请求都可能读到 1，然后各自写回 0，导致超卖。",
+          "reasonEn": "Both requests can read 1 and then write 0, causing an oversell.",
+          "quote": "没问题",
+          "quoteEn": "fine"
+        },
+        {
+          "pointId": "fix",
+          "light": "red",
+          "reason": "没有处理读与写之间的空隙；应使用 DECR 并检查结果，或用 Lua 脚本。",
+          "reasonEn": "The gap between read and write is unhandled; use DECR and check the result, or a Lua script.",
+          "quote": "原子的",
+          "quoteEn": "atomic"
+        }
+      ]
+    },
+    "single-thread": {
+      "followup": "单线程只是不并行执行命令；GET 和 SET 之间仍可能插入另一个请求，对吗？",
+      "followupEn": "Single-threaded means commands do not run in parallel; another request can still run between GET and SET, right?",
+      "points": [
+        {
+          "pointId": "two-ops",
+          "light": "red",
+          "reason": "单线程不代表 GET 和 SET 合并成一次操作，它们仍然是两步。",
+          "reasonEn": "Single-threaded does not merge GET and SET into one operation; they are still two steps.",
+          "quote": "单线程",
+          "quoteEn": "single-threaded"
+        },
+        {
+          "pointId": "both-read-1",
+          "light": "red",
+          "reason": "两个请求仍可能都读到 1；单线程不等于整个读—改—写原子化。",
+          "reasonEn": "Both requests can still read 1; single-threaded does not make the read-modify-write atomic.",
+          "quote": "安全",
+          "quoteEn": "safe"
+        },
+        {
+          "pointId": "fix",
+          "light": "red",
+          "reason": "这条回答没有给出修复；DECR 并检查结果或用 Lua 才能保护检查与扣减。",
+          "reasonEn": "This answer gives no fix; DECR with a result check or Lua protects the check and deduction.",
+          "quote": "安全",
+          "quoteEn": "safe"
+        }
+      ]
+    },
+    "gap-oversell": {
+      "followup": "",
+      "followupEn": "",
+      "points": [
+        {
+          "pointId": "two-ops",
+          "light": "green",
+          "reason": "你指出 GET 和 SET 是两次独立操作。",
+          "reasonEn": "You point out that GET and SET are two separate operations.",
+          "quote": "读和写之间",
+          "quoteEn": "read and write"
+        },
+        {
+          "pointId": "both-read-1",
+          "light": "green",
+          "reason": "两个请求都可能读到 1，确实会超卖。",
+          "reasonEn": "Both requests can read 1, so the item can indeed oversell.",
+          "quote": "超卖",
+          "quoteEn": "oversell"
+        },
+        {
+          "pointId": "fix",
+          "light": "green",
+          "reason": "用 DECR 并检查结果，能保证只有成功扣减的请求继续；Lua 也能做到。",
+          "reasonEn": "DECR with a result check ensures only a successful deduction continues; Lua can do the same.",
+          "quote": "DECR",
+          "quoteEn": "DECR"
+        }
+      ]
+    }
+  }
+}

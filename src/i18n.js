@@ -833,6 +833,59 @@ export const messages = {
     "zh": "最近 {count} 次：{history}",
     "en": "Last {count} ratings: {history}"
   }
+,
+  "AI 生成 · 库存服务": {
+    "zh": "AI 生成 · 库存服务",
+    "en": "AI-generated · Inventory service"
+  },
+  "两个请求同时下单，库存只剩 1，会发生什么？": {
+    "zh": "两个请求同时下单，库存只剩 1，会发生什么？",
+    "en": "Two requests place orders at the same time; stock is 1. What happens?"
+  },
+  "GET 和 SET 是两次独立操作。": {
+    "zh": "GET 和 SET 是两次独立操作。",
+    "en": "GET and SET are two separate operations."
+  },
+  "两个请求可能都读到 1，导致超卖。": {
+    "zh": "两个请求可能都读到 1，导致超卖。",
+    "en": "Both requests can read 1, overselling the item."
+  },
+  "修复用 DECR 并检查结果，或用 Lua 脚本。": {
+    "zh": "修复用 DECR 并检查结果，或用 Lua 脚本。",
+    "en": "Fix it with DECR and check the result, or use a Lua script."
+  },
+  "你的回答": {
+    "zh": "你的回答",
+    "en": "Your answer"
+  },
+  "选一个回答，看看预设判定": {
+    "zh": "选一个回答，看看预设判定",
+    "en": "Pick an answer to see the preset judgment"
+  },
+  "预设判定，未调用 AI": {
+    "zh": "预设判定，未调用 AI",
+    "en": "Preset judgment, no AI call"
+  },
+  "讲清了，试试 L3？": {
+    "zh": "讲清了，试试 L3？",
+    "en": "Clear. Try L3?"
+  },
+  "追问：{question}": {
+    "zh": "追问：{question}",
+    "en": "Follow-up: {question}"
+  },
+  "预设判定：{green} 条讲清了，{amber} 条还差一点，{red} 条漏掉了。": {
+    "zh": "预设判定：{green} 条讲清了，{amber} 条还差一点，{red} 条漏掉了。",
+    "en": "Preset judgment: {green} clear, {amber} almost, {red} missed."
+  },
+  "代码能跑，不代表你讲得出它为什么能跑。": {
+    "zh": "代码能跑，不代表你讲得出它为什么能跑。",
+    "en": "Code that runs isn't code you can explain."
+  },
+  "示例判定暂不可用": {
+    "zh": "示例判定暂不可用",
+    "en": "The preset judgment is unavailable."
+  }
 };
 export const LANGUAGE_KEY = 'unscripted.language';
 let language = 'zh';

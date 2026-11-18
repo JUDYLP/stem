@@ -15,10 +15,31 @@ const $ = id => document.getElementById(id);
 initLanguage(location.search, navigator.language);
 applyLanguage();
 initDotfield($('dotfield'));
-initPanelGlow();
-initDemo();
 
+const sectionGlows = new Map();
 const edgeTimers = new WeakMap();
+
+function setSectionGlow(name, rgb = '255, 255, 255', alpha = 0.1) {
+  const glow = sectionGlows.get(name);
+  if (glow) glow.style.backgroundColor = `rgba(${rgb}, ${alpha})`;
+}
+
+function initSectionGlows() {
+  for (const element of document.querySelectorAll('.section-glow')) sectionGlows.set(element.dataset.glow, element);
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (reduced || !('IntersectionObserver' in window)) {
+    for (const element of sectionGlows.values()) element.classList.add('is-visible');
+    return;
+  }
+  const observer = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.classList.add('is-visible');
+      observer.unobserve(entry.target);
+    }
+  }, { threshold: .18 });
+  for (const element of sectionGlows.values()) observer.observe(element);
+}
 const EDGE_PANEL = '.example-panel, .practice-panel, .records-panel, .answer-card';
 
 function initPanelGlow() {
@@ -40,6 +61,10 @@ function initPanelGlow() {
     edgeTimers.set(panel, setTimeout(() => panel.classList.remove('edge-lit'), 900));
   });
 }
+
+initPanelGlow();
+initSectionGlows();
+initDemo();
 
 const store = createProgressStore();
 const log = createHistoryStore();
@@ -121,6 +146,7 @@ function renderLayerLight() {
   const lamp = createLamp(light);
   if (d.submitted !== null && light === 'amber' && !d.confirmed) lamp.classList.add('is-pending');
   $('layer-light-slot').replaceChildren(lamp);
+  setSectionGlow('practice', LIGHT_RGB[light] || '255, 255, 255', 0.1);
 }
 
 function announcePoint(index, light) {
@@ -340,6 +366,15 @@ function renderRecords({ changed = null } = {}) {
     }
   }
 
+  const litCells = counts.green + counts.amber + counts.red;
+  if (litCells) {
+    const red = Math.round((counts.green * 34 + counts.amber * 245 + counts.red * 255) / litCells);
+    const green = Math.round((counts.green * 197 + counts.amber * 165 + counts.red * 69) / litCells);
+    const blue = Math.round((counts.green * 94 + counts.amber * 36 + counts.red * 58) / litCells);
+    setSectionGlow('records', `${red}, ${green}, ${blue}`, 0.1);
+  } else {
+    setSectionGlow('records', '255, 255, 255', 0.1);
+  }
   $('heat-stats').replaceChildren(
     heatStat('green', '绿灯', counts.green),
     heatStat('amber', '琥珀灯', counts.amber),
@@ -573,6 +608,7 @@ document.querySelectorAll('[data-lang]').forEach(button => button.addEventListen
   url.searchParams.set('lang', getLanguage());
   window.history.replaceState(null, '', url);
   applyLanguage();
+  window.dispatchEvent(new CustomEvent('language:changed'));
   if (questions.length) {
     $('category').options[0].textContent = t('全部分类');
     for (const option of $('question').options) option.textContent = localized(questions.find(question => question.id === option.value), 'title');
