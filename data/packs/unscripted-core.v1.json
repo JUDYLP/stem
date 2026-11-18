@@ -1,0 +1,361 @@
+{
+  "schemaVersion": 1,
+  "packId": "unscripted-core",
+  "packVersion": "1.0.0",
+  "title": {
+    "zh-CN": "技术理解基础",
+    "en": "Technical Understanding Essentials"
+  },
+  "description": {
+    "zh-CN": "Java 并发、Redis 过期与 MySQL 一致性读的三层解释练习。",
+    "en": "Three-level explanation practice on Java concurrency, Redis expiration, and MySQL consistent reads."
+  },
+  "defaultLanguage": "en",
+  "supportedLanguages": [
+    "zh-CN",
+    "en"
+  ],
+  "questions": [
+    {
+      "id": "juc-volatile-atomicity-v2",
+      "category": {
+        "zh-CN": "JUC",
+        "en": "JUC"
+      },
+      "title": {
+        "zh-CN": "为什么 volatile 不能让 i++ 成为线程安全操作？",
+        "en": "Why does volatile not make i++ thread-safe?"
+      },
+      "review": {
+        "status": "unreviewed"
+      },
+      "layers": [
+        {
+          "id": "L1",
+          "label": "Explain",
+          "prompt": {
+            "zh-CN": "在 Java 中，volatile 字段的读写提供什么保证？它能保证 i++ 的原子性吗？",
+            "en": "What guarantees do reads and writes of a volatile field provide in Java? Do they make i++ atomic?"
+          },
+          "rubric": [
+            {
+              "rubricId": "juc-volatile-atomicity-v2-l1-c01",
+              "criterion": {
+                "zh-CN": "对同一 volatile 字段的写与后续读建立 happens-before 关系，提供相应的可见性保证。",
+                "en": "A write to a volatile field happens-before a subsequent read of that field, providing the corresponding visibility guarantee."
+              }
+            },
+            {
+              "rubricId": "juc-volatile-atomicity-v2-l1-c02",
+              "criterion": {
+                "zh-CN": "单次读写的原子性不等于整个读-改-写表达式的原子性。",
+                "en": "Atomic individual reads and writes do not make an entire read-modify-write expression atomic."
+              }
+            },
+            {
+              "rubricId": "juc-volatile-atomicity-v2-l1-c03",
+              "criterion": {
+                "zh-CN": "volatile 不会自动让 i++ 这样的复合操作互斥执行。",
+                "en": "volatile does not automatically make compound operations such as i++ mutually exclusive."
+              }
+            }
+          ]
+        },
+        {
+          "id": "L2",
+          "label": "Reason",
+          "prompt": {
+            "zh-CN": "初值 i = 5，两个线程各执行一次 volatile int 的 i++，无其他写入；主线程在两个线程结束后读取结果。\n分别给出最终为 6 和 7 的合法执行顺序。请按“读 → 计算 → 写”推演，而不是只说“线程不安全”。",
+            "en": "A volatile int i starts at 5. Two threads each execute i++ once, with no other writes. The main thread reads the result after both threads finish.\nGive legal execution orders that produce 6 and 7. Trace read → calculate → write rather than just saying “not thread-safe.”"
+          },
+          "rubric": [
+            {
+              "rubricId": "juc-volatile-atomicity-v2-l2-c01",
+              "criterion": {
+                "zh-CN": "最终为 6：两个线程都先读取 5、各计算 6，再分别写回 6，发生丢失更新。",
+                "en": "For 6: both threads read 5, each calculates 6, and both write 6. One update is lost."
+              }
+            },
+            {
+              "rubricId": "juc-volatile-atomicity-v2-l2-c02",
+              "criterion": {
+                "zh-CN": "最终为 7：一个线程先完成读 5、写 6，另一个随后读 6、写 7。",
+                "en": "For 7: one thread reads 5 and writes 6 before the other reads 6 and writes 7."
+              }
+            },
+            {
+              "rubricId": "juc-volatile-atomicity-v2-l2-c03",
+              "criterion": {
+                "zh-CN": "volatile 的可见性没有把读、计算、写合并为一个不可交错的操作；主线程等待结束不阻止工作线程之间的竞争。",
+                "en": "Visibility does not combine reading, calculating, and writing into one indivisible operation. Waiting for both workers to finish does not prevent them from racing."
+              }
+            }
+          ]
+        },
+        {
+          "id": "L3",
+          "label": "Stress-test",
+          "prompt": {
+            "zh-CN": "改用 AtomicInteger stock，初值为 1。两个线程各执行一次：\nif (stock.get() > 0) { stock.decrementAndGet(); 发货(); }\n无其他修改。是否可能发出两件商品？给出交错过程，再提出一个保证“库存不为负且最多发货一次”的修复。假设发货本身不会失败。",
+            "en": "Now use an AtomicInteger stock initialized to 1. Two threads each execute:\nif (stock.get() > 0) { stock.decrementAndGet(); ship(); }\nThere are no other changes. Could two items ship? Show the interleaving, then propose a fix that keeps stock nonnegative and ships at most once. Assume shipping cannot fail."
+          },
+          "rubric": [
+            {
+              "rubricId": "juc-volatile-atomicity-v2-l3-c01",
+              "criterion": {
+                "zh-CN": "可能：两个线程均先读到 1 并通过检查，随后分别原子递减到 0 和 -1，各自发货。",
+                "en": "Yes. Both threads can read 1 and pass the check, then atomically decrement to 0 and -1 respectively and each ship an item."
+              }
+            },
+            {
+              "rubricId": "juc-volatile-atomicity-v2-l3-c02",
+              "criterion": {
+                "zh-CN": "get 和 decrementAndGet 各自原子，不代表“检查后扣减”整体原子；单独换原子类型不足以保护条件。",
+                "en": "get and decrementAndGet are individually atomic; the check-then-decrement sequence is not. Changing the type alone does not protect the condition."
+              }
+            },
+            {
+              "rubricId": "juc-volatile-atomicity-v2-l3-c03",
+              "criterion": {
+                "zh-CN": "可用同一锁包住检查和扣减，只有成功扣减者才发货；或循环读取正库存，以 compareAndSet(old, old-1) 成功作为发货资格，失败则重读重试。",
+                "en": "Use the same lock around the check and decrement, allowing only a successful decrement to authorize shipping. Alternatively, repeatedly read positive stock and use compareAndSet(old, old-1); ship only on success, otherwise reread and retry."
+              }
+            },
+            {
+              "rubricId": "juc-volatile-atomicity-v2-l3-c04",
+              "criterion": {
+                "zh-CN": "不能先无条件递减再仅检查是否非负来声称满足库存永不为负；修复必须同时解释库存约束与发货资格。",
+                "en": "Unconditionally decrementing first and only then checking for a nonnegative value does not keep stock nonnegative at all times. Explain both the stock invariant and permission to ship."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "redis-expiration-v2",
+      "category": {
+        "zh-CN": "Redis",
+        "en": "Redis"
+      },
+      "title": {
+        "zh-CN": "Redis 的过期时间如何生效，又如何被改变？",
+        "en": "How does Redis expiration work, and what can change it?"
+      },
+      "review": {
+        "status": "unreviewed"
+      },
+      "layers": [
+        {
+          "id": "L1",
+          "label": "Explain",
+          "prompt": {
+            "zh-CN": "对已有键执行 EXPIRE key 60 是什么意思？所有键默认都有过期时间吗？",
+            "en": "What does EXPIRE key 60 do to an existing key? Do all keys have an expiration time by default?"
+          },
+          "rubric": [
+            {
+              "rubricId": "redis-expiration-v2-l1-c01",
+              "criterion": {
+                "zh-CN": "EXPIRE 为键设置以秒为单位的生存时间。",
+                "en": "EXPIRE sets a key’s time to live in seconds."
+              }
+            },
+            {
+              "rubricId": "redis-expiration-v2-l1-c02",
+              "criterion": {
+                "zh-CN": "普通新建键默认没有过期时间，除非写入时显式设置或随后添加。",
+                "en": "A normally created key has no expiration unless one is explicitly set on creation or added later."
+              }
+            },
+            {
+              "rubricId": "redis-expiration-v2-l1-c03",
+              "criterion": {
+                "zh-CN": "到期键会被过期机制移除；不能把过期时间当作精确的业务任务调度器。",
+                "en": "Expired keys are removed by the expiration mechanism; expiration is not a precise scheduler for business tasks."
+              }
+            }
+          ]
+        },
+        {
+          "id": "L2",
+          "label": "Reason",
+          "prompt": {
+            "zh-CN": "一个带 TTL 的键已经到期，但之后一直没有客户端读取它。\n如果只在 GET 时检查过期，会有什么问题？Redis 为什么还需要主动过期？能否用“到期”保证恰好在那一毫秒执行业务回调？",
+            "en": "A key with a TTL has expired, but no client reads it afterward.\nWhat would go wrong if expiration were checked only on GET? Why does Redis also need active expiration? Can expiration guarantee a business callback at that exact millisecond?"
+          },
+          "rubric": [
+            {
+              "rubricId": "redis-expiration-v2-l2-c01",
+              "criterion": {
+                "zh-CN": "只靠访问时的被动过期，长期无人读取的过期键可能继续占用内存。",
+                "en": "With only access-triggered passive expiration, expired keys that are never read may continue occupying memory."
+              }
+            },
+            {
+              "rubricId": "redis-expiration-v2-l2-c02",
+              "criterion": {
+                "zh-CN": "主动过期会周期性检查带过期时间的键并清理到期项；不是每次请求全量扫描所有键。",
+                "en": "Active expiration periodically checks keys with expiration times and removes expired ones; it does not scan every key on every request."
+              }
+            },
+            {
+              "rubricId": "redis-expiration-v2-l2-c03",
+              "criterion": {
+                "zh-CN": "键的逻辑到期与内存实际回收时刻不同；过期机制不是精确定时业务回调的保证。",
+                "en": "Logical expiration and actual memory reclamation can happen at different times. Expiration does not guarantee precisely timed business callbacks."
+              }
+            }
+          ]
+        },
+        {
+          "id": "L3",
+          "label": "Stress-test",
+          "prompt": {
+            "zh-CN": "Redis 7+，无其他客户端修改，以下命令在 60 秒内执行完且最后一条前键未到期：\nSET hits 1 → EXPIRE hits 60 → INCR hits → SET hits 9\n请逐步说明值与 TTL 状态（不要求精确剩余秒数）。为什么最后一次更新后缓存可能不再过期？若要保留原到期时刻，应怎样修改最后一条命令？",
+            "en": "Redis 7+, with no other client changes. All commands finish within 60 seconds, and the key has not expired before the last command:\nSET hits 1 → EXPIRE hits 60 → INCR hits → SET hits 9\nTrace the value and TTL state after each step; exact remaining seconds are not required. Why might the cache no longer expire after the last update? Change the last command to preserve the original expiration time."
+          },
+          "rubric": [
+            {
+              "rubricId": "redis-expiration-v2-l3-c01",
+              "criterion": {
+                "zh-CN": "SET hits 1 后值为 1、无 TTL；EXPIRE 后值仍为 1、有 60 秒生存时间。",
+                "en": "After SET hits 1, the value is 1 with no TTL. After EXPIRE, the value is still 1 with a 60-second lifetime."
+              }
+            },
+            {
+              "rubricId": "redis-expiration-v2-l3-c02",
+              "criterion": {
+                "zh-CN": "INCR 后值为 2，原到期时刻保留，不会把倒计时重新开始。",
+                "en": "After INCR, the value is 2. The original expiration time remains; the countdown does not restart."
+              }
+            },
+            {
+              "rubricId": "redis-expiration-v2-l3-c03",
+              "criterion": {
+                "zh-CN": "普通 SET hits 9 后值为 9，原 TTL 被清除，键不会再因原 TTL 到期。",
+                "en": "After plain SET hits 9, the value is 9 and the previous TTL is cleared. The key will not expire because of that old TTL."
+              }
+            },
+            {
+              "rubricId": "redis-expiration-v2-l3-c04",
+              "criterion": {
+                "zh-CN": "将最后一条改为 SET hits 9 KEEPTTL 可保留题设中的原到期时刻；重新 EXPIRE 60 是重设期限，不等同于保留原时刻。",
+                "en": "Use SET hits 9 KEEPTTL to retain the original expiration time in this scenario. EXPIRE 60 would set a new deadline, not preserve the original one."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mysql-consistent-read-v2",
+      "category": {
+        "zh-CN": "MySQL",
+        "en": "MySQL"
+      },
+      "title": {
+        "zh-CN": "InnoDB 的一致性读为什么可能看不到刚提交的数据？",
+        "en": "Why might an InnoDB consistent read miss a newly committed change?"
+      },
+      "review": {
+        "status": "unreviewed"
+      },
+      "layers": [
+        {
+          "id": "L1",
+          "label": "Explain",
+          "prompt": {
+            "zh-CN": "在 MySQL 8.4 InnoDB 中，普通 SELECT 的一致性非锁定读读取什么？是否必然读取其他事务刚提交的最新值？",
+            "en": "In MySQL 8.4 InnoDB, what does a plain SELECT using a consistent nonlocking read see? Must it see the latest value just committed by another transaction?"
+          },
+          "rubric": [
+            {
+              "rubricId": "mysql-consistent-read-v2-l1-c01",
+              "criterion": {
+                "zh-CN": "一致性读利用多版本机制读取某个时间点的快照。",
+                "en": "A consistent read uses multiversioning to read a snapshot from a particular point in time."
+              }
+            },
+            {
+              "rubricId": "mysql-consistent-read-v2-l1-c02",
+              "criterion": {
+                "zh-CN": "快照不包含在该时间点之后提交的其他事务修改，也不读取其未提交修改。",
+                "en": "The snapshot excludes other transactions’ changes committed after that point, as well as their uncommitted changes."
+              }
+            },
+            {
+              "rubricId": "mysql-consistent-read-v2-l1-c03",
+              "criterion": {
+                "zh-CN": "当前事务自身先前语句所做的修改是可见性规则的例外。",
+                "en": "Changes made by earlier statements in the current transaction are an exception to this visibility rule."
+              }
+            }
+          ]
+        },
+        {
+          "id": "L2",
+          "label": "Reason",
+          "prompt": {
+            "zh-CN": "MySQL 8.4 InnoDB，id=1 的 balance 初始为 100；两个显式事务，无其他写入。\n① A: BEGIN，普通 SELECT balance 得到 100。\n② B: UPDATE 将 balance 改为 80，然后 COMMIT。\n③ A: 再做普通 SELECT balance，然后 COMMIT。\nA 自己没有修改。分别在 RR 和 RC 下预测第③步结果，并指出快照何时建立。",
+            "en": "MySQL 8.4 InnoDB: balance for id=1 initially equals 100. There are two explicit transactions and no other writes.\n1. A: BEGIN, then a plain SELECT reads balance as 100.\n2. B: UPDATE changes balance to 80, then COMMIT.\n3. A: another plain SELECT of balance, then COMMIT.\nA makes no changes itself. Predict step 3 under RR and RC, and identify when the snapshot is created."
+          },
+          "rubric": [
+            {
+              "rubricId": "mysql-consistent-read-v2-l2-c01",
+              "criterion": {
+                "zh-CN": "RR 下第③步为 100：沿用 A 第一次一致性读所建立的快照。",
+                "en": "Under RR, step 3 reads 100, using the snapshot established by A’s first consistent read."
+              }
+            },
+            {
+              "rubricId": "mysql-consistent-read-v2-l2-c02",
+              "criterion": {
+                "zh-CN": "RC 下第③步为 80：每次一致性读建立新的快照，B 已提交。",
+                "en": "Under RC, step 3 reads 80: each consistent read gets a new snapshot, and B has committed."
+              }
+            },
+            {
+              "rubricId": "mysql-consistent-read-v2-l2-c03",
+              "criterion": {
+                "zh-CN": "决定差别的是一致性读快照的建立时机，不是 B 是否成功提交；显式事务内普通 BEGIN 本身不等于已建立读快照。",
+                "en": "The difference is when the consistent-read snapshot is created, not whether B committed successfully. An ordinary BEGIN alone does not establish a read snapshot."
+              }
+            }
+          ]
+        },
+        {
+          "id": "L3",
+          "label": "Stress-test",
+          "prompt": {
+            "zh-CN": "沿用上一层初始数据，隔离级别为 RR。A 第一次普通 SELECT 读到 100；B 随后将同一行改成 80 并提交。\n此时 A 执行 UPDATE account SET balance = balance - 10 WHERE id = 1，再普通 SELECT 该行。无其他事务操作，语句均成功。\n最后读到 90、70 还是 100？解释为什么，指出“RR 中所有语句都只看旧快照”的错误。",
+            "en": "Use the previous initial data with RR isolation. A’s first plain SELECT reads 100; B then changes the same row to 80 and commits.\nA now executes UPDATE account SET balance = balance - 10 WHERE id = 1, followed by a plain SELECT of that row. No other transactions act, and all statements succeed.\nDoes the last read return 90, 70, or 100? Explain why the claim “all statements in RR only see the old snapshot” is wrong."
+          },
+          "rubric": [
+            {
+              "rubricId": "mysql-consistent-read-v2-l3-c01",
+              "criterion": {
+                "zh-CN": "读到 70：UPDATE 在 B 提交后的当前行值 80 上减 10，不是对旧快照的 100 减 10。",
+                "en": "It reads 70. UPDATE subtracts 10 from the current value 80 after B’s commit, not from the old snapshot value 100."
+              }
+            },
+            {
+              "rubricId": "mysql-consistent-read-v2-l3-c02",
+              "criterion": {
+                "zh-CN": "普通一致性 SELECT 的快照规则不能直接推广到 UPDATE 等写语句或锁定读。",
+                "en": "The snapshot rules for plain consistent SELECT cannot be applied directly to writes such as UPDATE or to locking reads."
+              }
+            },
+            {
+              "rubricId": "mysql-consistent-read-v2-l3-c03",
+              "criterion": {
+                "zh-CN": "A 自己刚做的修改对后续一致性读可见，因此读到自己的 70；这不意味着其他未修改行的快照也全部刷新。",
+                "en": "A’s own change is visible to its subsequent consistent read, so it sees its own 70. This does not mean the snapshots of all other, unchanged rows are refreshed."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

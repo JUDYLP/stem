@@ -34,3 +34,5 @@ Stage 1完成复核：Schema结构用例10/10、语义反例4/4符合预期；�
 ## Stage 2A.1：构建闭环本地完成待审
 
 npm ci/test/check:syntax/build:pack-validator及指定静态打包均通过；138测试、25语法文件，Chrome157严格CSP冒烟8项通过。Node与浏览器共享规则，产物work/pack-validator/pack-validator.mjs。保留全部已有修改，未提交/推送/部署，未进入2B。详情见STAGE_2A_REPORT.md末节。
+
+Stage 2B 已在 stage2b-registry 完成本地交付，151 项测试通过。当前审核入口为 docs/architecture/STAGE_2B_REPORT.md。2C 等待单独授权。
