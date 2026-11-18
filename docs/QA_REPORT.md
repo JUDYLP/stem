@@ -308,3 +308,46 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 ### 本轮部署确认
 
 2026-11-18：Actions https://github.com/JUDYLP/stem/actions/runs/44229179238 completed/success，部署 `ea5833b`。独立 Chrome 打开 https://judylp.github.io/stem/ 并写入同一组测试历史：12 个资源 HTTP 200、SHA-256 与提交一致；L1 轨迹为红/琥珀/绿且出现 ↑，aria-label 为「… · 讲清了 · 最近 3 次：漏掉了 → 还差一点 → 讲清了」；统计为「绿灯 3 琥珀灯 2 红灯 0 未作答 4」；格子背景为中心椭圆渐变；手动紧凑后格子 28×28，1440/390 无横向溢出；Console 无错误。
+
+## Stage 2A.1浏览器校验构建
+
+本轮基线123测试，新增15项后138/138通过；25文件语法通过。独立ESM无裸import，不含Ajv编译器，Node禁动态代码生成测试通过。Chrome157实际加载localhost冒烟页（script-src self，无unsafe-eval），合法/非法/嵌套和转义重复键/危险键/超大输入/字节API共8项通过，控制台无消息。临时服务已停止。本轮未复测训练UI、不操作存储、不推送或部署；现有独立页面改动予以保留。
+
+## 2026-11-18 背景光与首屏库存示例
+
+范围：只改首屏示例与点阵/环境光；练习区、题库和存储未改。执行者 Codex，无 Subagent；新增数据只有 `data/hero-demo.v1.json`。
+
+### 自动测试
+
+- 应用测试 `node --test tests/{dotfield,hero-demo,lights,history,export,i18n,questions,storage}.test.mjs`：**44/44 PASS**。新增 `dotfield` 斜向光带（0.08–0.20、12s 周期、峰谷比）与 `hero-demo` 的 JSON 契约（3 回答、3 要点、灯色枚举、引用必须来自所选回答、红灯必须带追问、双语齐全）。
+- 说明：`tests/*.test.mjs` 全量还包含并行架构会话未提交的 `pack-browser.test.mjs`；该文件在 WSL 下因 `node_modules/esbuild` 是 win32 版本而失败，与本轮改动无关，未计入本轮通过项。
+
+### 背景与手电筒（Chrome 157 headless，禁用缓存）
+
+| 项目 | 结果 |
+|---|---|
+| 首屏环境光 | 900px 圆、背景 .22 × 元素 opacity .82 = 中心 .18；中性微白 → 绿 → 红由 800ms 颜色过渡；每次点亮加 1s 扩张/增亮脉冲；红后保持红色；重播重走 |
+| 色值 | 红 `rgba(255,69,58,.22)`、绿 `rgba(34,197,94,.22)`、空 `rgba(255,255,255,.22)`（最终不透明度 .18） |
+| 分区环境光 | method 白 .1、practice 跟随本层灯色（样例绿 .1）、records 按灯数混色（样例 `rgba(118,184,71,.1)`）；IntersectionObserver 进入视口才 `is-visible` |
+| 点阵波动 | 基础 0.08–0.20，12s 斜向宽光带；测试验证周期与峰谷比 |
+| 手电筒 | 半径 180、最大 .45、冷白；光标缓动 0.15；画布像素实测中心 `(215,227,255,108)`≈0.42；移到练习面板上 0.9s 后强度 0.012；答题框聚焦强度 0；靠近本层绿灯时像素为 `(33,196,94,108)`（混入灯色）；仅 `pointer:fine` 初始化 |
+| 帧耗时 | 带手电筒 5 秒窗口平均 0.37ms、最大 1.7ms、30fps（间隔 33.3ms）；无手电筒约 0.20–0.58ms |
+| 减少动态 | 帧数 1.2s 内保持 4 不变；手电筒 0；三分区光晕直接 visible；首屏自动判定一次到位；无脉冲 |
+| 对比度 | 正文 #EDEDED：黑底 17.94、最亮基础点 #333 10.79、白/绿/红环境光 11.60/14.28/15.29；次要文字 #A1A1AA：8.19/#333 4.93/白 5.30/绿 6.52/红 6.98，均 ≥4.5 |
+
+### 首屏库存示例
+
+- Spring Boot 风格 `StockService.deduct`（Redis GET → 判空 → SET-1），带 `// Check stock and deduct atomically` 注释；头部「AI 生成 · 库存服务」与 `stock · Redis`。
+- 三个预设回答；点选后引用整句、三盏 32px 灯按 JSON 逐盏点亮并显示理由与关键词；红判定出追问；全绿显示「讲清了，试试 L3？」；`aria-live` 汇总「预设判定：X 条讲清了…」；按钮原生键盘可用；持续标注「预设判定，未调用 AI」。
+- 进入页面 700ms 后用第一个错误回答自动演示；点击任一选项停止自动；「重播示例」重走当前选项。
+- 390 选项竖排（324px 全宽）；英文页除产品名外无中文；首屏卡片在 1440×1000 内完整显示（底边 947px）。
+- 截图：`hero-red2.png`、`hero-green2.png`（绿/红首屏视口）、`spot-canvas-black.png` 与 `spot-zoom-final.png`（点阵层手电筒）、`option-{zh,en}-{1,2,3}.png`（6 张选项结果）、`hero-390-options.png`（390 竖排）。
+- 手电筒整页截图限制：headless 的 `Page.captureScreenshot` 在指针移动后未包含画布聚光帧；改为保存 canvas 图层并叠黑底，且用 `getImageData` 独立验证像素。实际页面交互仍由 `pointermove` 驱动。
+
+### 未验证与限制
+
+- 真实触屏、Safari/Firefox、真实 60/120Hz 未测；30fps 为门限与 headless 窗口测量。
+- `visibilitychange` 暂停沿用旧实现，未做真实切后台帧数测量。
+- 首屏「试试 L3」只是文案，不跳转（练习题库主题与库存题不同，避免误导）。
+- 12 题紧凑矩阵与上一轮相同，仍是浏览器 Fetch 注入的测试数据。
+- 并行架构会话的 `pack-browser.test.mjs` 与 node_modules 平台问题不属于本轮产品代码。
