@@ -328,7 +328,17 @@ textarea:focus-visible, summary:focus-visible, input:focus-visible {
 #hero-followup.is-shown { opacity: 1; transform: none; }
 .hero-result { margin-top: 14px; }
 .hero-result-label { margin: 0 0 6px; font-size: 10.5px; color: var(--muted); }
-.hero-try { width: 100%; margin-top: 10px; }
+.hero-try {
+  width: auto;
+  min-height: 36px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(34, 197, 94, .5);
+  background: #0d1a12;
+  color: #4ade80;
+  font-size: 12.5px;
+}
+.hero-try:hover { border-color: var(--green); background: #102317; color: #86efac; }
 .hero-clear { display: none; }
 .hero-options { margin: 12px 0 0; padding: 0; border: 0; display: grid; gap: 6px; }
 .hero-options legend { margin-bottom: 6px; padding: 0; font-size: 11.5px; color: var(--muted); }
@@ -409,7 +419,10 @@ textarea:focus-visible, summary:focus-visible, input:focus-visible {
 .hero-glow[data-light="white"] .glow-layer[data-light="white"],
 .hero-glow[data-light="green"] .glow-layer[data-light="green"],
 .hero-glow[data-light="amber"] .glow-layer[data-light="amber"],
-.hero-glow[data-light="red"] .glow-layer[data-light="amber"] {
+.hero-glow[data-light="red"] .glow-layer[data-light="red"] {
+  opacity: 1;
+}
+.glow-layer[data-light="amber"] {
   background: radial-gradient(circle closest-side,
     rgba(245, 165, 36, .18) 0%,
     rgba(245, 165, 36, .155) 16%,
@@ -420,7 +433,6 @@ textarea:focus-visible, summary:focus-visible, input:focus-visible {
     rgba(245, 165, 36, 0) 94%,
     transparent 100%);
 }
-.glow-layer[data-light="red"] { opacity: 1; }
 .glow-layer[data-light="white"] {
   background: radial-gradient(circle closest-side,
     rgba(255, 255, 255, .18) 0%,

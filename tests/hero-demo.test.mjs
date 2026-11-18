@@ -19,10 +19,11 @@ test('the preset hero judgment covers three options and three points with valid 
       assert.equal(typeof point.quoteEn, 'string');
     }
   }
-  const lights = Object.values(data.judgments).map(judgment => judgment.points.map(point => point.light));
-  assert.ok(lights.some(points => points.every(light => light === 'red')));
-  assert.ok(lights.some(points => points.every(light => light === 'amber')));
-  assert.ok(lights.some(points => points.every(light => light === 'green')));
+  assert.deepEqual(data.judgments['comment-atomic'].points.map(point => point.light), ['red', 'red', 'red']);
+  assert.deepEqual(data.judgments['single-thread'].points.map(point => point.light), ['amber', 'red', 'red']);
+  assert.deepEqual(data.judgments['gap-oversell'].points.map(point => point.light), ['green', 'green', 'green']);
+  assert.ok(data.judgments['single-thread'].followup);
+  assert.equal(data.judgments['single-thread'].points[2].quote, '');
 });
 
 test('every quote is a substring of its option in both languages', () => {

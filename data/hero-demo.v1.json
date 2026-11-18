@@ -50,8 +50,8 @@
       ]
     },
     "single-thread": {
-      "followup": "",
-      "followupEn": "",
+      "followup": "单线程只是不并行执行命令；GET 和 SET 之间仍可能插入另一个请求，对吗？",
+      "followupEn": "Single-threaded means commands do not run in parallel; another request can still run between GET and SET, right?",
       "points": [
         {
           "pointId": "two-ops",
@@ -63,7 +63,7 @@
         },
         {
           "pointId": "both-read-1",
-          "light": "amber",
+          "light": "red",
           "reason": "单线程不会让两个请求的 GET 与 SET 自动串成一个原子动作，仍可能都读到 1。",
           "reasonEn": "Single-threaded does not merge each request's GET and SET into one atomic action; both can still read 1.",
           "quote": "安全",
@@ -71,9 +71,9 @@
         },
         {
           "pointId": "fix",
-          "light": "amber",
-          "reason": "没有给出修复；DECR 并检查结果或用 Lua 才能保护检查与扣减。",
-          "reasonEn": "No fix is given; DECR with a result check or Lua protects the check and deduction.",
+          "light": "red",
+          "reason": "回答没有给出修复；DECR 并检查结果或用 Lua 才能保护检查与扣减。",
+          "reasonEn": "The answer gives no fix; DECR with a result check or Lua protects the check and deduction.",
           "quote": "",
           "quoteEn": ""
         }
