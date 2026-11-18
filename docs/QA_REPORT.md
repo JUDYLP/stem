@@ -399,3 +399,35 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 ### 本轮部署确认
 
 2026-11-18：Actions https://github.com/JUDYLP/stem/actions/runs/44244761267 completed/success，部署 `7a69f42`。独立 Chrome 打开 https://judylp.github.io/stem/（1440×900）：13 个静态资源 HTTP 200、SHA-256 与提交一致；自动演示选中第一项，三盏红灯，环境光 `data-light=red`，仅要点 1 显示「原子的」；选项 373–522、卡片 115–803、代码 8 行；Console 无错误。
+
+## 2026-11-18 首屏光晕配色与单线程判定修正
+
+范围：修 CSS 光晕激活规则、预设判定与全绿按钮样式；不改数据结构与练习逻辑。执行者 Codex，无 Subagent。
+
+### 自动测试
+
+- 应用测试 **47/47 PASS**。新增 `tests/styles.test.mjs` 3 项：四色激活选择器两两配对且组内只有 `opacity: 1`；不存在无条件的 `.glow-layer[data-light="red"] { opacity: 1; }`；琥珀有独立渐变块；`hero-try` 为非整行的次级按钮。`hero-demo` 测试改为断言选项灯色 `[red,red,red]`、`[amber,red,red]`、`[green,green,green]`，单线程判定带追问、修复点引用为空。
+- `pack-browser.test.mjs` 仍是并行架构会话未提交的 WSL/win32-esbuild 环境问题，不属于本轮提交。
+
+### 光晕修复
+
+- 分组规则现在为 `.hero-glow[data-light="X"] .glow-layer[data-light="X"] { opacity: 1; }`（red 对 red）；琥珀渐变移到独立 `.glow-layer[data-light="amber"]`；删除常亮红色规则。
+- 初始/重播：`data-light=white`，`prejudge-white-1440x900.png` 为判定前的中性白；重播后 120ms 采样仍为 white。
+- 选项 1：红色；选项 3：绿色；选项 2：按 item 2 把修复点改为红，最终整体红（点1琥珀 380–860ms 时环境光为琥珀，`glow-amber-1440x900.png`；随后点2/3红，环境光红）。「三个选项分别红/琥珀/绿」与「单线程修复点必须红」存在冲突；按更明确的 item 2 执行，选项 2 的截图最终为红，琥珀层通过中途截图与 CSS 测试验证。
+- 截图：`option-red-1440x900.png`、`option-single-thread-1440x900.png`、`option-green-1440x900.png`，均 1440×900 视口。
+
+### 单线程判定
+
+- `single-thread` 灯色：点1 琥珀（单命令原子，引用「单线程」）、点2 红（“安全”正是错误结论，引用「安全」）、点3 红（完全没提修复，无引用）；整体红，追问出现，英文同步。
+- 点2 选择红而非琥珀：回答直接断言“安全”，遗漏两个请求读到同一值的核心错误，按红更诚实；用户允许二选一。
+
+### 全绿按钮
+
+- `hero-try` 改为 `#0d1a12` 底、`rgba(34,197,94,.5)` 细边框、`#4ade80` 文字，宽度自适应（实测 142×38），不再整行白底；点击后 scrollY 1246、练习区顶部 72。
+- 红/琥珀不显示该按钮。
+
+### 限制
+
+- 光晕中心位于卡片内，截图采样使用可见左侧光区/激活层背景；精确中心被不透明卡片遮挡。
+- 1366×768 判定后卡片仍可能超出视口底部；选项在首屏，本轮未改布局高度。
+- 真实 60/120Hz、Safari/Firefox、触屏未测；`pack-browser` 环境问题同上。
