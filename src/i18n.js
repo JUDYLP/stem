@@ -800,6 +800,39 @@ export const messages = {
     "zh": "仅包含当前最后一次判定为「需要复习」的题目层级；不是历史错误次数或能力评分。",
     "en": "Only levels whose latest rating is Review are included. This is not a history of errors or a skill score."
   }
+,
+  "热力图密度": {
+    "zh": "热力图密度",
+    "en": "Heat map density"
+  },
+  "展开": {
+    "zh": "展开",
+    "en": "Expanded"
+  },
+  "紧凑": {
+    "zh": "紧凑",
+    "en": "Compact"
+  },
+  "绿灯": {
+    "zh": "绿灯",
+    "en": "Green"
+  },
+  "琥珀灯": {
+    "zh": "琥珀灯",
+    "en": "Amber"
+  },
+  "红灯": {
+    "zh": "红灯",
+    "en": "Red"
+  },
+  "没有判定历史": {
+    "zh": "没有判定历史",
+    "en": "No rating history"
+  },
+  "最近 {count} 次：{history}": {
+    "zh": "最近 {count} 次：{history}",
+    "en": "Last {count} ratings: {history}"
+  }
 };
 export const LANGUAGE_KEY = 'unscripted.language';
 let language = 'zh';

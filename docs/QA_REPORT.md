@@ -268,3 +268,39 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 ### 本轮部署确认
 
 2026-11-18：Actions https://github.com/JUDYLP/stem/actions/runs/44223151827 completed/success，部署 `f92cc82`（fb29cf8 点阵提亮/限流、0e5c608 面板接光、f92cc82 文档）。独立 Chrome 打开 https://judylp.github.io/stem/ ：12 个静态资源 HTTP 200、MIME 正确、SHA-256 与 `git show HEAD:` 一致；左上 300×120 区域彩色点 0；基础点 alpha 32–51/255；30fps（平均间隔 33.3ms）、绘制平均 0.47ms；示例面板点亮后 `edge-lit` 与 `rgba(255,69,58,.7)` 生效；390 下间距 32、canvas 780×1688（dpr 上限 2）、无横向溢出；Console 无错误。
+
+## Stage 1.1 + Stage 2A（2026-11-18，未提交）
+
+- 本地/远端基线f254eea，原38项测试通过。新增83项真实校验测试；npm ci后npm test为121/121 PASS，0失败；npm run check:syntax为21文件PASS。
+- 原题库、main、storage/history、UI和打包脚本未改。原打包产物12资源+.nojekyll，无开发依赖或校验器。线上12资源HTTP200，SHA256与HEAD Git原始字节一致；Windows工作树CRLF不是线上内容差异。
+- API、大小/深度/错误边界、安全解析、跨题Rubric唯一、翻译、日期、版本测试详见[验证矩阵](architecture/TEST_MATRIX_AND_NEXT_STAGE.md)。
+- 新工作流在Pages之前安装Node24依赖、跑测试和语法，保留权限/concurrency；NOT RUN远端CI（用户禁止提交/推送）。本地同等命令通过不等于远端job已成功。
+- NOT RUN：本轮浏览器视觉/交互复验；导入UI/注册/迁移/删除/JCS摘要尚未实现。没有操作真实localStorage或Live AI。
+
+## 2026-11-18 热力矩阵：中心光、轨迹、紧凑模式
+
+范围：只改热力矩阵显示，读取既有 `unscripted.history.v1`，不改数据结构、题库或存储。执行者 Codex，无 Subagent。
+
+### 自动测试
+
+- `node --test tests/*.test.mjs`：123/123 PASS（含题库架构阶段新增测试）。新增：`isImproving`（红→琥珀、琥珀→绿、红→绿为真；绿→琥珀、同色、单条、空数组为假）与 `shouldUseCompact`（6 题展开、7/12 题紧凑）。
+
+### 浏览器验证
+
+| 项目 | 结果 |
+|---|---|
+| 中心光 | 判定格背景为默认中心椭圆渐变（`radial-gradient(... 0%, ... 46%, transparent 78%)`）+ 深色底；`inset 0 0 0 1px` 同色微光与 `inset 0 0 16px` 内发光；不再有 32% 28% 的偏左上色块 |
+| 进步轨迹 | JUC L1 三次判定显示红/琥珀/绿三个 5px 点；JUC L2 两次显示红/琥珀；L1/L2 的 L 标签旁出现绿色 ↑；L3 单次无箭头 |
+| 历史文案 | L1 aria-label：`… · 讲清了 · 最近 3 次：漏掉了 → 还差一点 → 讲清了`；tooltip 同内容并带最近时间 |
+| 统计行 | 绿灯 3、琥珀灯 2、红灯 0、未作答 4，均为小灯 + 数字，无斜杠 |
+| 紧凑切换 | 3 题时手动切换为紧凑：28×28 格、行 678+28×3、`展开/紧凑` aria-pressed 正确 |
+| 12 题自动紧凑 | CDP Fetch 注入 12 题测试数据（不改 `data/questions.json`）：自动紧凑、12 行、每行 01–12 题号 + 截断题名 + 3 个 28px 格；1440 与 390 均无横向溢出（390 scrollWidth=390） |
+| 移动端 | 390 紧凑头部 L1/L2/L3 对齐；12 行 + 统计在 844 视口内完整可见 |
+
+证据（本地忽略目录 `work/qa-signal-20261117/`，不提交）：`trail-1440.png`、`trail-390.png`、`trail-zoom.png`、`compact12-1440.png`、`compact12-390.png`。
+
+### 未验证与限制
+
+- 12 题是浏览器 Fetch 注入的测试数据，不是正式题库；紧凑阈值与显示已验证，但不声称有 12 道审校题目。
+- 紧凑 28px 格内 5 个 5px 轨迹点只能无间隙排列，视觉上接近短条；展开模式是完整轨迹视图。
+- 真实触屏 hover/tooltip、读屏软件播报仍未实测；只验证了 aria-label 与 data-tip 文本。

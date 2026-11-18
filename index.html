@@ -189,7 +189,16 @@
           </div>
           <div class="records-panel">
             <div class="records-block">
-              <div class="block-head"><h3><span data-i18n="热力矩阵">热力矩阵</span></h3><p class="mono" id="heat-caption"><span data-i18n="每个格子是最近一次判定">每个格子是最近一次判定</span></p></div>
+              <div class="block-head">
+                <h3><span data-i18n="热力矩阵">热力矩阵</span></h3>
+                <div class="heat-tools">
+                  <div class="heat-toggle" role="group" aria-label="热力图密度" data-i18n-aria-label="热力图密度">
+                    <button type="button" data-density="expanded" aria-pressed="true"><span data-i18n="展开">展开</span></button>
+                    <button type="button" data-density="compact" aria-pressed="false"><span data-i18n="紧凑">紧凑</span></button>
+                  </div>
+                  <p class="mono" id="heat-caption"><span data-i18n="每个格子是最近一次判定">每个格子是最近一次判定</span></p>
+                </div>
+              </div>
               <div class="heat-scroll">
                 <div class="heatmap" id="heatmap" role="group" aria-label="题目与层级的最近灯色" data-i18n-aria-label="题目与层级的最近灯色">
                   <div class="heat-head" aria-hidden="true">

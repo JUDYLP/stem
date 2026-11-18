@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createHistoryStore, parseHistory, latestByCell, emptyHistory,
-  MAX_ENTRIES, HISTORY_KEY,
+  MAX_ENTRIES, HISTORY_KEY, shouldUseCompact,
 } from '../src/history.js';
 
 const memory = raw => {
@@ -114,4 +114,13 @@ test('clear empties the timeline but keeps the answer switch preference', () => 
   assert.equal(reloaded.snapshot().entries.length, 0);
   assert.equal(reloaded.saveAnswers, true);
   assert.equal(HISTORY_KEY, 'unscripted.history.v1');
+});
+
+test('compact mode starts above six questions', () => {
+  assert.equal(shouldUseCompact(0), false);
+  assert.equal(shouldUseCompact(3), false);
+  assert.equal(shouldUseCompact(6), false);
+  assert.equal(shouldUseCompact(7), true);
+  assert.equal(shouldUseCompact(12), true);
+  assert.equal(shouldUseCompact('12'), true);
 });

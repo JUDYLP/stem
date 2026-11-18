@@ -3,6 +3,12 @@ import { isLight } from './lights.js';
 
 export const HISTORY_KEY = 'unscripted.history.v1';
 export const MAX_ENTRIES = 200;
+export const COMPACT_THRESHOLD = 6;
+
+// More than six questions switches the heat matrix to compact rows by default.
+export function shouldUseCompact(count) {
+  return Number(count) > COMPACT_THRESHOLD;
+}
 
 export const emptyHistory = () => ({ schemaVersion: 1, saveAnswers: false, entries: [] });
 export const entryKey = entry => `${entry.questionId}::${entry.layer}`;

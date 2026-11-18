@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   summarizeLights, statusForLight, lightForStatus, nextLight,
-  keyToLight, pointLabel, pointAnnouncement,
+  keyToLight, pointLabel, pointAnnouncement, isImproving,
   suggestLights, getSuggestion, clearSuggestion,
 } from '../src/lights.js';
 import { setLanguage } from '../src/i18n.js';
@@ -74,4 +74,18 @@ test('number keys set a light directly and the label names the current and next 
   assert.equal(pointLabel(0, 'amber'), 'Point 1: currently Almost. Activate to switch to Clear.');
   assert.equal(pointAnnouncement(2, 'red'), 'Point 3 set to Missed.');
   setLanguage('zh', () => null);
+});
+
+test('progress is detected only when the latest light outranks the previous one', () => {
+  const entry = light => ({ light });
+  assert.equal(isImproving([entry('red'), entry('amber')]), true);
+  assert.equal(isImproving([entry('amber'), entry('green')]), true);
+  assert.equal(isImproving([entry('red'), entry('green')]), true);
+  assert.equal(isImproving([entry('green'), entry('green')]), false);
+  assert.equal(isImproving([entry('green'), entry('amber')]), false);
+  assert.equal(isImproving([entry('amber'), entry('red')]), false);
+  assert.equal(isImproving([entry('red')]), false);
+  assert.equal(isImproving([]), false);
+  assert.equal(isImproving(null), false);
+  assert.equal(isImproving([entry('red'), { light: 'off' }]), false);
 });

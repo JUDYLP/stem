@@ -368,9 +368,9 @@ textarea:focus-visible, summary:focus-visible, input:focus-visible {
 .selectors { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 18px; }
 .field { display: grid; gap: 6px; position: relative; min-width: 0; }
 .field > span { font-size: 12px; color: var(--muted); }
-.question-selector { flex: 1; }
+.question-selector { flex: 1; min-width: 0; }
 select {
-  width: 100%; min-height: 42px;
+  width: 100%; min-width: 0; max-width: 100%; min-height: 42px;
   appearance: none;
   background: #141417; color: var(--text);
   border: 1px solid #2a2a30; border-radius: 9px;
@@ -507,9 +507,17 @@ summary:hover { color: var(--text); }
   display: grid; gap: 28px;
 }
 .records-block { min-width: 0; }
-.block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.block-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .block-head h3 { font-size: 14.5px; font-weight: 700; }
 .block-head p { color: var(--muted); font-size: 11px; }
+.heat-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.heat-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.heat-toggle button {
+  border: 0; background: transparent; color: var(--muted);
+  font-size: 10.5px; padding: 4px 9px; cursor: pointer;
+}
+.heat-toggle button:hover { color: var(--text); }
+.heat-toggle button[aria-pressed="true"] { background: #1b1b1f; color: var(--text); }
 .heat-scroll { overflow: visible; }
 .heatmap { width: max-content; max-width: 100%; }
 .heat-head, .heat-row {
@@ -535,18 +543,36 @@ summary:hover { color: var(--text); }
 }
 .heat-cell[data-state="green"] {
   color: #4ade80;
-  background: radial-gradient(circle at 32% 28%, rgba(74, 222, 128, .22), transparent 58%), #0e2316; border-color: #276b41;
-  box-shadow: inset 0 0 18px #22c55e2b, 0 0 10px #22c55e14;
+  border-color: #276b41;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(74, 222, 128, .3) 0%, rgba(34, 197, 94, .12) 46%, rgba(34, 197, 94, 0) 78%),
+    #0e2316;
+  box-shadow:
+    inset 0 0 0 1px rgba(74, 222, 128, .3),
+    inset 0 0 16px rgba(34, 197, 94, .18),
+    0 0 10px rgba(34, 197, 94, .08);
 }
 .heat-cell[data-state="amber"] {
   color: #fbbf24;
-  background: radial-gradient(circle at 32% 28%, rgba(251, 191, 36, .2), transparent 58%), #241b0d; border-color: #7a5316;
-  box-shadow: inset 0 0 18px #f5a52429, 0 0 10px #f5a52414;
+  border-color: #7a5316;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(251, 191, 36, .28) 0%, rgba(245, 165, 36, .11) 46%, rgba(245, 165, 36, 0) 78%),
+    #241b0d;
+  box-shadow:
+    inset 0 0 0 1px rgba(251, 191, 36, .28),
+    inset 0 0 16px rgba(245, 165, 36, .16),
+    0 0 10px rgba(245, 165, 36, .07);
 }
 .heat-cell[data-state="red"] {
   color: #ff6b60;
-  background: radial-gradient(circle at 32% 28%, rgba(255, 107, 96, .2), transparent 58%), #240f0e; border-color: #7a2a26;
-  box-shadow: inset 0 0 18px #ff453a29, 0 0 10px #ff453a14;
+  border-color: #7a2a26;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255, 107, 96, .28) 0%, rgba(255, 69, 58, .11) 46%, rgba(255, 69, 58, 0) 78%),
+    #240f0e;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 107, 96, .28),
+    inset 0 0 16px rgba(255, 69, 58, .16),
+    0 0 10px rgba(255, 69, 58, .07);
 }
 .heat-cell:hover { transform: translateY(-1px); border-color: #4a4a54; }
 .heat-cell:active { transform: none; }
@@ -555,7 +581,15 @@ summary:hover { color: var(--text); }
   stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
 }
 .heat-empty { width: 6px; height: 6px; border-radius: 50%; background: #3a3a42; }
-.heat-layer { display: none; }
+.heat-corner { position: absolute; top: 5px; left: 7px; z-index: 1; display: flex; align-items: center; gap: 3px; }
+.heat-layer { font: 9px/1 var(--mono); color: var(--muted); letter-spacing: 0; }
+.heat-up { font: 11px/1 var(--mono); color: #4ade80; text-shadow: 0 0 6px #22c55e66; }
+.heat-history { position: absolute; right: 5px; bottom: 5px; display: flex; align-items: center; gap: 3px; }
+.heat-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--off); }
+.heat-dot[data-state="green"] { background: #4ade80; box-shadow: 0 0 4px #22c55e88; }
+.heat-dot[data-state="amber"] { background: #fbbf24; box-shadow: 0 0 4px #f5a52488; }
+.heat-dot[data-state="red"] { background: #ff6b60; box-shadow: 0 0 4px #ff453a88; }
+.heat-index { display: none; font: 10px var(--mono); color: var(--muted); }
 .heat-cell::after {
   content: attr(data-tip);
   position: absolute; left: 50%; bottom: calc(100% + 8px);
@@ -575,7 +609,14 @@ summary:hover { color: var(--text); }
 .heat-row .heat-cell:nth-of-type(1):focus::after,
 .heat-row .heat-cell:nth-of-type(3):hover::after,
 .heat-row .heat-cell:nth-of-type(3):focus::after { transform: translate(0, 0); }
-.heat-stats { margin-top: 14px; color: var(--muted); font-size: 11.5px; }
+.heat-stats {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px;
+  margin-top: 14px; color: var(--muted); font-size: 11.5px;
+}
+.heat-stat { display: inline-flex; align-items: center; gap: 6px; }
+.heat-stat .lamp { width: 12px; height: 12px; }
+.heat-stat .lamp svg { width: 8px; height: 8px; }
+.heat-stat-count { font-family: var(--mono); color: var(--text); }
 .empty-note { color: var(--muted); font-size: 12.5px; }
 
 .timeline { list-style: none; margin: 0; padding: 0; }
@@ -747,10 +788,7 @@ summary:hover { color: var(--text); }
   .heat-question { grid-column: 1 / -1; margin-bottom: 2px; }
   .heat-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; }
   .heat-cell { width: 100%; height: 64px; }
-  .heat-layer {
-    display: block; position: absolute; top: 6px; left: 8px;
-    font: 9.5px var(--mono); color: var(--muted); letter-spacing: 0;
-  }
+  .heat-corner { top: 6px; left: 8px; }
   .records-buttons .button { width: 100%; }
   .records-buttons { flex-direction: column; }
   .dialog-actions { flex-direction: column; align-items: stretch; }
@@ -777,6 +815,59 @@ summary:hover { color: var(--text); }
 .edge-lit::after { opacity: 1; transition: opacity .12s ease; }
 
 .site-footer { margin-top: 48px; gap: 10px; font-size: 10.5px; }
+}
+
+/* Compact heat matrix: one row per question, 28px cells. */
+.heatmap.is-compact { width: 100%; max-width: 780px; min-width: 0; }
+.heatmap.is-compact .heat-head,
+.heatmap.is-compact .heat-row {
+  grid-template-columns: minmax(0, 1fr) repeat(3, 28px);
+  gap: 6px;
+}
+.heatmap.is-compact .heat-head { display: grid; padding-bottom: 6px; }
+.heatmap.is-compact .heat-body { gap: 0; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.heatmap.is-compact .heat-row {
+  min-width: 0; overflow: hidden;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.heatmap.is-compact .heat-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.heatmap.is-compact .heat-question { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+.heatmap.is-compact .heat-category { display: none; }
+.heatmap.is-compact .heat-index { display: inline; }
+.heatmap.is-compact .heat-title {
+  display: block; flex: 1 1 auto; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.heatmap.is-compact .heat-cell { width: 28px; height: 28px; border-radius: 8px; }
+.heatmap.is-compact .heat-icon { width: 14px; height: 14px; }
+.heatmap.is-compact .heat-corner { top: 2px; left: 3px; }
+.heatmap.is-compact .heat-layer { display: none; }
+.heatmap.is-compact .heat-up { font-size: 9px; }
+.heatmap.is-compact .heat-history { display: flex; right: 1px; bottom: 1px; gap: 0; }
+.heatmap.is-compact .heat-dot { width: 5px; height: 5px; }
+
+@media (max-width: 720px) {
+  .heatmap.is-compact .heat-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(3, 28px);
+    gap: 6px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .heatmap.is-compact .heat-row:last-child { padding-bottom: 0; }
+  .heatmap.is-compact .heat-question { grid-column: auto; margin-bottom: 0; }
+  .heatmap.is-compact .heat-title {
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    -webkit-line-clamp: unset;
+  }
+  .heatmap.is-compact .heat-cell { width: 28px; height: 28px; }
+  .heatmap.is-compact .heat-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(3, 28px);
+    gap: 6px;
+  }
+  .heat-tools { justify-content: flex-start; }
 }
 
 @media (prefers-reduced-motion: reduce) {

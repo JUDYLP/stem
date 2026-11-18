@@ -25,6 +25,16 @@ export function lightForStatus(status) {
   return status === 'pass' ? 'green' : status === 'review' ? 'red' : 'off';
 }
 
+const RANK = { red: 0, amber: 1, green: 2 };
+
+// The latest rating is an improvement over the one before it.
+export function isImproving(entries) {
+  if (!Array.isArray(entries) || entries.length < 2) return false;
+  const latest = entries[entries.length - 1] && entries[entries.length - 1].light;
+  const previous = entries[entries.length - 2] && entries[entries.length - 2].light;
+  return RANK[latest] > RANK[previous];
+}
+
 export function nextLight(light) {
   return light === 'amber' ? 'green' : light === 'green' ? 'red' : 'amber';
 }

@@ -1,14 +1,14 @@
 import { t, localized, getLanguage, initLanguage, setLanguage, applyLanguage } from './i18n.js';
 import { loadQuestions } from './questions.js';
 import { createProgressStore } from './storage.js';
-import { createHistoryStore, latestByCell } from './history.js';
+import { createHistoryStore, latestByCell, shouldUseCompact } from './history.js';
 import { reviewItems, buildCrashSheet, downloadCrashSheet } from './export.js';
 import { initDemo } from './demo.js';
 import { initDotfield } from './dotfield.js';
 import {
   createLamp, createLightIcon, setLampState, ignite, nextLight, summarizeLights,
   statusForLight, lightForStatus, lightLabel, keyToLight, pointLabel, pointAnnouncement,
-  getSuggestion, clearSuggestion, suggestLights, LIGHT_RGB,
+  getSuggestion, clearSuggestion, suggestLights, LIGHT_RGB, isImproving,
 } from './lights.js';
 
 const $ = id => document.getElementById(id);
@@ -48,6 +48,7 @@ let questions = [];
 let questionId = '';
 let layerIndex = 0;
 let revealObserved = false;
+let heatDensity = null;
 
 const current = () => questions.find(question => question.id === questionId);
 const currentLayer = () => current().layers[layerIndex];
@@ -237,9 +238,24 @@ function openCell(id, layerId) {
   $('answer').focus({ preventScroll: true });
 }
 
-function heatTooltip(question, layer, entry) {
+function historyText(entries) {
+  if (!entries.length) return t('没有判定历史');
+  const recent = entries.slice(-5);
+  return t('最近 {count} 次：{history}', {
+    count: recent.length,
+    history: recent.map(entry => lightLabel(entry.light)).join(' → '),
+  });
+}
+
+function heatTooltip(question, layer, entry, entries) {
   const time = entry ? formatTime(entry.ts) : t('未作答');
-  return `${localized(question, 'title')} · ${layer.id} ${layer.label} · ${time}`;
+  return `${localized(question, 'title')} · ${layer.id} · ${historyText(entries)} · ${time}`;
+}
+
+function heatStat(state, key, count) {
+  const item = byId('span', 'heat-stat');
+  item.append(createLamp(state, { label: false }), byId('span', 'heat-stat-label', t(key)), byId('span', 'heat-stat-count', String(count)));
+  return item;
 }
 
 function renderRecords({ changed = null } = {}) {
@@ -247,29 +263,59 @@ function renderRecords({ changed = null } = {}) {
   const data = index();
   const review = reviewItems(questions, data.progress);
   const counts = { green: 0, amber: 0, red: 0, off: 0 };
+  const histories = new Map();
+  for (const entry of data.entries) {
+    const key = cellKey(entry.questionId, entry.layer);
+    if (!histories.has(key)) histories.set(key, []);
+    histories.get(key).push(entry);
+  }
+  $('heatmap').classList.toggle('is-compact', heatDensity === 'compact');
+  for (const button of document.querySelectorAll('[data-density]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.density === heatDensity));
+  }
 
   $('heat-body').replaceChildren(...questions.map((question, row) => {
     const rowEl = byId('div', 'heat-row');
     const label = byId('div', 'heat-question');
-    label.append(byId('span', 'mono', question.category), byId('span', 'heat-title', localized(question, 'title')));
+    label.append(
+      byId('span', 'mono heat-category', question.category),
+      byId('span', 'heat-index', String(row + 1).padStart(2, '0')),
+      byId('span', 'heat-title', localized(question, 'title')),
+    );
     rowEl.append(label);
     question.layers.forEach((layer, column) => {
-      const entry = data.latest.get(cellKey(question.id, layer.id));
+      const key = cellKey(question.id, layer.id);
+      const entries = histories.get(key) || [];
+      const entry = data.latest.get(key);
       const light = lightOf(data, question.id, layer.id);
+      const recent = entries.slice(-5);
       counts[light] += 1;
       const button = byId('button', 'heat-cell');
       button.type = 'button';
       button.dataset.state = light;
       button.dataset.row = String(row);
       button.dataset.column = String(column);
-      button.dataset.tip = heatTooltip(question, layer, entry);
-      button.setAttribute('aria-label', `${localized(question, 'title')} · ${layer.id} ${layer.label} · ${lightLabel(light)}`);
+      button.dataset.tip = heatTooltip(question, layer, entry, entries);
+      button.setAttribute('aria-label', `${localized(question, 'title')} · ${layer.id} ${layer.label} · ${lightLabel(light)} · ${historyText(entries)}`);
       button.style.setProperty('--reveal-delay', `${(row + column) * 90}ms`);
       button.style.setProperty('--wave-delay', '0ms');
-      button.append(byId('span', 'heat-layer', layer.id));
+      const corner = byId('span', 'heat-corner');
+      corner.append(byId('span', 'heat-layer', layer.id));
+      if (isImproving(entries)) corner.append(byId('span', 'heat-up', '↑'));
+      button.append(corner);
       if (light === 'off') button.append(byId('span', 'heat-empty'));
       else button.append(createLightIcon(light));
-      if (changed === cellKey(question.id, layer.id)) {
+      if (recent.length) {
+        const trail = byId('span', 'heat-history');
+        trail.setAttribute('aria-hidden', 'true');
+        for (const item of recent) {
+          const dot = byId('span', 'heat-dot');
+          dot.dataset.state = item.light;
+          trail.append(dot);
+        }
+        button.append(trail);
+      }
+      if (changed === key) {
         button.classList.add('is-changed');
         window.dispatchEvent(new CustomEvent('lamp:lit', { detail: { element: button } }));
       }
@@ -294,7 +340,12 @@ function renderRecords({ changed = null } = {}) {
     }
   }
 
-  $('heat-stats').textContent = t('绿 {green} / 琥珀 {amber} / 红 {red} / 未作答 {off}', counts);
+  $('heat-stats').replaceChildren(
+    heatStat('green', '绿灯', counts.green),
+    heatStat('amber', '琥珀灯', counts.amber),
+    heatStat('red', '红灯', counts.red),
+    heatStat('off', '未作答', counts.off),
+  );
   $('save-answers').checked = log.saveAnswers;
   $('export-review').disabled = !review.length;
   $('clear-export').disabled = !review.length;
@@ -544,6 +595,7 @@ async function boot() {
   $('load-message').textContent = t('正在加载题库…');
   try {
     questions = await loadQuestions();
+    if (!heatDensity) heatDensity = shouldUseCompact(questions.length) ? 'compact' : 'expanded';
     $('category').replaceChildren(option('', t('全部分类')), ...[...new Set(questions.map(question => question.category))].map(category => option(category, category)));
     renderOptions();
     $('practice-body').hidden = false;
@@ -554,6 +606,10 @@ async function boot() {
     $('reload-questions').hidden = false;
   }
 }
+document.querySelectorAll('[data-density]').forEach(button => button.addEventListener('click', () => {
+  heatDensity = button.dataset.density;
+  renderRecords();
+}));
 $('reload-questions').addEventListener('click', boot);
 boot();
 
