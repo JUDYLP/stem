@@ -304,3 +304,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - 12 题是浏览器 Fetch 注入的测试数据，不是正式题库；紧凑阈值与显示已验证，但不声称有 12 道审校题目。
 - 紧凑 28px 格内 5 个 5px 轨迹点只能无间隙排列，视觉上接近短条；展开模式是完整轨迹视图。
 - 真实触屏 hover/tooltip、读屏软件播报仍未实测；只验证了 aria-label 与 data-tip 文本。
+
+### 本轮部署确认
+
+2026-11-18：Actions https://github.com/JUDYLP/stem/actions/runs/44229179238 completed/success，部署 `ea5833b`。独立 Chrome 打开 https://judylp.github.io/stem/ 并写入同一组测试历史：12 个资源 HTTP 200、SHA-256 与提交一致；L1 轨迹为红/琥珀/绿且出现 ↑，aria-label 为「… · 讲清了 · 最近 3 次：漏掉了 → 还差一点 → 讲清了」；统计为「绿灯 3 琥珀灯 2 红灯 0 未作答 4」；格子背景为中心椭圆渐变；手动紧凑后格子 28×28，1440/390 无横向溢出；Console 无错误。
