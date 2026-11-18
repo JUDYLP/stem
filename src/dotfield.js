@@ -9,8 +9,14 @@ export const MAX_TINT = 0.5;
 export const RIPPLE_MS = 1200;
 export const RIPPLE_SPREAD = 320;
 export const RIPPLE_BAND = 56;
-export const BASE_MIN = 0.12;
+export const BASE_MIN = 0.08;
 export const BASE_MAX = 0.20;
+export const WAVE_PERIOD = 12000;
+export const WAVE_SIGMA = 0.2;
+export const SPOT_RADIUS = 180;
+export const SPOT_ALPHA = 0.45;
+export const SPOT_LAMP_RADIUS = 220;
+export const SPOT_EASE = 0.15;
 
 export function spacingFor(width) {
   return width <= NARROW_MAX ? SPACING_NARROW : SPACING_DESKTOP;
@@ -38,12 +44,24 @@ export function spillAllowed(distanceToEdge, isHeroPanel = false, limit = 80) {
   return isHeroPanel && Number.isFinite(distanceToEdge) && distanceToEdge <= limit;
 }
 
-// Two slow sines keep the surface alive without moving a single dot.
-export function waveAlpha(x, y, time, intensity = 1) {
-  const wave = Math.sin(time * 0.0007 + x * 0.012 + y * 0.008)
-    + Math.sin(time * 0.00055 - y * 0.01 + x * 0.004);
-  const amplitude = (BASE_MAX - BASE_MIN) / 2 * Math.max(0, Math.min(1, intensity));
-  return (BASE_MIN + BASE_MAX) / 2 + wave * amplitude * 0.5;
+// A wide diagonal band travels across the screen once every 12 seconds.
+export function screenPhase(x, y, width, height) {
+  const diagonal = width * 0.62 + height * 0.78;
+  if (!(diagonal > 0)) return 0;
+  return (x * 0.62 + y * 0.78) / diagonal;
+}
+
+export function waveAlpha(phase, time, intensity = 1) {
+  const center = ((Number(time) || 0) % WAVE_PERIOD) / WAVE_PERIOD;
+  let delta = (Number(phase) || 0) - center;
+  delta -= Math.round(delta);
+  const band = Math.exp(-(delta * delta) / (2 * WAVE_SIGMA * WAVE_SIGMA));
+  const amplitude = (BASE_MAX - BASE_MIN) * Math.max(0, Math.min(1, intensity));
+  return BASE_MIN + amplitude * band;
+}
+
+export function spotFalloff(distance, radius = SPOT_RADIUS) {
+  return falloff(distance, radius);
 }
 
 const COLORS = {
@@ -51,9 +69,10 @@ const COLORS = {
   green: [34, 197, 94],
   amber: [245, 165, 36],
   red: [255, 69, 58],
+  spot: [214, 226, 255],
 };
 const STATE_INDEX = { green: 1, amber: 2, red: 3 };
-const CSS_COLORS = ['#ffffff', '#22c55e', '#f5a524', '#ff453a'];
+const CSS_COLORS = ['#ffffff', '#22c55e', '#f5a524', '#ff453a', '#d6e2ff'];
 const LEVELS = 16;
 const MAX_DRAW_ALPHA = 0.8;
 // A little under 33.3ms so a 60Hz display always gets every second frame.
@@ -75,6 +94,7 @@ export function initDotfield(canvas) {
   let spacing = spacingFor(width);
   let dots = [];
   let lamps = [];
+  let allLamps = [];
   let ripples = [];
   let quiet = false;
   let raf = 0;
@@ -82,9 +102,11 @@ export function initDotfield(canvas) {
   let lastScan = 0;
   let scrollTimer = 0;
   const perf = { frames: 0, total: 0, last: 0, avg: 0, max: 0, interval: 0, intervalAvg: 0, intervals: 0 };
-  const buckets = Array.from({ length: 4 * LEVELS }, () => []);
+  const buckets = Array.from({ length: 5 * LEVELS }, () => []);
   const motion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
   let reduced = !!motion?.matches;
+  const finePointer = !!(window.matchMedia && window.matchMedia('(pointer: fine)').matches);
+  const pointer = { x: 0, y: 0, tx: 0, ty: 0, active: false, overPanel: false, suspended: false, strength: 0, moved: false, locked: false };
 
   function resizeCanvas() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -108,6 +130,7 @@ export function initDotfield(canvas) {
 
   function collectLamps() {
     const found = [];
+    const visible = [];
     const root = document.querySelector('main') || document;
     for (const element of root.querySelectorAll(LAMP_SELECTOR)) {
       const rect = element.getBoundingClientRect();
@@ -117,6 +140,7 @@ export function initDotfield(canvas) {
       if (!STATE_INDEX[color]) continue;
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
+      visible.push({ x, y, color });
       const panel = element.closest(PANEL_SELECTOR);
       if (panel) {
         const panelRect = panel.getBoundingClientRect();
@@ -126,18 +150,53 @@ export function initDotfield(canvas) {
       found.push({ x, y, color });
     }
     lamps = found;
+    allLamps = visible;
+  }
+
+  function updatePointer() {
+    if (pointer.locked) return;
+    const target = (finePointer && pointer.active && !pointer.overPanel && !pointer.suspended) ? 1 : 0;
+    pointer.strength += (target - pointer.strength) * SPOT_EASE;
+    if (pointer.strength < 0.005) pointer.strength = 0;
+    if (pointer.moved) {
+      pointer.x += (pointer.tx - pointer.x) * SPOT_EASE;
+      pointer.y += (pointer.ty - pointer.y) * SPOT_EASE;
+    }
   }
 
   function draw(now, staticMode) {
     const start = performance.now();
     const intensity = quiet ? 0.3 : 1;
-    if (!staticMode) ripples = ripples.filter(ripple => now - ripple.start < RIPPLE_MS);
-    else ripples = [];
+    if (!staticMode) {
+      updatePointer();
+      ripples = ripples.filter(ripple => now - ripple.start < RIPPLE_MS);
+    } else {
+      pointer.strength = 0;
+      ripples = [];
+    }
     for (const bucket of buckets) bucket.length = 0;
 
+    const diagonal = width * 0.62 + height * 0.78;
     const radiusSq = LAMP_RADIUS * LAMP_RADIUS;
+    const spotActive = !staticMode && finePointer && pointer.strength > 0.01;
+    const spotR2 = SPOT_RADIUS * SPOT_RADIUS;
+    let spotColorIndex = 4;
+    if (spotActive) {
+      let best = 0;
+      for (const lamp of allLamps) {
+        const f = falloff(Math.hypot(pointer.x - lamp.x, pointer.y - lamp.y), SPOT_LAMP_RADIUS);
+        if (f > best) {
+          best = f;
+          spotColorIndex = STATE_INDEX[lamp.color];
+        }
+      }
+      if (best < 0.12) spotColorIndex = 4;
+    }
+
     for (const dot of dots) {
-      let alpha = waveAlpha(dot.x, dot.y, staticMode ? 0 : now, intensity);
+      let alpha = staticMode
+        ? (BASE_MIN + BASE_MAX) / 2
+        : waveAlpha(diagonal ? (dot.x * 0.62 + dot.y * 0.78) / diagonal : 0, now, intensity);
       let colorIndex = 0;
 
       let bestTint = 0;
@@ -168,6 +227,19 @@ export function initDotfield(canvas) {
           bestTint = strength;
           alpha = Math.min(0.7, alpha + strength);
           colorIndex = STATE_INDEX[ripple.color];
+        }
+      }
+
+      if (spotActive) {
+        const dx = dot.x - pointer.x;
+        const dy = dot.y - pointer.y;
+        const distanceSq = dx * dx + dy * dy;
+        if (distanceSq < spotR2) {
+          const spot = SPOT_ALPHA * falloff(Math.sqrt(distanceSq), SPOT_RADIUS) * pointer.strength;
+          if (spot > alpha) {
+            alpha = spot;
+            colorIndex = spotColorIndex;
+          }
         }
       }
 
@@ -258,11 +330,34 @@ export function initDotfield(canvas) {
   }
 
   document.addEventListener('focusin', event => {
-    if (event.target instanceof Element && event.target.matches('#answer, #retry-answer')) quiet = true;
+    if (event.target instanceof Element && event.target.matches('#answer, #retry-answer')) {
+      quiet = true;
+      pointer.suspended = true;
+    }
   });
   document.addEventListener('focusout', event => {
-    if (event.target instanceof Element && event.target.matches('#answer, #retry-answer')) quiet = false;
+    if (event.target instanceof Element && event.target.matches('#answer, #retry-answer')) {
+      quiet = false;
+      pointer.suspended = false;
+    }
   });
+  if (finePointer) {
+    window.addEventListener('pointermove', event => {
+      pointer.tx = event.clientX;
+      pointer.ty = event.clientY;
+      if (!pointer.moved) {
+        pointer.x = pointer.tx;
+        pointer.y = pointer.ty;
+        pointer.moved = true;
+      }
+      pointer.active = true;
+      pointer.locked = false;
+      pointer.overPanel = !!(event.target instanceof Element && event.target.closest(PANEL_SELECTOR));
+    }, { passive: true });
+    window.addEventListener('pointerout', event => {
+      if (!event.relatedTarget) pointer.active = false;
+    });
+  }
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) stop();
     else start();
@@ -293,6 +388,15 @@ export function initDotfield(canvas) {
     get quiet() { return quiet; },
     get reduced() { return reduced; },
     get rippleCount() { return ripples.length; },
+    get pointerStrength() { return pointer.strength; },
+    spotlightAt(x, y, strength = 1) {
+      pointer.x = x; pointer.y = y; pointer.tx = x; pointer.ty = y;
+      pointer.moved = true; pointer.active = true; pointer.overPanel = false; pointer.suspended = false;
+      pointer.strength = strength;
+      pointer.locked = true;
+      if (!reduced) draw(performance.now(), false);
+    },
+    get finePointer() { return finePointer; },
   };
   window.__dotfield = api;
   return api;

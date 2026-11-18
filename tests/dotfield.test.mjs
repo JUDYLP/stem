@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  falloff, tintStrength, waveAlpha, spacingFor, spillAllowed,
+  falloff, tintStrength, waveAlpha, spacingFor, spillAllowed, screenPhase, spotFalloff, WAVE_PERIOD,
   LAMP_RADIUS, MAX_TINT, BASE_MIN, BASE_MAX,
   SPACING_DESKTOP, SPACING_NARROW,
 } from '../src/dotfield.js';
@@ -29,15 +29,33 @@ test('tint strength never exceeds the 0.5 ceiling', () => {
   assert.ok(tintStrength(120) < MAX_TINT * 0.2);
 });
 
-test('dot breathing stays inside 0.12-0.20 and quietens to 30%', () => {
-  for (let time = 0; time < 30000; time += 250) {
-    const alpha = waveAlpha(120, 80, time);
-    assert.ok(alpha >= BASE_MIN - 1e-9 && alpha <= BASE_MAX + 1e-9, `alpha ${alpha} at ${time}`);
+test('dot breathing is a slow diagonal band with a 2.5x peak-to-trough range', () => {
+  let min = 1;
+  let max = 0;
+  for (let time = 0; time < WAVE_PERIOD; time += 100) {
+    for (let phase = 0; phase <= 1; phase += 0.05) {
+      const alpha = waveAlpha(phase, time);
+      min = Math.min(min, alpha);
+      max = Math.max(max, alpha);
+    }
   }
-  const loud = waveAlpha(120, 80, 5000, 1);
-  const quiet = waveAlpha(120, 80, 5000, 0.3);
-  assert.ok(Math.abs(quiet - 0.16) < Math.abs(loud - 0.16));
-  assert.notEqual(waveAlpha(0, 0, 0), waveAlpha(0, 0, 4000));
+  assert.ok(min >= 0.08 - 1e-9, `trough ${min}`);
+  assert.ok(max <= 0.20 + 1e-9, `peak ${max}`);
+  assert.ok(max / min > 2.3, `ratio ${max / min}`);
+  assert.equal(waveAlpha(0.4, 0), waveAlpha(0.4, WAVE_PERIOD));
+  assert.notEqual(waveAlpha(0.4, 0), waveAlpha(0.4, WAVE_PERIOD / 2));
+  const loud = waveAlpha(0.5, WAVE_PERIOD / 2, 1);
+  const quiet = waveAlpha(0.5, WAVE_PERIOD / 2, 0.3);
+  assert.ok(Math.abs(quiet - 0.08) < Math.abs(loud - 0.08));
+});
+
+test('screen phase and spotlight falloff use the diagonal and the pointer radius', () => {
+  assert.equal(screenPhase(0, 0, 1440, 900), 0);
+  assert.ok(Math.abs(screenPhase(1440, 900, 1440, 900) - 1) < 1e-9);
+  assert.ok(Math.abs(screenPhase(720, 450, 1440, 900) - 0.5) < 1e-9);
+  assert.equal(spotFalloff(0), 1);
+  assert.equal(spotFalloff(180), 0);
+  assert.equal(spotFalloff(181), 0);
 });
 
 test('dot spacing is 28px on desktop and 32px on a 390px screen', () => {
