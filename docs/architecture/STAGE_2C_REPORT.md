@@ -27,3 +27,5 @@ createMigrationService 接收相同依赖。先在可信 registry 调用 registe
 npm ci 成功。修改前151项，最终 npm test 169通过、0失败、0跳过；npm run check:syntax 检查36文件；两个 Pack 构建命令通过。新增18项覆盖版本和包隔离、人工确认、历史裁剪、答案开关、坏数据与 quota、各迁移写入/读回故障、并发重复、旧源变化、部分删除和恢复检查。新工作流在 pull_request 上执行相同安装、测试、语法和构建。真实用户记录未用于验证。
 
 Stage 2D 接线前，审查确认提示、用户明确点击事件、未映射与待确认视图、错误与源冲突提示、备份含答案说明及关闭旧标签页流程。仅将 view().items 交给 Depth Meter/Crash Sheet。真实浏览器多标签交互和生产数据迁移未执行。
+
+交付分支 stage2c-storage，实施提交 0ef45c2a959bf2ea9c8b40b853f020277b161cb7。[PR #2](https://github.com/JUDYLP/stem/pull/2) 等待人工审核。[远端 PR 测试](https://github.com/JUDYLP/stem/actions/runs/44300355998) 的安装、测试、语法和两个构建步骤均已完成并通过。
