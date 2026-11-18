@@ -110,3 +110,40 @@ test('full deletion cancels, reports partial failure, removes orphan archives an
   assert.deepEqual(await f.s.deleteAll(true),{deleted:false,remaining:[H1]});
   f.storage.removeItem=remove;assert.equal((await f.s.deleteAll(true)).deleted,true);assert.deepEqual([...f.map.keys()],['unscripted.language']);
 });
+test('view requires migration when either legacy key exists, including empty raw strings',()=>{
+  const f=fixture();
+  assert.deepEqual(f.s.view(ctx(core)),{items:{},legacyItems:{},history:[]});
+  for(const key of [P1,H1]){
+    f.map.set(key,'');
+    assert.throws(()=>f.s.view(ctx(core)),{message:'MIGRATION_REQUIRED'});
+    assert.deepEqual([...f.map],[[key,'']]);
+    f.map.delete(key);
+  }
+  assert.deepEqual(f.writes,[]);
+});
+test('v2 rejects invalid calendar and clock values at write and snapshot read',async()=>{
+  const f=fixture();
+  const leap='2024-02-29T23:59:59.12+08:00';
+  await f.s.recordSelfRating(ctx(core),{...input,ts:leap});
+  const original=f.map.get(V2);
+  for(const ts of ['2025-02-29T12:00:00Z','2024-02-30T12:00:00Z','2024-04-31T12:00:00+08:00','2024-12-01T24:00:00Z','2024-01-01T00:60:00Z']){
+    await assert.rejects(f.s.recordSelfRating(ctx(core),{...input,ts}),/INVALID_RATING/);
+    assert.equal(f.map.get(V2),original);
+    const snapshot=JSON.parse(original);
+    const v=snapshot.packs[core.packId].versions[core.packVersion];
+    Object.values(v.items)[0].updatedAt=v.history[0].ts=ts;
+    f.map.set(V2,JSON.stringify(snapshot));
+    assert.throws(()=>f.s.view(ctx(core)),/DAMAGED_STATE/);
+    f.map.set(V2,original);
+  }
+});
+test('legacy timestamps retain v1 interpretation and exact source text',async()=>{
+  const f=fixture();seed(f);
+  const old='2025-02-30T12:00:00Z';
+  for(const k of [P1,H1])f.map.set(k,f.map.get(k).replaceAll(ts,old));
+  const before=new Map(f.map);
+  await f.migrate();
+  for(const [k,v] of before)assert.equal(f.map.get(k),v);
+  assert.equal(Object.values(f.s.view(ctx(core)).legacyItems)[0].updatedAt,old);
+  assert.equal((await f.m.readLegacyArchive()).entries[0].ts,old);
+});

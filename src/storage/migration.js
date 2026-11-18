@@ -1,4 +1,4 @@
-import {P1,H1,V2,PREFIX,shape,object,check,parse,empty,version,readState,keys,locked,writeChecked,timestamp,light} from './snapshot.js';
+import {P1,H1,V2,PREFIX,shape,object,check,parse,empty,version,readState,keys,locked,writeChecked,legacyTimestamp,light} from './snapshot.js';
 const known=new Set(['juc-volatile-atomicity-v2','redis-expiration-v2','mysql-consistent-read-v2']);
 const sources=storage=>({progress:storage.getItem(P1),history:storage.getItem(H1)});
 async function fingerprint(raw){
@@ -11,14 +11,14 @@ function strictLegacy(raw){
   shape(p,['schemaVersion','items']);check(p.schemaVersion===1 && object(p.items));
   for(const [k,i] of Object.entries(p.items)){
     check(/^[a-z0-9-]+::L[123]$/.test(k));shape(i,['status','updatedAt']);
-    check(['pass','review'].includes(i.status)&&timestamp(i.updatedAt));
+    check(['pass','review'].includes(i.status)&&legacyTimestamp(i.updatedAt));
   }
   const h=raw.history===null?{schemaVersion:1,saveAnswers:false,entries:[]}:parse(raw.history);
   shape(h,['schemaVersion','saveAnswers','entries']);
   check(h.schemaVersion===1 && typeof h.saveAnswers==='boolean' && Array.isArray(h.entries)&&h.entries.length<=200);
   for(const e of h.entries){
     shape(e,['questionId','layer','ts','light','pointLights','missedPoints'],['answer']);
-    check(typeof e.questionId==='string' && /^[a-z0-9-]+$/.test(e.questionId) && /^L[123]$/.test(e.layer)&&timestamp(e.ts)&&light(e.light));
+    check(typeof e.questionId==='string' && /^[a-z0-9-]+$/.test(e.questionId) && /^L[123]$/.test(e.layer)&&legacyTimestamp(e.ts)&&light(e.light));
     check(Array.isArray(e.pointLights)&&e.pointLights.length && e.pointLights.every(light));
     check(Array.isArray(e.missedPoints)&&e.missedPoints.every(i=>Number.isInteger(i)&&i>=0&&i<e.pointLights.length));
     check(!('answer' in e)||typeof e.answer==='string');

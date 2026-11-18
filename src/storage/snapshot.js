@@ -12,18 +12,33 @@ export function parse(raw){
   const result=parseStrictJson(raw);
   check(!result.error); return result.value;
 }
-export const timestamp=t=>typeof t==='string' && Number.isFinite(Date.parse(t));
+// v1 accepted all Date.parse-compatible strings. Keep original legacy bytes and semantics.
+export const legacyTimestamp=t=>typeof t==='string' && Number.isFinite(Date.parse(t));
+
+export function timestamp(text){
+  if(typeof text!=='string')return false;
+  const match=/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})$/.exec(text);
+  if(!match || !Number.isFinite(Date.parse(text)))return false;
+  // Check the supplied wall clock before applying its offset. Date.parse alone
+  // normalizes inputs such as February 30 or 24:00 to the following day.
+  const wallTime=match[1]+'.'+(match[2]??'').slice(0,3).padEnd(3,'0')+'Z';
+  const parsed=new Date(wallTime);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString()===wallTime;
+}
 export const light=l=>['green','amber','red'].includes(l);
 export const digest=d=>typeof d==='string' && /^sha256:[a-f0-9]{64}$/.test(d);
 const id=s=>typeof s==='string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s) && !['constructor','prototype'].includes(s);
 export function item(value){
   shape(value,['status','updatedAt'],['source','needsReconfirmation']);
-  check(['pass','review'].includes(value.status)&&timestamp(value.updatedAt));
+  check(['pass','review'].includes(value.status)&&(value.source==='legacy-v1' ? legacyTimestamp : timestamp)(value.updatedAt));
   if ('source' in value || 'needsReconfirmation' in value) check(value.source==='legacy-v1' && value.needsReconfirmation===true);
 }
 export function readState(storage){
   const raw=storage.getItem(V2);
-  if(raw===null)return empty();
+  if(raw===null){
+    check(storage.getItem(P1)===null && storage.getItem(H1)===null,'MIGRATION_REQUIRED');
+    return empty();
+  }
   const s=parse(raw);
   shape(s,['schemaVersion','packs','saveAnswers','migration']);
   check(s.schemaVersion===2 && object(s.packs) && typeof s.saveAnswers==='boolean');

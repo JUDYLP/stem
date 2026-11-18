@@ -14,8 +14,6 @@ export function createLearningStore({storage,locks,registry}){
         check(raw!==null,'BACKUP_MISSING');
         const archived=JSON.parse(raw);
         check(archived.progress===storage.getItem(P1) && archived.history===storage.getItem(H1),'SOURCE_CHANGED');
-      } else if(storage.getItem(V2)===null){
-        check(storage.getItem(P1)===null && storage.getItem(H1)===null,'MIGRATION_REQUIRED');
       }
       change(state);
       writeChecked(storage,V2,JSON.stringify(state));
