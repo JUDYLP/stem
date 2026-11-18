@@ -117,7 +117,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 
 ### 自动测试
 
-- `node --test tests/*.test.mjs`：37/37 PASS（Node v24.18.0，WSL）。新增 `tests/lights.test.mjs`（5 项：灯色汇总、Pass 映射、循环顺序、外部建议校验、旧 progress 兼容）与 `tests/history.test.mjs`（7 项：200 条裁剪、默认不存原文、关闭开关删除原文、坏数据不改写、非法条目丢弃、最近灯色、清空保留开关）。
+- `node --test tests/*.test.mjs`：38/38 PASS（Node v24.18.0，WSL）。新增 `tests/lights.test.mjs`（5 项：灯色汇总、Pass 映射、循环顺序、外部建议校验、旧 progress 兼容）与 `tests/history.test.mjs`（7 项：200 条裁剪、默认不存原文、关闭开关删除原文、坏数据不改写、非法条目丢弃、最近灯色、清空保留开关）。
 - `node --check src/main.js`、`src/history.js`、`src/demo.js`、`src/export.js`：PASS。
 
 ### 浏览器流程（Chrome 157 headless，CDP 独立上下文，http://127.0.0.1:5177）
@@ -160,7 +160,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 
 ### 自动测试
 
-- `node --test tests/*.test.mjs`：37/37 PASS（Node v24.18.0）。新增「1/2/3 键映射与 aria-label 文案」测试；history 的「关闭保存时不写入原文」与「关闭后删除已有原文」继续通过；旧 progress 映射为绿/红仍通过。
+- `node --test tests/*.test.mjs`：38/38 PASS（Node v24.18.0）。新增「1/2/3 键映射与 aria-label 文案」测试；history 的「关闭保存时不写入原文」与「关闭后删除已有原文」继续通过；旧 progress 映射为绿/红仍通过。
 
 ### 浏览器验证（Chrome 157 headless，CDP，127.0.0.1:5177）
 
@@ -202,7 +202,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 
 ### 自动测试
 
-- `node --test tests/*.test.mjs`：37/37 PASS。新增 `tests/dotfield.test.mjs` 4 项：衰减 0→1 与 160px 边界、单调性、0.5 染色上限、0.06–0.10 呼吸与 30% 静音、28/32px 间距。
+- `node --test tests/*.test.mjs`：38/38 PASS。新增 `tests/dotfield.test.mjs` 4 项：衰减 0→1 与 160px 边界、单调性、0.5 染色上限、0.06–0.10 呼吸与 30% 静音、28/32px 间距。
 
 ### 浏览器测量（Chrome 157 headless，CDP，127.0.0.1:5177）
 
@@ -235,3 +235,32 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 ### 本轮部署确认
 
 2026-11-17：Actions https://github.com/JUDYLP/stem/actions/runs/44070234739 completed/success，部署 `67ad40e`（e15f81f 点阵模块、f4791fb 点阵与灯、67ad40e 文档）。独立 Chrome 打开 https://judylp.github.io/stem/ ：12 个静态资源 HTTP 200、MIME 正确、SHA-256 与 `git show HEAD:` 一致；canvas 1440×1000、间距 28、`window.__dotfield` 存在，5 秒窗口 30fps（平均间隔 33.3ms）、绘制平均 0.6ms / 最大 2.1ms；示例灯 32px，点阵有 840 个已染色像素；body 透明、无横向溢出、Console 无错误。英文站无中文。
+
+## 2026-11-18 外观收尾：点阵提亮与灯的外溢
+
+范围：只调点阵与灯的边界表现，不改功能、存储或文案。执行者 Codex，无 Subagent；无新依赖。
+
+### 自动测试
+
+- `node --test tests/*.test.mjs`：38/38 PASS。新增 `spillAllowed` 测试（0/80/81、非首屏面板、NaN）；呼吸区间改为 0.12–0.20。
+
+### 浏览器验证（Chrome 157 headless，CDP，禁用缓存，127.0.0.1:5177）
+
+| 项目 | 结果 |
+|---|---|
+| 导航 logo 不染色 | 首帧后左上 300×120 区域内彩色点 = 0；只统计 `<main>` 内的灯 |
+| 点阵亮度 | 基础像素 alpha 32–51 / 255（0.125–0.20），波峰/波谷比约 1.6；峰值仍为 0.20 |
+| 正文对比度 | `#EDEDED` 对 `#000` 17.94:1、对最亮基础点 `#333` 10.79:1；`#A1A1AA` 对 `#000` 8.19:1、对 `#333` 4.93:1（均 ≥4.5） |
+| 首屏波纹 | `RIPPLE_SPREAD=320`，`lamp:lit` 触发；1.1s 时在标题区采样到绿色点 alpha 159/255（0.62），波纹越过卡片边缘可见 |
+| 面板边缘接光 | 灯点亮后最近面板获得 `edge-lit`，`--edge-color` 为对应 rgba(...,.7)，1px 遮罩环沿灯方向显示，900ms 后移除并淡出 |
+| 外溢限制 | 只有首屏示例面板的灯染背景；面板内灯距离边缘 >80px 或不属于示例面板时不染。练习区滚动到视口后左侧 200px 内彩色点 = 0 |
+| 视口截图 | 1440×1000 与 390×844，中文/英文，首屏与热力图附近各一张；未做全页拉伸 |
+| 性能 | 30fps 门限；桌面绘制约 0.35–0.52ms/帧，峰值 <2.1ms；Console 无错误 |
+
+证据（本地忽略目录 `work/qa-signal-20261117/`，不提交）：`viewport-{zh,en}-{1440,390}-{hero,heat}.png`、`rip-zoom.png`、`edge-left.png`、`edge-glow.png`。
+
+### 未验证与限制
+
+- 真实 60/120Hz 与真机未测；4ms 为 canvas 绘制耗时，不含合成。
+- 面板内的灯不再染背景点（比 80px 规则更严格），统一改由面板 1px 边缘光连接内外；这是为避免左侧彩色点条。
+- 基础点提亮后，正文字形落在单个亮点上的最坏对比度为 4.93:1（次要文字），仅覆盖 2px 点，实际阅读背景仍是黑底。
