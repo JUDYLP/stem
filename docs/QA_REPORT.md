@@ -264,3 +264,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - 真实 60/120Hz 与真机未测；4ms 为 canvas 绘制耗时，不含合成。
 - 面板内的灯不再染背景点（比 80px 规则更严格），统一改由面板 1px 边缘光连接内外；这是为避免左侧彩色点条。
 - 基础点提亮后，正文字形落在单个亮点上的最坏对比度为 4.93:1（次要文字），仅覆盖 2px 点，实际阅读背景仍是黑底。
+
+### 本轮部署确认
+
+2026-11-18：Actions https://github.com/JUDYLP/stem/actions/runs/44223151827 completed/success，部署 `f92cc82`（fb29cf8 点阵提亮/限流、0e5c608 面板接光、f92cc82 文档）。独立 Chrome 打开 https://judylp.github.io/stem/ ：12 个静态资源 HTTP 200、MIME 正确、SHA-256 与 `git show HEAD:` 一致；左上 300×120 区域彩色点 0；基础点 alpha 32–51/255；30fps（平均间隔 33.3ms）、绘制平均 0.47ms；示例面板点亮后 `edge-lit` 与 `rgba(255,69,58,.7)` 生效；390 下间距 32、canvas 780×1688（dpr 上限 2）、无横向溢出；Console 无错误。
