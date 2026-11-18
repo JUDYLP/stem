@@ -431,3 +431,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - 光晕中心位于卡片内，截图采样使用可见左侧光区/激活层背景；精确中心被不透明卡片遮挡。
 - 1366×768 判定后卡片仍可能超出视口底部；选项在首屏，本轮未改布局高度。
 - 真实 60/120Hz、Safari/Firefox、触屏未测；`pack-browser` 环境问题同上。
+
+### 本轮部署确认
+
+2026-11-18：Actions https://github.com/JUDYLP/stem/actions/runs/44252757476 completed/success，部署 `4e92795`。独立 Chrome 打开 https://judylp.github.io/stem/（1440×900）：13 个资源哈希一致；自动红判定时 `data-light=red`，四层 opacity 为 white 0 / green 0 / amber 0 / red 1（不再常亮红层）；全绿时按钮 142×38、底色 `#0d1a12`、文字 `#4ade80`，点击后练习区顶部 72；重播 100ms 后 `data-light=white`；Console 无错误。
