@@ -395,3 +395,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - 1366×768 判定后卡片底部到 803px，追问/预设标注需滚动才能看全；选项和灯已按要求在首屏。
 - 环境光的 blur 为静态 CSS filter，未单独测 GPU 成本；点阵仍 30fps。
 - 手电筒/点阵/分区光沿用上一轮，未在本轮改动。
+
+### 本轮部署确认
+
+2026-11-18：Actions https://github.com/JUDYLP/stem/actions/runs/44244761267 completed/success，部署 `7a69f42`。独立 Chrome 打开 https://judylp.github.io/stem/（1440×900）：13 个静态资源 HTTP 200、SHA-256 与提交一致；自动演示选中第一项，三盏红灯，环境光 `data-light=red`，仅要点 1 显示「原子的」；选项 373–522、卡片 115–803、代码 8 行；Console 无错误。
