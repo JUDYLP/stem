@@ -72,6 +72,9 @@ export function readState(storage){
       for(const [key,h] of latest){const i=v.items[key];check(i && !i.needsReconfirmation && i.updatedAt===h.ts && i.status===statusForLight(h.light));}
     }
   }
+  if (s.migration === null) {
+    check(storage.getItem(P1) === null && storage.getItem(H1) === null, 'LEGACY_DATA_CONFLICT');
+  }
   return s;
 }
 export function version(s,r,create=false){

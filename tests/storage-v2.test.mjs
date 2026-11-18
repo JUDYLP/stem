@@ -39,11 +39,11 @@ test('one confirmation is one write, detached views, version and digest isolatio
   await assert.rejects(s.recordSelfRating(ctx(core),{...input,criterionResults:[{rubricId:'foreign',light:'green'}]}));
 });
 test('latest 200 entries; answer opt-in, revocation and explicit pack clearing',async()=>{
-  const f=fixture();await f.s.setSaveAnswers(true);
+  const f=fixture();seed(f);await f.migrate();await f.s.setSaveAnswers(true);
   for(let i=0;i<201;i++)await f.s.recordSelfRating(ctx(core),{...input,answer:String(i)});
   const h=f.s.view(ctx(core)).history;assert.equal(h.length,200);assert.equal(h[0].answer,'1');
   await f.s.setSaveAnswers(false);assert.ok(f.s.view(ctx(core)).history.every(e=>!('answer' in e)));
-  seed(f);f.map.set(PREFIX+'old.backup','retained');
+  f.map.set(PREFIX+'old.backup','retained');
   for(const r of [imported,newer])await f.s.recordSelfRating(ctx(r),input);
   await f.s.clearPack(ctx(imported),true);assert.equal(f.s.view(ctx(newer)).history.length,0);
   assert.equal(f.s.view(ctx(imported)).history.length,0);assert.equal(f.s.view(ctx(core)).history.length,200);
@@ -146,4 +146,27 @@ test('legacy timestamps retain v1 interpretation and exact source text',async()=
   for(const [k,v] of before)assert.equal(f.map.get(k),v);
   assert.equal(Object.values(f.s.view(ctx(core)).legacyItems)[0].updatedAt,old);
   assert.equal((await f.m.readLegacyArchive()).entries[0].ts,old);
+});
+for (const legacyKey of [P1, H1]) {
+  test('legacy key appearing after native v2 blocks views and updates: ' + legacyKey, async () => {
+    const f = fixture();
+    await f.s.setSaveAnswers(false);
+    f.map.set(legacyKey, '');
+    const before = new Map(f.map);
+    const writes = f.writes.length;
+    const conflict = {message: 'LEGACY_DATA_CONFLICT'};
+    assert.throws(() => f.s.view(ctx(core)), conflict);
+    await assert.rejects(f.s.recordSelfRating(ctx(core), input), conflict);
+    await assert.rejects(f.s.setSaveAnswers(true), conflict);
+    await assert.rejects(f.s.clearPack(ctx(core), true), conflict);
+    assert.deepEqual(f.map, before);
+    assert.equal(f.writes.length, writes);
+  });
+}
+test('native v2 without legacy keys permits empty views and subsequent ratings', async () => {
+  const f = fixture();
+  await f.s.setSaveAnswers(false);
+  assert.deepEqual(f.s.view(ctx(core)), {items:{}, legacyItems:{}, history:[]});
+  assert.equal((await f.s.recordSelfRating(ctx(core), input)).persisted, true);
+  assert.equal(f.s.view(ctx(core)).history.length, 1);
 });
