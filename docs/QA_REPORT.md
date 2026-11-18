@@ -351,3 +351,7 @@ Live AI、Key/CORS、真实手机、其他浏览器、用户试用、视频/Devp
 - 首屏「试试 L3」只是文案，不跳转（练习题库主题与库存题不同，避免误导）。
 - 12 题紧凑矩阵与上一轮相同，仍是浏览器 Fetch 注入的测试数据。
 - 并行架构会话的 `pack-browser.test.mjs` 与 node_modules 平台问题不属于本轮产品代码。
+
+### 本轮部署确认
+
+2026-11-18：Actions https://github.com/JUDYLP/stem/actions/runs/44231982922 completed/success，部署 `2ef6ba6`（564fd1c 点阵波/手电筒、173027a 环境光/库存示例、2ef6ba6 文档）。独立 Chrome 打开 https://judylp.github.io/stem/ ：13 个静态资源 HTTP 200、SHA-256 与 `git show HEAD:` 一致；自动演示选中第一个错误回答，三灯红、环境光 `rgba(255,69,58,.22)`；英文页除产品名外无中文；390 选项宽 324、scrollWidth 390、点距 32；30fps、绘制平均 0.64ms、峰值 1.5ms；Console 无错误。
