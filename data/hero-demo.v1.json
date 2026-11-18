@@ -36,46 +36,46 @@
           "light": "red",
           "reason": "两个请求都可能读到 1，然后各自写回 0，导致超卖。",
           "reasonEn": "Both requests can read 1 and then write 0, causing an oversell.",
-          "quote": "没问题",
-          "quoteEn": "fine"
+          "quote": "",
+          "quoteEn": ""
         },
         {
           "pointId": "fix",
           "light": "red",
           "reason": "没有处理读与写之间的空隙；应使用 DECR 并检查结果，或用 Lua 脚本。",
           "reasonEn": "The gap between read and write is unhandled; use DECR and check the result, or a Lua script.",
-          "quote": "原子的",
-          "quoteEn": "atomic"
+          "quote": "",
+          "quoteEn": ""
         }
       ]
     },
     "single-thread": {
-      "followup": "单线程只是不并行执行命令；GET 和 SET 之间仍可能插入另一个请求，对吗？",
-      "followupEn": "Single-threaded means commands do not run in parallel; another request can still run between GET and SET, right?",
+      "followup": "",
+      "followupEn": "",
       "points": [
         {
           "pointId": "two-ops",
-          "light": "red",
-          "reason": "单线程不代表 GET 和 SET 合并成一次操作，它们仍然是两步。",
-          "reasonEn": "Single-threaded does not merge GET and SET into one operation; they are still two steps.",
+          "light": "amber",
+          "reason": "单个 Redis 命令确实原子，但 GET 和 SET 是两次操作，整个扣减不是原子的。",
+          "reasonEn": "A single Redis command is atomic, but GET and SET are two operations; the whole deduction is not atomic.",
           "quote": "单线程",
           "quoteEn": "single-threaded"
         },
         {
           "pointId": "both-read-1",
-          "light": "red",
-          "reason": "两个请求仍可能都读到 1；单线程不等于整个读—改—写原子化。",
-          "reasonEn": "Both requests can still read 1; single-threaded does not make the read-modify-write atomic.",
+          "light": "amber",
+          "reason": "单线程不会让两个请求的 GET 与 SET 自动串成一个原子动作，仍可能都读到 1。",
+          "reasonEn": "Single-threaded does not merge each request's GET and SET into one atomic action; both can still read 1.",
           "quote": "安全",
           "quoteEn": "safe"
         },
         {
           "pointId": "fix",
-          "light": "red",
-          "reason": "这条回答没有给出修复；DECR 并检查结果或用 Lua 才能保护检查与扣减。",
-          "reasonEn": "This answer gives no fix; DECR with a result check or Lua protects the check and deduction.",
-          "quote": "安全",
-          "quoteEn": "safe"
+          "light": "amber",
+          "reason": "没有给出修复；DECR 并检查结果或用 Lua 才能保护检查与扣减。",
+          "reasonEn": "No fix is given; DECR with a result check or Lua protects the check and deduction.",
+          "quote": "",
+          "quoteEn": ""
         }
       ]
     },

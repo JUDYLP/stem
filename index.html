@@ -39,7 +39,12 @@
 
       <main id="main">
         <section class="hero" aria-labelledby="hero-title">
-          <div class="hero-glow" id="hero-glow" aria-hidden="true"></div>
+          <div class="hero-glow" id="hero-glow" data-light="white" aria-hidden="true">
+            <span class="glow-layer" data-light="white"></span>
+            <span class="glow-layer" data-light="green"></span>
+            <span class="glow-layer" data-light="amber"></span>
+            <span class="glow-layer" data-light="red"></span>
+          </div>
           <div class="hero-copy">
             <p class="kicker"><span data-i18n="解释练习">解释练习</span></p>
             <h1 id="hero-title"><span data-i18n="AI 写完了，">AI 写完了，</span><br><em data-i18n="你讲得清吗？">你讲得清吗？</em></h1>
@@ -63,25 +68,22 @@
     <span class="tok-key">int</span> stock = redis.get(<span class="tok-string">"stock:"</span> + id);
     <span class="tok-key">if</span> (stock &gt; 0) {
       redis.set(<span class="tok-string">"stock:"</span> + id, stock - 1);
-    }
-  }
-}</code></pre>
+    } } }</code></pre>
             <div class="example-body">
               <h2 id="preview-title"><span data-i18n="两个请求同时下单，库存只剩 1，会发生什么？">两个请求同时下单，库存只剩 1，会发生什么？</span></h2>
-              <ul id="hero-points" class="point-list demo-points">
-                <li data-point="two-ops"><span class="lamp" data-state="off" aria-hidden="true"></span><div class="demo-point-body"><p class="demo-point-text"><span data-i18n="GET 和 SET 是两次独立操作。">GET 和 SET 是两次独立操作。</span></p><p class="point-reason" hidden></p><p class="point-quote" hidden></p></div></li>
-                <li data-point="both-read-1"><span class="lamp" data-state="off" aria-hidden="true"></span><div class="demo-point-body"><p class="demo-point-text"><span data-i18n="两个请求可能都读到 1，导致超卖。">两个请求可能都读到 1，导致超卖。</span></p><p class="point-reason" hidden></p><p class="point-quote" hidden></p></div></li>
-                <li data-point="fix"><span class="lamp" data-state="off" aria-hidden="true"></span><div class="demo-point-body"><p class="demo-point-text"><span data-i18n="修复用 DECR 并检查结果，或用 Lua 脚本。">修复用 DECR 并检查结果，或用 Lua 脚本。</span></p><p class="point-reason" hidden></p><p class="point-quote" hidden></p></div></li>
-              </ul>
-              <div id="hero-answer" class="hero-answer" hidden>
-                <span class="hero-answer-label"><span data-i18n="你的回答">你的回答</span></span>
-                <blockquote class="student-answer" id="hero-quote"></blockquote>
-              </div>
-              <p id="hero-followup" class="followup" hidden></p>
-              <p id="hero-clear" class="hero-clear" hidden><span data-i18n="讲清了，试试 L3？">讲清了，试试 L3？</span></p>
               <fieldset id="hero-options" class="hero-options">
                 <legend><span data-i18n="选一个回答，看看预设判定">选一个回答，看看预设判定</span></legend>
               </fieldset>
+              <div id="hero-result" class="hero-result" hidden>
+                <p class="hero-result-label"><span data-i18n="判定结果">判定结果</span></p>
+                <ul id="hero-points" class="point-list demo-points">
+                  <li data-point="two-ops"><span class="lamp" data-state="off" aria-hidden="true"></span><div class="demo-point-body"><p class="demo-point-text"><span data-i18n="GET 和 SET 是两次独立操作。">GET 和 SET 是两次独立操作。</span></p><p class="point-reason" hidden></p><p class="point-quote" hidden></p></div></li>
+                  <li data-point="both-read-1"><span class="lamp" data-state="off" aria-hidden="true"></span><div class="demo-point-body"><p class="demo-point-text"><span data-i18n="两个请求可能都读到 1，导致超卖。">两个请求可能都读到 1，导致超卖。</span></p><p class="point-reason" hidden></p><p class="point-quote" hidden></p></div></li>
+                  <li data-point="fix"><span class="lamp" data-state="off" aria-hidden="true"></span><div class="demo-point-body"><p class="demo-point-text"><span data-i18n="修复用 DECR 并检查结果，或用 Lua 脚本。">修复用 DECR 并检查结果，或用 Lua 脚本。</span></p><p class="point-reason" hidden></p><p class="point-quote" hidden></p></div></li>
+                </ul>
+                <p id="hero-followup" class="followup" hidden></p>
+                <button id="hero-try" class="button primary hero-try" type="button" hidden><span data-i18n="去练习区试试真题 →">去练习区试试真题 →</span></button>
+              </div>
               <p class="sim-note mono"><span data-i18n="预设判定，未调用 AI">预设判定，未调用 AI</span></p>
               <p id="hero-status" class="visually-hidden" role="status" aria-live="polite"></p>
             </div>

@@ -35,12 +35,12 @@ export function validateHeroDemo(data) {
     for (const point of judgment.points) {
       if (!point || !pointIds.includes(point.pointId) || seen.has(point.pointId)) throw new Error('判定要点 ID 无效或重复');
       if (!POINT_LIGHTS.includes(point.light)) throw new Error('灯色无效');
-      if (!nonempty(point.reason) || !nonempty(point.reasonEn) || !nonempty(point.quote) || !nonempty(point.quoteEn)) {
-        throw new Error('判定理由或引用为空');
-      }
-      if (!option.text.includes(point.quote) || !option.textEn.includes(point.quoteEn)) {
-        throw new Error('引用必须来自所选回答');
-      }
+      if (!nonempty(point.reason) || !nonempty(point.reasonEn)) throw new Error('判定理由为空');
+      const quote = typeof point.quote === 'string' ? point.quote : '';
+      const quoteEn = typeof point.quoteEn === 'string' ? point.quoteEn : '';
+      if (nonempty(quote) !== nonempty(quoteEn)) throw new Error('引用必须双语同时存在或同时为空');
+      if (quote && !option.text.includes(quote)) throw new Error('引用必须来自所选回答');
+      if (quoteEn && !option.textEn.includes(quoteEn)) throw new Error('引用必须来自所选回答');
       if (point.light === 'red') hasRed = true;
       seen.add(point.pointId);
     }
@@ -59,10 +59,9 @@ export function initDemo() {
   const $ = id => document.getElementById(id);
   const pointsHost = $('hero-points');
   const optionsHost = $('hero-options');
-  const quoteBox = $('hero-answer');
-  const quote = $('hero-quote');
   const followup = $('hero-followup');
-  const clear = $('hero-clear');
+  const result = $('hero-result');
+  const tryButton = $('hero-try');
   const status = $('hero-status');
   const glow = $('hero-glow');
   const replay = $('replay-demo');
@@ -84,8 +83,7 @@ export function initDemo() {
 
   function setGlow(light, pulse = true) {
     if (!glow) return;
-    const rgb = { green: '34,197,94', amber: '245,165,36', red: '255,69,58' }[light] || '255,255,255';
-    glow.style.backgroundColor = `rgba(${rgb}, .22)`;
+    glow.dataset.light = ['green', 'amber', 'red'].includes(light) ? light : 'white';
     if (!pulse) return;
     glow.classList.remove('is-pulsing');
     void glow.offsetWidth;
@@ -128,15 +126,15 @@ export function initDemo() {
       followup.textContent = t('追问：{question}', { question: localize(judgment, 'followup') });
       followup.hidden = false;
       requestAnimationFrame(() => followup.classList.add('is-shown'));
-      clear.hidden = true;
+      tryButton.hidden = true;
     } else if (allGreen) {
       followup.hidden = true;
       followup.classList.remove('is-shown');
-      clear.hidden = false;
+      tryButton.hidden = false;
     } else {
       followup.hidden = true;
       followup.classList.remove('is-shown');
-      clear.hidden = true;
+      tryButton.hidden = true;
     }
     if (announce) status.textContent = summary(judgment);
   }
@@ -145,11 +143,12 @@ export function initDemo() {
     setLampState(point.lamp, judgmentPoint.light);
     ignite(point.lamp);
     point.row.dataset.state = judgmentPoint.light;
-    point.reason.textContent = localize(judgmentPoint, 'reason');
-    point.reason.hidden = false;
+    const showReason = judgmentPoint.light !== 'green';
+    point.reason.textContent = showReason ? localize(judgmentPoint, 'reason') : '';
+    point.reason.hidden = !showReason;
     const quoteText = localize(judgmentPoint, 'quote');
-    point.quote.textContent = getLanguage() === 'zh' ? `「${quoteText}」` : `“${quoteText}”`;
-    point.quote.hidden = false;
+    point.quote.textContent = quoteText ? (getLanguage() === 'zh' ? `「${quoteText}」` : `“${quoteText}”`) : '';
+    point.quote.hidden = !quoteText;
   }
 
   function applyOption(id, { animate = true, announce = true } = {}) {
@@ -163,11 +162,10 @@ export function initDemo() {
       button.setAttribute('aria-pressed', String(button.dataset.option === id));
     }
     resetPoints();
-    quote.textContent = localize(option, 'text');
-    quoteBox.hidden = false;
+    result.hidden = false;
     followup.hidden = true;
     followup.classList.remove('is-shown');
-    clear.hidden = true;
+    tryButton.hidden = true;
     status.textContent = '';
     setGlow('off', false);
 
@@ -226,6 +224,10 @@ export function initDemo() {
       status.textContent = t('示例判定暂不可用');
     }
   }
+
+  tryButton.addEventListener('click', () => {
+    document.getElementById('practice')?.scrollIntoView({ block: 'start' });
+  });
 
   replay.addEventListener('click', () => {
     stopAuto();

@@ -886,6 +886,15 @@ export const messages = {
     "zh": "示例判定暂不可用",
     "en": "The preset judgment is unavailable."
   }
+,
+  "判定结果": {
+    "zh": "判定结果",
+    "en": "Result"
+  },
+  "去练习区试试真题 →": {
+    "zh": "去练习区试试真题 →",
+    "en": "Try a real question in Practice →"
+  }
 };
 export const LANGUAGE_KEY = 'unscripted.language';
 let language = 'zh';
