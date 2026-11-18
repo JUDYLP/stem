@@ -24,7 +24,7 @@
     },
     "packVersion": {
       "type": "string",
-      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?![\\s\\S])",
       "maxLength": 32
     },
     "title": {
@@ -32,7 +32,7 @@
       "minProperties": 1,
       "maxProperties": 8,
       "propertyNames": {
-        "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$"
+        "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?(?![\\s\\S])"
       },
       "additionalProperties": {
         "type": "string",
@@ -46,7 +46,7 @@
       "minProperties": 1,
       "maxProperties": 8,
       "propertyNames": {
-        "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$"
+        "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?(?![\\s\\S])"
       },
       "additionalProperties": {
         "type": "string",
@@ -81,7 +81,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 64,
-      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?![\\s\\S])",
       "not": {
         "enum": [
           "constructor",
@@ -91,7 +91,7 @@
     },
     "language": {
       "type": "string",
-      "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$",
+      "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?(?![\\s\\S])",
       "maxLength": 20
     },
     "review": {
@@ -115,7 +115,7 @@
         },
         "reviewedAt": {
           "type": "string",
-          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z(?![\\s\\S])"
         }
       },
       "allOf": [
@@ -164,7 +164,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 96,
-          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?![\\s\\S])",
           "not": {
             "enum": [
               "constructor",
@@ -177,7 +177,7 @@
           "minProperties": 1,
           "maxProperties": 8,
           "propertyNames": {
-            "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$"
+            "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?(?![\\s\\S])"
           },
           "additionalProperties": {
             "type": "string",
@@ -217,7 +217,7 @@
           "minProperties": 1,
           "maxProperties": 8,
           "propertyNames": {
-            "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$"
+            "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?(?![\\s\\S])"
           },
           "additionalProperties": {
             "type": "string",
@@ -255,7 +255,7 @@
           "minProperties": 1,
           "maxProperties": 8,
           "propertyNames": {
-            "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$"
+            "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?(?![\\s\\S])"
           },
           "additionalProperties": {
             "type": "string",
@@ -269,7 +269,7 @@
           "minProperties": 1,
           "maxProperties": 8,
           "propertyNames": {
-            "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$"
+            "pattern": "^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?(?![\\s\\S])"
           },
           "additionalProperties": {
             "type": "string",
@@ -299,7 +299,8 @@
                     "label": {
                       "const": "Explain"
                     }
-                  }
+                  },
+                  "type": "object"
                 }
               ]
             },
@@ -316,7 +317,8 @@
                     "label": {
                       "const": "Reason"
                     }
-                  }
+                  },
+                  "type": "object"
                 }
               ]
             },
@@ -333,7 +335,8 @@
                     "label": {
                       "const": "Stress-test"
                     }
-                  }
+                  },
+                  "type": "object"
                 }
               ]
             }

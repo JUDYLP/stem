@@ -1,6 +1,6 @@
 # Question Pack JSON Schema v1
 
-状态：Stage 1审核候选，审批前不接入产品。理念：**Swap the knowledge. Keep the challenge.**
+状态：Stage 1.1规范修订与Stage 2A独立校验已实现，未接入产品。理念：**Swap the knowledge. Keep the challenge.**
 
 权威机器文件：[question-pack.schema.v1.json](question-pack.schema.v1.json)。完整双语示例：[question-pack.example.v1.json](question-pack.example.v1.json)，含原有3题9层和逐项Rubric，非省略示意。示例仅在docs，不替换data/questions.json。
 
@@ -25,12 +25,12 @@ label是稳定层级语义标识，不是任意领域标签；引擎UI可本地�
 - packId在本浏览器注册表的逻辑题库中唯一，不是全球可信注册。内置保留`unscripted-`前缀，导入新Pack不得冒用；已有内置更新只能来自应用维护者发布。
 - Question id只在一个Pack内唯一；不同Pack允许同名。`packId::questionId::layerId`是统一逻辑记录键，ID只允许小写字母/数字和内部单连字符，禁止分隔符`::`。
 - rubricId在整个Pack内唯一，不仅在一层内；不同Pack可复用。建议`question-id-l1-c01`，但命名不代替重复检测。初次转换按位置赋ID，之后重排保留ID，含义改变创建新ID，不能按新位置重编号。
-- `schemaVersion`代表结构协议；`packVersion`代表题库内容。支持1.0.0三段版本，暂不接受v前缀/预发布/构建后缀；版本按整数三元组比较，不能字符串排序。
+- `schemaVersion`代表结构协议；`packVersion`代表题库内容。支持1.0.0三段版本，暂不接受v前缀/预发布/构建后缀；版本三段禁止前导零，按整数三元组比较；禁止把任意长度分量转换为JavaScript Number。comparePackVersions按十进制分量长度、再按等长数字字典序比较，返回-1/0/1。非法格式抛TypeError；支持超过2^53的分量。Pack字段仍受Schema的32码点总长度限制，独立比较函数不施加此容量限制。
 - 同packId同packVersion的规范化JSON内容必须不可变。相同内容重导为幂等，内容不同拒绝；新版本并存、显式激活。不同题库重复ID不能仅靠单个JSON的Schema检查。
 
 ## 强制语义校验：Schema通过还不等于可导入
 
-JSON Schema的uniqueItems不能检查对象某个属性的唯一值，也无法在此通用Schema中动态要求每个翻译对象等于supportedLanguages。后续导入器必须在结构校验后完成：
+JSON Schema的uniqueItems不能检查对象某个属性的唯一值，也无法在此通用Schema中动态要求每个翻译对象等于supportedLanguages。独立校验器先执行结构检查再执行语义检查；后续注册器还需检查上下文冲突：
 
 1. Question ID集合无重复；所有层rubricId组成一个Pack级集合，无重复。
 2. defaultLanguage属于supportedLanguages；每个语言映射键集合**恰好等于**supportedLanguages，值trim后非空（包括Unicode空白）。未声明翻译也拒绝，防止拼写错误被忽略。
@@ -38,7 +38,7 @@ JSON Schema的uniqueItems不能检查对象某个属性的唯一值，也无法�
 4. 注册表ID/版本/内置保留命名冲突检查；只有显式确认才激活。
 5. 入口限制文件UTF-8字节数≤1,048,576、JSON嵌套≤32；拒绝非有限数、重复对象成员名和畸形编码；最终字段按Schema白名单构造对象，不深合并用户对象。
 
-**完整接受条件＝入口检查＋Schema＋语义＋注册冲突检查。** 文档示例的语义检查并不是产品已实现的校验器。
+**完整接受条件＝入口检查＋Schema＋语义＋注册冲突检查。** Stage 2A已实现前三项；valid:true不代表已注册，注册冲突检查仍未实现。
 
 ## 翻译缺失、未知字段与容量
 
@@ -91,3 +91,21 @@ JSON Schema的uniqueItems不能检查对象某个属性的唯一值，也无法�
 未来灯号建议映射met→green、partial/uncertain→amber、missing→red；按rubricId映射到当前顺序，仅作为可采纳建议，仍需人工确认。切Pack、版本、题层、语言或编辑回答时使旧requestId/answerRevision失效；响应即使晚到也不能污染新上下文。旧规划snake_case evidence_gaps/rubric_index是历史草案，无真实已部署AI集成，不做不存在的在线协议迁移。
 
 Provider接口`evaluate(input,{signal,credential})`返回上述规范化输出，服务商原始字段不进入训练引擎；无API时不创建伪评价结果。Provider不能调用storage/history，不能替用户确认。具体厂商、额度及真实JSON验证留到独立获授权阶段。
+
+## Stage 2A实现边界与API
+
+- `src/packs/validate.js`是Node 24开发入口，不在Pages打包白名单，也不被main.js引用。Ajv 8.20.0（2020入口）和Microsoft jsonc-parser 3.3.1是固定devDependencies；无runtime dependencies，lockfile固定传递依赖。
+- `validateQuestionPackText(text)`：仅接受字符串；按实际UTF-8字节限制1MiB。`validateQuestionPackBytes(bytes)`：仅接受Uint8Array（含Node Buffer），fatal UTF-8解码；不改输入。BOM、孤立代理项、非有限数拒绝。
+- jsonc-parser仅使用visit token回调；每个对象独立Set检查解码后的键，拒绝__proto__/constructor/prototype，进入第33个容器即停止；根容器深度为1。关闭注释/尾逗号，任何解析诊断立即失败，最后JSON.parse再次严格检查语法，不采用容错修复结果。输入对象尚未生成时就拒绝重复键；不是正则扫描键。
+- Ajv完整执行Schema；禁止coerceTypes/useDefaults/removeAdditional。strict模式开启，只有strictRequired关闭，因为review分支的required引用父级定义的属性；这不关闭数据required校验。层级顺序、label对应、review字段互斥、语言uniqueItems由Schema强制保证；语义模块无需重复实现这些结构规则。
+- `semantics.js`只接收结构已通过的数据，检查语言映射集合、包内ID唯一、真实UTC日历（格式加Date序列化回比，拒绝滚动溢出）。v1时间固定YYYY-MM-DDTHH:mm:ssZ，不接受偏移/小数秒/闰秒；Unicode文本不归一化。
+- 成功：`{valid:true, errors:[], pack}`；失败：`{valid:false, errors:[{code,path,message}]}`，没有部分pack。路径使用JSONPath形式；错误按固定遍历次序返回。语法/结构快速失败（Ajv allErrors:false，避免先产生大量错误）；语义最多50条，满额即停止收集。消息不含用户完整题库，不写日志。
+- 示例错误：`{code:"DUPLICATE_QUESTION_ID",path:"$.questions[1].id",message:"Question ID must be unique"}`。结构错误`SCHEMA_*`、未知字段`UNKNOWN_FIELD`；入口`MAX_BYTES/MAX_DEPTH/INVALID_UTF8/INVALID_UNICODE/INVALID_JSON/DUPLICATE_JSON_KEY/DANGEROUS_KEY/NON_FINITE_NUMBER`；版本`UNSUPPORTED_SCHEMA_VERSION`。
+- 未知字段不得静默丢弃，任一阶段失败整包拒绝。HTML字符串仍是数据；本阶段无DOM，未来UI必须textContent安全呈现。通过结构与语义检查不证明技术内容或作者审校声明可信。
+- Schema增加显式object子类型以通过Ajv严格检查，并用真正的输入末尾断言代替可容忍末尾换行的`$`。没有放松固定三层或字段白名单。
+
+参考：[Ajv Draft 2020-12](https://ajv.js.org/json-schema.html)、[Ajv校验选项](https://ajv.js.org/options.html)、[Microsoft jsonc-parser visitor API](https://github.com/microsoft/node-jsonc-parser)。后续浏览器集成须单独审查依赖打包/预编译方案；本阶段不生成浏览器bundle，不实现JCS摘要。
+
+## Stage 2A.1浏览器交付更新
+
+此前“浏览器分发待定/不生成bundle”是Stage 2A阶段限制；本轮已授权并完成Ajv standalone+esbuild独立ESM构建。构建入口tools/build-pack-validator.mjs，产物work/pack-validator/pack-validator.mjs；Node与浏览器共享core.js/strict-json.js/semantics.js，未复制规则。allErrors:false与visitor正式接受，证据见STAGE_2A_REPORT.md末节。产物不在部署白名单中，未接入产品，未来集成仍须单独授权。

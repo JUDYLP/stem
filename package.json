@@ -1,0 +1,20 @@
+{
+  "name": "unscripted",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check:syntax": "node tools/check-syntax.mjs",
+    "build:pack-validator": "node tools/build-pack-validator.mjs",
+    "build:pack-runtime": "node tools/build-pack-runtime.mjs"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "canonicalize": "5.1.0",
+    "esbuild": "0.28.2",
+    "jsonc-parser": "3.3.1"
+  }
+}

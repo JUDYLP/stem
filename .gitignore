@@ -9,3 +9,6 @@ __pycache__/
 Thumbs.db
 work/
 _site/
+
+# Development-only dependencies
+node_modules/
