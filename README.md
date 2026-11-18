@@ -38,20 +38,19 @@
 python -m http.server 5174 --bind 127.0.0.1
 ```
 
-访问 http://127.0.0.1:5174/ ，练习入口为 #practice 。按 Ctrl+C 停止服务。本机 python 为 3.14.2；py 启动器不可用，使用 python。无 npm 依赖和构建步骤；不要用 file:// 正式测试。
+访问 http://127.0.0.1:5174/ ，练习入口为 #practice 。按 Ctrl+C 停止服务。本机 python 为 3.14.2；py 启动器不可用，使用 python。页面运行无需 npm 依赖或构建；仅开发校验/测试需安装下述devDependencies；不要用 file:// 正式测试。
 
 ## 测试
 
-本机 Node v24.22.1，仅用内置测试工具：
+本机 Node v24.22.1；Node内置测试工具，Pack校验新增固定开发依赖Ajv8.20.0与jsonc-parser3.3.1（MIT）。无浏览器runtime依赖：
 
 ```powershell
-node --test tests/*.test.mjs
-node --check src/main.js
-node --check src/history.js
-node --check src/demo.js
+npm ci --ignore-scripts --no-audit --no-fund
+npm test
+npm run check:syntax
 ```
 
-38 项自动测试：题库 schema 与双语对齐、本地记录降级、灯色汇总规则、history 200 条裁剪、关闭开关不写原文、旧 progress 兼容、导出过滤与转义、英文导出。浏览器实际结果与未测项见 docs/QA_REPORT.md。
+121 项自动测试（原38项+Pack83项）：题库 schema 与双语对齐、本地记录降级、灯色汇总规则、history 200 条裁剪、关闭开关不写原文、旧 progress 兼容、导出过滤与转义、英文导出。浏览器实际结果与未测项见 docs/QA_REPORT.md。
 
 ## 数据与隐私
 
@@ -85,8 +84,20 @@ node --check src/demo.js
 
 ## 后续
 
-T05 API Spike 因缺少有效 Key 为 BLOCKED，T06/T07 Live 未开工；T02 题目待人工审校；下载落盘、真实手机与其他浏览器未验证；视频与 Devpost 提交未完成。远程为 https://github.com/JUDYLP/stem ，Pages 由 `.github/workflows/pages.yml` 打包 11 个静态资源发布。
+T05 API Spike 因缺少有效 Key 为 BLOCKED，T06/T07 Live 未开工；T02 题目待人工审校；下载落盘、真实手机与其他浏览器未验证；视频与 Devpost 提交未完成。远程为 https://github.com/JUDYLP/stem ，Pages 由 `.github/workflows/pages.yml` 打包 12 个静态资源发布。本轮新增的测试门禁工作流尚未提交或运行远端CI。
 
 ## AI 辅助开发披露
 
 由用户指导 Codex 编写和测试。未启动 Subagent，具体底层模型子型号无法从本次工具回执核实。产品没有 Live AI；开发使用 AI 与产品集成 AI 分开陈述。题目来源和人工审校状态已记录，不冒称用户已掌握所有技术。
+
+## Stage 2A：独立题库校验（未接入页面）
+
+`src/packs/validate.js`提供validateQuestionPackText(text)、validateQuestionPackBytes(Uint8Array)、comparePackVersions(a,b)。前三段流程为安全JSON解析→Ajv2020结构→语义检查；成功返回valid/errors/pack，失败仅valid/errors，错误带code/path/message且最多50条。不注册、不修复、无DOM/存储/网络副作用。技术内容正确性仍需人工审核。
+
+开发依赖和lockfile仅用于Node校验/测试；不在现有Pages白名单中，不要求服务器或AI Key。CI新增安装→测试→语法检查，失败阻止原有打包部署。当前只完成本地验证；按要求不提交、不推送、不触发新部署。
+
+详见[Stage 2A交付报告](docs/architecture/STAGE_2A_REPORT.md)与[Schema规范](docs/architecture/QUESTION_PACK_SCHEMA_V1.md)。2B注册/预览、2C迁移、2D训练接线均未实现。
+
+## 浏览器校验器构建（Stage 2A.1，未接入训练）
+
+安装开发依赖后运行`npm run build:pack-validator`，生成`work/pack-validator/pack-validator.mjs`。Ajv standalone在构建期生成Schema校验代码，esbuild打包共享解析/语义规则，不依赖CDN或浏览器动态编译。work目录不提交也不由当前Pages发布。最新本地测试138/138通过；构建与Chrome冒烟结果见Stage 2A报告末节。

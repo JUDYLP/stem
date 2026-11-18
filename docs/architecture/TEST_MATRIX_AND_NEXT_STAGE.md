@@ -1,6 +1,8 @@
-# Stage 1 验证证据与下一阶段计划
+# 验证证据与下一阶段计划
 
-## 必须完成的测试矩阵（产品测试未实现，除明确标记外均待下一阶段）
+当前状态：Stage 1.1 + 2A本地实现完成待审核。当前证据见文末；Stage 1记录保留供追溯。
+
+## 总体验收矩阵（部分由Stage 2A覆盖，注册/UI/迁移仍未实现）
 
 | 场景 | 预期 | 校验位置 |
 |---|---|---|
@@ -43,7 +45,7 @@
 
 ## 下一阶段实施计划（需人工审核后才启动）
 
-先读ARCHITECTURE_AUDIT、QUESTION_PACK_SCHEMA_V1、PROGRESS_MIGRATION_V2；以最新Git基线为准，不按旧比赛日程推进。默认串行、无Subagent。下面的路径是允许范围建议，尚未创建。
+Stage 2A已本地完成；下表保留阶段边界，2B/2C/2D仍需单独授权。先读ARCHITECTURE_AUDIT、QUESTION_PACK_SCHEMA_V1、PROGRESS_MIGRATION_V2；以最新Git基线为准，不按旧比赛日程推进。默认串行、无Subagent。下面的路径是允许范围建议，尚未创建。
 
 | 阶段 | 目标/读取 | 允许修改 | 验收及退出摘要 | 学习自测 |
 |---|---|---|---|---|
@@ -72,3 +74,34 @@
 - 4个语义反例均按预期拒绝：重复题ID、跨题重复RubricID、缺少声明语言译文、defaultLanguage不在支持列表。此检查是设计验证脚本，不是已实现的生产校验器。
 - 未单独执行官方metaschema验证；本机Test-Json成功加载并执行Schema。技术知识人工审校、恶意HTML浏览器执行验证、导入/迁移/注册端到端仍为NOT RUN。
 - 同期工作提交了src/dotfield.js、src/lights.js、src/main.js、styles.css及相关测试和页面文档；它们不是本Stage的实现。TASKS/DECISIONS的Stage 1摘要已被同期文档提交f92cc82包含；本轮保留其后新增的D21记录，不重置提交、不覆盖他人工作。剩余交付仅暂存docs/architecture和docs/planning。
+
+## Stage 1.1 / 2A验证（2026-11-18）
+
+环境Windows、Node24.22.1、npm11.9.0。修改前本地/远端main均f254eea，工作区干净，38/38基线PASS。
+
+| 检查 | 实际结果 |
+|---|---|
+| npm ci --ignore-scripts --no-audit --no-fund | PASS：固定lockfile，从官方npm registry重装6个开发包；无生命周期脚本执行 |
+| npm test | PASS：121/121，原有38项+新增83项，0失败 |
+| npm run check:syntax | PASS：21个JS/MJS文件（含全部src、tests、tools） |
+| Schema合法示例与原题逐项对应 | PASS：3题9层29条Rubric，title/prompt/rubric双语与原数组一致 |
+| Schema异常/嵌套未知字段 | PASS：版本/类型/必填/三层顺序和label/审校字段/空及过量Rubric/所有固定对象额外字段 |
+| 语义 | PASS：默认语言、每类翻译缺失/额外语言、包级题ID/跨题跨层RubricID、真实UTC及闰年 |
+| 输入安全 | PASS：重复及转义键、对象生成前拒绝、危险键、非法JSON/UTF8/非有限数/代理项、注释/尾逗号/BOM |
+| 容量边界 | PASS：UTF8 1MiB及+1字节、32及33容器、200及201题、8及9语言、50错误封顶；10000层快速拒绝 |
+| 版本 | PASS：大小/相同/非法/前导零/后缀/末尾换行、超过2^53及24位、100位数字比较 |
+| 纯函数 | PASS：输入字节不变、输出互不别名、重复结果相同；子进程禁止DOM/storage/network/console仍可导入和校验 |
+| 原打包脚本 | PASS：work/stage2a-static-check中仅12资源+.nojekyll，内容与工作树一致，无校验器/npm/docs/tests |
+| 线上回归只读检查 | PASS：12资源HTTP200且SHA256与HEAD原始blob一致（初次与Windows工作树比出现CRLF差异，改用Git原始字节后全一致） |
+| 新GitHub Actions远端执行 | NOT RUN：按用户要求不提交/推送、不触发部署；本地执行了对应安装/测试/语法/打包步骤 |
+| 真实浏览器UI回归/导入/迁移/删除/JCS摘要 | NOT RUN：页面资产未改；新增运行时、删除与摘要尚未实现，不把HTTP200当视觉通过 |
+
+新增测试在tests/packs.test.mjs；没有删除或替换原测试。语义50条上限不代表返回全部诊断，结构快速失败最多首条（组合规则可能给少量关联诊断），都不返回部分有效数据。
+
+补充未来矩阵：全量删除必须覆盖孤立backup/candidate、旧v1、答案、迁移元数据；取消不写入、失败不声称全清、其他Pack保持（局部清理）、旧标签页写回防护。JCS须用RFC官方向量验证Unicode键排序/转义/数字/数组顺序。以上均设计标准，尚未运行。
+
+Stage 2B准备条件：人工审查本轮差异；确认组合内置Pack与受保护ID策略；单独批准注册预览范围与浏览器端校验分发方案（当前入口仅Node/dev）。不得将校验valid:true当注册/摘要/内容审校通过，也不授权2C迁移或2D接线。
+
+## Stage 2A.1补充证据
+
+本轮基线123项（原121项保留），新增tests/pack-browser.test.mjs的15项，最终138/138通过；25文件语法通过。实际执行npm ci、npm test、npm run check:syntax、npm run build:pack-validator、指定Python打包。构建metafile无外部import/无Ajv编译器；Schema SHA256与仓库一致；共享语义模块直接进入产物。Node禁止动态代码生成测试通过，真实Chrome157在不含unsafe-eval的CSP下8项冒烟通过，控制台无消息。远端CI/部署仍NOT RUN；2B未实现。更多构建证据见STAGE_2A_REPORT.md。

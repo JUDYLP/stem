@@ -1,6 +1,6 @@
 # Stage 1 — 现有架构审计与目标边界
 
-状态：设计完成，待人工审核；未接入运行时。审计日期2026-11-18。
+状态：下文为Stage 1架构审计；Stage 1.1/2A增量见文末，仍未接入运行时。审计日期2026-11-18。
 基线：`0c09c60ba6ff6a41fc73168d9809b12c2d0a5287`，main，审计开始工作树干净。继续任务时发现基线已从61e45e9推进，以下以最新源码为准。既有测试37/37通过。
 
 ## 实际检查的文件与证据
@@ -92,3 +92,9 @@ C是可验证的数据契约，见QUESTION_PACK_SCHEMA_V1.md；它不知道厂�
 本轮没有前端代码变更，不需要为文档重做视觉测试；已运行源码基线测试。结构校验、来源记录和翻译对应均不证明知识正确。人工审校仍未完成。
 
 完成复核：同期视觉工作推进到f92cc82；最新测试38/38通过。上述训练/数据边界未因其改变；本Stage不包含同期页面实现。具体提交归属见测试记录。
+
+## Stage 1.1 / 2A增量（基线f254eea）
+
+独立校验API落实在src/packs/validate.js，取代上文parseAndValidatePack草案命名；返回valid而非ok，见Schema说明。strict-json.js仅负责安全解析，semantics.js负责结构无法表达的约束。两项npm开发依赖不进入现有12资源发布白名单。原questions.js/main/storage/history/export/Demo调用图不变。
+
+Pages同一deploy job新增Node24→npm ci→npm test→语法检查，之后才使用原Python白名单打包。保留permissions/concurrency，未增加continue-on-error；失败会阻止后续打包和部署。新工作流未提交，所以远端CI尚未运行。迁移/删除/JCS仅修订规范，没有可调用实现。
