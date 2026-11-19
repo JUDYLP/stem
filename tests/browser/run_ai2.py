@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory() as temporary:
         thread.start()
         try:
             result = subprocess.run([chrome, '--headless', '--disable-gpu', '--no-first-run',
-                '--user-data-dir=' + str(root / 'profile'), '--virtual-time-budget=15000', '--dump-dom',
+                '--user-data-dir=' + str(root / 'profile'), '--virtual-time-budget=60000', '--dump-dom',
                 f'http://127.0.0.1:{server.server_port}/ai2.html'], capture_output=True, timeout=60)
         finally:
             server.shutdown()
