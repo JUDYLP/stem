@@ -4,7 +4,7 @@
     "packVersion": "1.0.1",
     "questionId": "juc-volatile-atomicity-v2",
     "layerId": "L1",
-    "answer": "A volatile write happens-before a subsequent read of the same field. Reading i is atomic, but i++ still consists of a read, calculation, and write. Two threads can interleave those steps.",
+    "answer": "A volatile write happens-before a subsequent read of the same field. Each individual access to volatile i is atomic, but i++ still consists of a read, calculation, and write. Two threads can interleave those steps.",
     "verdicts": [
       {
         "pointId": "juc-volatile-atomicity-v2-l1-c01",
@@ -16,7 +16,7 @@
         "pointId": "juc-volatile-atomicity-v2-l1-c02",
         "light": "green",
         "reason": "Explains the compound read-modify-write sequence and why its steps can interleave.",
-        "quote": "i++ still consists of a read, calculation, and write. Two threads can interleave those steps."
+        "quote": "Each individual access to volatile i is atomic, but i++ still consists of a read, calculation, and write. Two threads can interleave those steps."
       }
     ],
     "followUp": "How could two threads interleave the read and write steps?"
