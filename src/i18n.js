@@ -829,9 +829,9 @@ export const messages = {
     "zh": "展开",
     "en": "Expanded"
   },
-  "紧凑": {
-    "zh": "紧凑",
-    "en": "Compact"
+  "Mini 版": {
+    "zh": "Mini 版",
+    "en": "Mini"
   },
   "绿灯": {
     "zh": "绿灯",
