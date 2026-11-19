@@ -6,7 +6,7 @@
 - Source repository: https://github.com/JUDYLP/stem (currently private; must become public for submission).
 - Live website: not yet verified; Pages setup is pending.
 - Video: not recorded or uploaded.
-- Live AI: not integrated. Do not call the simulated example a real model response.
+- Live AI: learners can use their own DeepSeek key. Hosted judging is pending Worker deployment and URL configuration.
 - Question content: source-checked draft, pending participant review.
 - User study / learning outcome evidence: none collected yet.
 
@@ -24,13 +24,11 @@ A bilingual signal-light demo on the landing page illustrates the flow using fix
 
 ### How it is built
 
-HTML, CSS, native JavaScript modules, a JSON question bank, and browser localStorage. No account, backend, database, third-party frontend library, or API key is required. Lights are CSS plus inline SVG, and motion respects the reduced-motion preference. Node's built-in test runner checks the data contract, light aggregation, history trimming, answer-switch privacy, persistence fallback, and review export. Python's standard library serves local files during development.
+HTML, CSS, native JavaScript modules, a JSON question bank, and browser localStorage. Offline practice and the simulated Judge Demo require no account or API key. The optional hosted judging mode uses a Cloudflare Worker. Lights are CSS plus inline SVG, and motion respects the reduced-motion preference. Node's built-in test runner checks the data contract, light aggregation, history trimming, answer-switch privacy, persistence fallback, and review export. Python's standard library serves local files during development.
 
 ### AI use and limitations
 
-Codex assisted with planning, implementation, debugging and tests. The participant must review the content and explain their own contribution before submission. There is no live model integration in the current prototype. We have not measured learning gains or validated the tool as a measure of mastery.
-
-If live integration remains unavailable because of browser CORS, disclose that actual reason. Do not claim the API-credit exception without confirming that it applies.
+Codex assisted with planning, implementation, debugging and tests. The participant must review the content and explain their own contribution before submission. The hosted demo is configured for the open-weight Qwen 3.8 27B model on Cloudflare Workers AI and becomes available when its Worker URL is deployed and configured. Live AI also supports a learner-provided DeepSeek key. Judge Demo uses labeled preset responses. The learner confirms the rating. We have not measured learning gains or validated the tool as a measure of mastery.
 
 ### What I learned
 
@@ -38,7 +36,7 @@ If live integration remains unavailable because of browser CORS, disclose that a
 
 ### What's next
 
-Finish participant review of the questions, validate public deployment, collect a few real usability observations, and evaluate a browser-compatible optional model integration with transparent failure handling.
+Finish participant review of the questions, validate public deployment, collect a few real usability observations, and validate the hosted proxy on the public origin and report the model comparison.
 
 ## 90–180 second video plan
 

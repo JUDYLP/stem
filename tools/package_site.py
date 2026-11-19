@@ -6,7 +6,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 FILES = [
     'index.html', 'styles.css', 'data/questions.json', 'data/hero-demo.v1.json',
-    'src/ai/demo-scenario.js', 'src/ai/demo-scenarios.json', 'src/ai/provider.js', 'src/ai/judge.js', 'data/packs/unscripted-core.v1.json',
+    'src/ai/hosted.js', 'src/ai/demo-scenario.js', 'src/ai/demo-scenarios.json', 'src/ai/provider.js', 'src/ai/judge.js', 'data/packs/unscripted-core.v1.json',
     'src/fx/verdict-fx.js', 'assets/fonts/doto-latin-wght-normal.woff2',
     'src/main.js', 'src/questions.js', 'src/storage.js', 'src/export.js', 'src/demo.js', 'src/i18n.js',
     'data/packs/unscripted-core.v1.0.0.json', 'data/packs/unscripted-intro.v1.json',

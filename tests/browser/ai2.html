@@ -5,6 +5,7 @@
 import core from './data/packs/unscripted-core.v1.json' with {type:'json'};
 import intro from './data/packs/unscripted-intro.v1.json' with {type:'json'};
 import scenarios from './src/ai/demo-scenarios.json' with {type:'json'};
+import {HOSTED_PROXY_URL,HOSTED_MODEL_LABEL} from "./src/ai/hosted.js";
 const frame = document.querySelector('iframe');
 const result = document.querySelector('#result');
 const wait = () => new Promise(resolve => setTimeout(resolve, 25));
@@ -13,8 +14,6 @@ async function run() {
   const w = frame.contentWindow;
   const el = id => w.document.getElementById(id);
   for (let i=0; i<160 && !el('question')?.options.length; i++) await wait();
-  const options = [...el('question').options];
-  assert(options.length === 3, 'Packaged app did not load all three topics');
   const input = (id, text) => {
     el(id).value = text;
     el(id).dispatchEvent(new w.Event('input'));
@@ -23,10 +22,110 @@ async function run() {
     el(id).value = value;
     el(id).dispatchEvent(new w.Event('change'));
   };
+  const pythonStart = intro.questions[0];
+  assert(w.localStorage.getItem('unscripted.questionPack') === null &&
+    el('question-pack').value === intro.packId && el('question').value === pythonStart.id &&
+    el('layer-prompt').textContent === pythonStart.layers[0].prompt.en,
+    'First visit should start at Python Intro L1');
+  assert(el('load-message').textContent === intro.title.en+' · v1.0.0 · 1 question',
+    'English Intro question count must be singular');
+  const impacts = {
+    'float-equality-v1': ["A loop that never stops, or a bill that's off by a cent","循环停不下来，或账单差一分钱"],
+    'juc-volatile-atomicity-v2': ['A counter that silently loses updates under concurrency','计数器在并发下悄悄丢数'],
+    'redis-expiration-v2': ['Cache entries that never expire until memory runs out','缓存永不过期，内存被撑爆'],
+    'mysql-consistent-read-v2': ["Reading stale data while believing it's current","读到旧数据却以为是最新的"],
+  };
+  const setLanguage = lang => w.document.querySelector('[data-lang="'+lang+'"]').click();
+  const assertImpact = (id, lang) => {
+    const visible = el('question-impact');
+    assert(!visible.hidden && visible.querySelector('strong').textContent ===
+      (lang==='en'?'Why it matters':'答错会怎样') &&
+      el('question-impact-text').textContent === impacts[id][lang==='en'?0:1],
+      'Incorrect impact copy for '+id+' in '+lang);
+  };
+  assertImpact(pythonStart.id,'en');
+  setLanguage('zh');
+  assertImpact(pythonStart.id,'zh');
+  setLanguage('en');
+  const heroOption = el('hero-options').querySelector('.hero-option');
+  assert(heroOption, 'Hero demo did not load');
+  heroOption.click();
+  select('question-pack',core.packId);
+  assert(heroOption.getAttribute('aria-pressed') === 'true', 'Pack switch changed the hero demo selection');
+  assert(el('load-message').textContent === core.title.en+' · v1.0.1 · 3 questions',
+    'English Core question count must be plural');
+  const options = [...el('question').options];
+  assert(options.length === 3, 'Packaged app did not load all three Core topics');
+  for (const topic of options) {
+    select('question',topic.value);
+    assertImpact(topic.value,'en');
+    setLanguage('zh');
+    assertImpact(topic.value,'zh');
+    setLanguage('en');
+  }
+  select('question',options[0].value);
   const layer = index => el('depth-meter').querySelectorAll('button')[index].click();
   const status = () => el('ai-status').textContent;
   const snapshot = () => ['unscripted.progress.v1','unscripted.history.v1'].map(k=>w.localStorage.getItem(k)).join('|');
   const before = snapshot();
+  if (HOSTED_PROXY_URL) {
+    assert(el('ai-connection').value === 'hosted' && !el('ai-hosted-details').hidden,
+      'Hosted proxy should be the default when configured');
+    assert(el('ai-hosted-model').textContent === HOSTED_MODEL_LABEL, 'Missing model disclosure');
+    input('answer','Hosted sample');
+    el('answer-form').requestSubmit();
+    select('judge-mode','live');
+    let reportedModel = '@cf/google/gemma-4-26b-a4b-it';
+    w.fetch = async (url,opts) => {
+      assert(url.href === new URL(HOSTED_PROXY_URL).href &&
+        !new w.Headers(opts.headers).has('Authorization'), 'Hosted success used the wrong transport');
+      return new w.Response(JSON.stringify({model:reportedModel,choices:[
+        {finish_reason:'stop',message:{content:'{"verdicts":[],"followUp":null}'}},
+      ]}));
+    };
+    await el('ai-run').onclick();
+    assert(status().includes('AI suggestion') && snapshot() === before,
+      'Hosted completion did not reach the normal suggestion flow');
+    assert(el('ai-hosted-model').textContent === reportedModel, 'Hosted label ignored the returned Gemma name');
+    reportedModel = '@cf/qwen/qwen3.8-27b';
+    await el('ai-run').onclick();
+    assert(el('ai-hosted-model').textContent === reportedModel, 'Hosted label did not track a server-side model change');
+    for (const code of [429,503]) {
+      let request;
+      w.fetch = async (url,opts) => {
+        request = {url,opts};
+        return new w.Response(null,{status:code});
+      };
+      await el('ai-run').onclick();
+      assert(request.url.href === new URL(HOSTED_PROXY_URL).href &&
+        !new w.Headers(request.opts.headers).has('Authorization'), 'Hosted request used the wrong transport');
+      assert(status().includes('resets daily at 00:00 UTC') && !el('ai-offer-demo').hidden,
+        'Hosted failure should offer the simulated demo');
+    }
+    el('ai-offer-demo').click();
+    assert(el('judge-mode').value === 'demo' && !el('judge-demo').hidden,
+      'Hosted failure button did not switch to Judge Demo');
+    select('ai-connection','byok');
+  } else {
+    assert(!el('ai-connection').querySelector('[value="hosted"]') &&
+      el('ai-connection').value === 'byok','Empty URL should retain the own-key mode');
+  }
+  select('ai-connection','custom');
+  select('judge-mode','live');
+  input('answer','Custom proxy sample');
+  el('answer-form').requestSubmit();
+  input('ai-proxy','https://custom-proxy.invalid/');
+  let customRequest;
+  w.fetch = async (url,opts) => {
+    customRequest = {url,opts};
+    return new w.Response(null,{status:429});
+  };
+  await el('ai-run').onclick();
+  assert(customRequest.url.href === 'https://custom-proxy.invalid/' &&
+    !new w.Headers(customRequest.opts.headers).has('Authorization') &&
+    el('ai-offer-demo').hidden, 'Custom proxy should retain its original transport and error');
+  select('ai-connection','byok');
+  select('judge-mode','offline');
   let calls = 0;
   w.fetch = () => { calls++; throw Error('Unexpected network request'); };
   for (const topic of options) {
@@ -179,7 +278,7 @@ async function run() {
     timeline[0].querySelectorAll('.tl-missed-list li').length === 2,'Versioned Java history did not render');
 
   assert(el('question-pack').value === core.packId && el('load-message').textContent.includes('1.0.1'),
-    'Default Core pack version missing');
+    'Saved Core pack should be restored after reload');
   assert([...el('question-pack').options].map(option=>option.textContent).join('|') ===
     'Core Software Engineering|Python Starter Pack', 'Builtin labels missing');
   const coreProgress = JSON.parse(w.localStorage.getItem('unscripted.progress.v1'));

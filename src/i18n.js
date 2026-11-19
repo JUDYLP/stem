@@ -2,9 +2,24 @@ export const messages = {
   "题库": {"zh": "题库", "en": "Question Pack"},
   "软件工程核心题库": {"zh": "软件工程核心题库", "en": "Core Software Engineering"},
   "Python 入门题库": {"zh": "Python 入门题库", "en": "Python Starter Pack"},
-  "已加载 {pack} · v{version} · {count} 道题": {"zh": "已加载 {pack} · v{version} · {count} 道题", "en": "{pack} · v{version} · {count} loaded"},
+  "已加载 {pack} · v{version} · {count} 道题": {"zh": "已加载 {pack} · v{version} · {count} 道题", "en": "{pack} · v{version} · {count} questions"},
+  "已加载 {pack} · v{version} · 1 道题": {"zh": "已加载 {pack} · v{version} · 1 道题", "en": "{pack} · v{version} · 1 question"},
+  "答错会怎样": {"zh": "答错会怎样", "en": "Why it matters"},
+  "impact.float-equality-v1": {"zh": "循环停不下来，或账单差一分钱", "en": "A loop that never stops, or a bill that's off by a cent"},
+  "impact.juc-volatile-atomicity-v2": {"zh": "计数器在并发下悄悄丢数", "en": "A counter that silently loses updates under concurrency"},
+  "impact.redis-expiration-v2": {"zh": "缓存永不过期，内存被撑爆", "en": "Cache entries that never expire until memory runs out"},
+  "impact.mysql-consistent-read-v2": {"zh": "读到旧数据却以为是最新的", "en": "Reading stale data while believing it's current"},
   "先写解释，再看参考要点 · 自己点灯判定": {"zh": "先写解释，再看参考要点 · 自己点灯判定", "en": "Explain first, then check the rubric and rate your answer"},
 
+  "连接方式": {"zh": "连接方式", "en": "Connection"},
+  "使用演示代理（无需 Key）": {"zh": "使用演示代理（无需 Key）", "en": "Use hosted demo proxy (no key needed)"},
+  "使用自己的 Key（DeepSeek）": {"zh": "使用自己的 Key（DeepSeek）", "en": "Use your own key (DeepSeek)"},
+  "使用自定义代理": {"zh": "使用自定义代理", "en": "Use a custom proxy"},
+  "代理地址": {"zh": "代理地址", "en": "Proxy URL"},
+  "请填写代理地址。": {"zh": "请填写代理地址。", "en": "Enter a proxy URL."},
+  "切到评委演示模式": {"zh": "切到评委演示模式", "en": "Switch to Judge Demo"},
+  "演示额度已用完或已关闭（每天北京时间 8:00 重置），可改用评委演示模式或自己的 Key。": {"zh": "演示额度已用完或已关闭（每天北京时间 8:00 重置），可改用评委演示模式或自己的 Key。", "en": "The hosted demo has reached its limit or is disabled (resets daily at 00:00 UTC). You can switch to Judge Demo or use your own key."},
+  "演示代理会将答案发送到作者的 Cloudflare Worker，由 Cloudflare Workers AI 上的开放权重模型判定。代理不保存答案。": {"zh": "演示代理会将答案发送到作者的 Cloudflare Worker，由 Cloudflare Workers AI 上的开放权重模型判定。代理不保存答案。", "en": "The hosted demo sends your answer to the author’s Cloudflare Worker for judging by an open-weight model on Cloudflare Workers AI. The proxy does not store your answer."},
   "清空本页练习记录？": { "zh": "清空本页练习记录？", "en": "Clear practice records from this page?" },
   "本页练习记录已清空。": { "zh": "本页练习记录已清空。", "en": "Practice records from this page were cleared." },
   "已关闭：本页练习记录中的回答原文已删除。": { "zh": "已关闭：本页练习记录中的回答原文已删除。", "en": "Answer saving is off. Answers saved by this page were deleted." },
@@ -969,6 +984,9 @@ export function initLanguage(search, browserLanguage, getStorage = () => globalT
 }
 export function t(key, params = {}, lang = language) {
   return (messages[key]?.[lang] ?? key).replace(/\{(\w+)\}/g, (_, name) => String(params[name] ?? `{${name}}`));
+}
+export function questionImpact(questionId, lang = language) {
+  return messages['impact.' + questionId]?.[lang] ?? '';
 }
 export function localized(item, field, lang = language) { return item[lang === 'en' ? field + '_en' : field]; }
 export function applyLanguage(root = document) {

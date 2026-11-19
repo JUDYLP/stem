@@ -10,6 +10,7 @@ import {buildMessages,buildEvaluationContext} from '../src/ai/judge.js';
 import {openDemo} from '../src/ai/demo-scenario.js';
 import {historyRubric} from '../src/history-rubric.js';
 import {createHistoryStore,HISTORY_KEY,makeRubricSnapshot,MAX_ENTRIES} from '../src/history.js';
+import {questionImpact} from '../src/i18n.js';
 import {buildCrashSheet} from '../src/export.js';
 
 const registry = createPackRegistry();
@@ -87,4 +88,8 @@ test('a full Core v1 journal retains every Core entry after an Intro rating and 
   assert.equal(saved.entries.length,MAX_ENTRIES+1);
   assert.deepEqual(saved.entries.slice(0,MAX_ENTRIES),older);
   assert.equal(saved.entries.at(-1).rubricSnapshot.packId,intro.packId);
+});
+
+test('questions without translated impact copy have no impact line text', () => {
+  for (const lang of ['zh','en']) assert.equal(questionImpact('question-without-copy',lang),'');
 });

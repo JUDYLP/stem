@@ -1,8 +1,9 @@
+import { HOSTED_PROXY_URL, HOSTED_MODEL_LABEL } from './ai/hosted.js';
 import { startScan, playVerdict } from './fx/verdict-fx.js';
 import { openDemo } from './ai/demo-scenario.js';
 import { createAIProvider } from './ai/provider.js';
 import { judgeAnswer, buildEvaluationContext, requestGate } from './ai/judge.js';
-import { t, localized, getLanguage, initLanguage, setLanguage, applyLanguage } from './i18n.js';
+import { t, localized, questionImpact, getLanguage, initLanguage, setLanguage, applyLanguage } from './i18n.js';
 import { questionsFromBuiltin } from './questions.js';
 import { createProgressStore } from './storage.js';
 import { createHistoryStore, latestByCell, makeRubricSnapshot, shouldUseCompact } from './history.js';
@@ -75,6 +76,7 @@ const store = createProgressStore();
 const log = createHistoryStore();
 const drafts = new Map();
 const packPositions = new Map();
+const packPreferenceKey = 'unscripted.questionPack';
 const packLabels = new Map([
   ['unscripted-core', '软件工程核心题库'],
   ['unscripted-intro', 'Python 入门题库'],
@@ -207,6 +209,20 @@ function demoScanDelay(signal) {
 
 let aiEvidence = [];
 let suggestedDraft;
+const aiConnection = $('ai-connection');
+if (!HOSTED_PROXY_URL) aiConnection.querySelector('[value="hosted"]').remove();
+aiConnection.value = HOSTED_PROXY_URL ? 'hosted' : 'byok';
+$('ai-hosted-model').textContent = HOSTED_MODEL_LABEL;
+
+function renderAiConnection() {
+  const mode = aiConnection.value;
+  $('ai-hosted-details').hidden = mode !== 'hosted';
+  $('ai-byok-fields').hidden = mode !== 'byok';
+  $('ai-model-field').hidden = mode === 'hosted';
+  $('ai-proxy-field').hidden = mode !== 'custom';
+}
+
+renderAiConnection();
 function resetJudge() {
   aiGate.cancel();
   if (suggestedDraft && suggestedDraft.confirmed === null) suggestedDraft.lights = [];
@@ -215,6 +231,7 @@ function resetJudge() {
   $('ai-run').disabled = false;
   $('confirm-rating').disabled = false;
   $('ai-followup').textContent = '';
+  $('ai-offer-demo').hidden = true;
   $('ai-status').textContent = t('离线自评');
   $('ai-panel').hidden = $('judge-mode').value !== 'live';
   if (!$('ai-panel').hidden) $('ai-status').textContent = t('在线 AI 已选择');
@@ -226,15 +243,30 @@ $('ai-clear').onclick = () => {
   $('judge-mode').value = 'offline';
   $('judge-mode').dispatchEvent(new Event('change'));
 };
+function refreshAiSettings() {
+  resetJudge();
+  if (draft().submitted !== null) {
+    fillRubric();
+    renderLayerLight();
+    $('rating-status').textContent = '';
+  }
+}
+
+aiConnection.addEventListener('change', () => {
+  renderAiConnection();
+  refreshAiSettings();
+});
+$('ai-offer-demo').onclick = () => {
+  $('ai-offer-demo').hidden = true;
+  $('judge-mode').value = 'demo';
+  $('judge-mode').dispatchEvent(new Event('change'));
+  $('demo-judge').focus();
+};
+
 for (const id of ['ai-base','ai-model','ai-key','ai-proxy']) {
   $(id).addEventListener('input', () => {
-    if (id === 'ai-base' || id === 'ai-proxy') $('ai-key').value = '';
-    resetJudge();
-    if (draft().submitted !== null) {
-      fillRubric();
-      renderLayerLight();
-      $('rating-status').textContent = '';
-    }
+    if (id === 'ai-base') $('ai-key').value = '';
+    refreshAiSettings();
   });
 }
 $('ai-run').onclick = async () => {
@@ -252,14 +284,21 @@ $('ai-run').onclick = async () => {
   answerEl.closest('details').open = true;
   const stop = scanAnswer(answerEl, signal);
   $('confirm-rating').disabled = true;
+  const connection = aiConnection.value;
   try {
+    const proxyURL = connection === 'hosted' ? HOSTED_PROXY_URL :
+      connection === 'custom' ? $('ai-proxy').value.trim() : '';
+    if (connection === 'custom' && !proxyURL) throw Error('NO_PROXY');
+    let hostedModel;
     const provider = createAIProvider({baseURL:$('ai-base').value.trim(), model:$('ai-model').value.trim(),
-      apiKey:$('ai-key').value, proxyURL:$('ai-proxy').value.trim()});
+      apiKey:connection === 'byok' ? $('ai-key').value : '', proxyURL,
+      onModel:connection === 'hosted' ? model => { hostedModel = model; } : undefined});
     const context = evaluationContext();
     let result;
     await judgeAnswer(provider, context, answer, signal, validated => { result = validated; });
     stop();
     if (signal.aborted) return;
+    if (hostedModel) $('ai-hosted-model').textContent = hostedModel;
     const lampEls = $('rubric').querySelectorAll('.point-lamp .lamp');
     await revealVerdict({verdicts:result.verdicts, answerEl, lampEls}, signal);
     if (signal.aborted) return;
@@ -275,7 +314,12 @@ $('ai-run').onclick = async () => {
     $('ai-followup').textContent = [result.followUp, t('原文引用仅证明出处，请自行核对技术判断。')].filter(Boolean).join(' ');
   } catch (error) {
     if (signal.aborted) return;
-    const messages = {NO_KEY:'缺少 Key',TIMEOUT:'请求超时',OFFLINE_NETWORK:'网络断开',NETWORK_OR_CORS:'网络或跨域请求失败，请检查网络和浏览器 CORS 提示'};
+    if (connection === 'hosted' && ['HTTP_429','HTTP_503'].includes(error.message)) {
+      $('ai-status').textContent = t('演示额度已用完或已关闭（每天北京时间 8:00 重置），可改用评委演示模式或自己的 Key。');
+      $('ai-offer-demo').hidden = false;
+      return;
+    }
+    const messages = {NO_PROXY:'请填写代理地址。',NO_KEY:'缺少 Key',TIMEOUT:'请求超时',OFFLINE_NETWORK:'网络断开',NETWORK_OR_CORS:'网络或跨域请求失败，请检查网络和浏览器 CORS 提示'};
     const code = /^(HTTP_[0-9]{3}|INVALID_JSON|EMPTY|TRUNCATED|INCOMPLETE|CONTRACT|ENDPOINT|PACK|RUBRIC_MISMATCH)$/.test(error.message) ? error.message : '';
     $('ai-status').textContent = [t('未取得建议，可继续自评。'),messages[error.message] ? t(messages[error.message]) : code].join(' ');
   } finally {
@@ -443,6 +487,9 @@ function renderLayer() {
   $('layer-label').textContent = `${localized(question, 'category')} / ${layer.id} ${layer.label}`;
   $('question-title').textContent = localized(question, 'title');
   $('layer-prompt').textContent = localized(layer, 'prompt');
+  const impact = questionImpact(question.id);
+  $('question-impact').hidden = !impact;
+  $('question-impact-text').textContent = impact;
   $('answer').value = d.text;
   updateAnswerSize();
   $('answer-message').textContent = '';
@@ -492,7 +539,9 @@ function renderPackOptions() {
   $('question-pack').replaceChildren(...Array.from(registeredPacks, ([id, pack]) =>
     option(id, t(packLabels.get(id) ?? pack.validatedPack.title.en))));
   $('question-pack').value = activePack.packId;
-  $('load-message').textContent = t('已加载 {pack} · v{version} · {count} 道题', {
+  const label = questions.length === 1
+    ? '已加载 {pack} · v{version} · 1 道题' : '已加载 {pack} · v{version} · {count} 道题';
+  $('load-message').textContent = t(label, {
     pack:activePack.title[getLanguage() === 'en' ? 'en' : 'zh-CN'],
     version:activePack.packVersion, count:questions.length,
   });
@@ -736,7 +785,12 @@ function observeHeatmap() {
   observer.observe($('heatmap'));
 }
 
-$('question-pack').addEventListener('change', event => selectPack(event.target.value));
+$('question-pack').addEventListener('change', event => {
+  const id = event.target.value;
+  if (!registeredPacks.has(id)) return;
+  selectPack(id);
+  try { localStorage.setItem(packPreferenceKey, id); } catch { /* selection stays in page memory */ }
+});
 $('category').addEventListener('change', () => renderOptions());
 $('question').addEventListener('change', event => selectQuestion(event.target.value));
 $('random-question').addEventListener('click', () => {
@@ -896,10 +950,12 @@ async function boot() {
     const { createPackRegistry } = await import('../work/pack-runtime.mjs');
     const builtins = await createPackRegistry().registerBuiltins();
     registeredPacks = new Map(builtins.map(record => [record.packId, record]));
-    const core = registeredPacks.get('unscripted-core');
-    if (!heatDensity) heatDensity = shouldUseCompact(core.validatedPack.questions.length) ? 'compact' : 'expanded';
+    let preferred;
+    try { preferred = localStorage.getItem(packPreferenceKey); } catch { /* use the default */ }
+    const selected = registeredPacks.get(preferred) ?? registeredPacks.get('unscripted-intro');
+    if (!heatDensity) heatDensity = shouldUseCompact(selected.validatedPack.questions.length) ? 'compact' : 'expanded';
     $('practice-body').hidden = false;
-    selectPack(core.packId);
+    selectPack(selected.packId);
   } catch {
     $('practice-body').hidden = true;
     $('load-message').textContent = t('题库加载失败，请确认通过 HTTP 打开且题库文件有效，再重试。');
