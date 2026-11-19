@@ -144,7 +144,7 @@
     "packVersion": "1.0.1",
     "questionId": "redis-expiration-v2",
     "layerId": "L3",
-    "answer": "SET stores 1 without a TTL; EXPIRE leaves 1 and sets 60 seconds. INCR changes it to 2. Plain SET hits 9 clears the old TTL; use SET hits 9 KEEPTTL to retain the original deadline.",
+    "answer": "SET stores 1 without a TTL; EXPIRE leaves 1 and sets 60 seconds. INCR changes it to 2. Plain SET hits 9 preserves the old TTL; use SET hits 9 KEEPTTL to retain the original deadline.",
     "verdicts": [
       {
         "pointId": "redis-expiration-v2-l3-c01",
@@ -160,9 +160,9 @@
       },
       {
         "pointId": "redis-expiration-v2-l3-c03",
-        "light": "green",
-        "reason": "Correctly identifies that ordinary SET clears the old TTL.",
-        "quote": "Plain SET hits 9 clears the old TTL;"
+        "light": "red",
+        "reason": "Incorrectly claims plain SET preserves the old TTL; ordinary SET clears it.",
+        "quote": "Plain SET hits 9 preserves the old TTL;"
       },
       {
         "pointId": "redis-expiration-v2-l3-c04",

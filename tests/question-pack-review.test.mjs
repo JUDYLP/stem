@@ -94,6 +94,7 @@ test('Redis L3 demo does not give Green when INCR TTL evidence is absent', () =>
   const ttl=row.verdicts.find(v=>v.pointId==='redis-expiration-v2-l3-c05');
   assert.equal(ttl.light,'amber');
   assert.equal(ttl.quote,'INCR changes it to 2.');
+  assert.equal(row.verdicts.find(v=>v.pointId==='redis-expiration-v2-l3-c03').light,'red');
 });
 
 test('Python L2 demo treats omission of an exact representation as incomplete, not incorrect', () => {
