@@ -155,10 +155,25 @@
                 </div>
                 <h3 id="question-title"></h3>
                 <p id="layer-prompt"></p>
+                <label class="field"><span data-i18n="判定模式">判定模式</span>
+                  <select id="judge-mode">
+                    <option value="offline" data-i18n="离线自评">离线自评</option>
+                    <option value="demo" data-i18n="评委演示">评委演示</option>
+                    <option value="live" data-i18n="在线 AI 判定">在线 AI 判定</option>
+                  </select>
+                </label>
+                <p class="fine-print" id="rubric-review"></p>
+                <section id="judge-demo" hidden>
+                  <strong data-i18n="模拟判定 · 非真实 AI">模拟判定 · 非真实 AI</strong>
+                  <p data-i18n="使用内置英文示例。你的回答会保留，模拟结果不会保存。">使用内置英文示例。你的回答会保留，模拟结果不会保存。</p>
+                  <button id="demo-judge" type="button" class="button secondary" data-i18n="运行模拟判定">运行模拟判定</button>
+                  <div id="judge-demo-result" aria-live="polite"></div>
+                </section>
+                <div id="formal-practice">
                 <form id="answer-form">
                   <label for="answer"><span data-i18n="我的解释">我的解释</span></label>
                   <textarea id="answer" rows="6" maxlength="8000" aria-describedby="draft-note answer-count" placeholder="先写下你的理解，不必一次就完整。" data-i18n-placeholder="先写下你的理解，不必一次就完整。"></textarea>
-                  <div class="answer-meta"><p id="draft-note"><span data-i18n="回答仅留在本页内存中，刷新会清空；自评单独保存于本浏览器。">回答仅留在本页内存中，刷新会清空；自评单独保存于本浏览器。</span></p><span id="answer-count" hidden><span data-i18n="0 / 8000">0 / 8000</span></span></div>
+                  <div class="answer-meta"><p id="draft-note"><span data-i18n="草稿暂存在本页，刷新会清空。">草稿暂存在本页，刷新会清空。</span></p><span id="answer-count" hidden><span data-i18n="0 / 8000">0 / 8000</span></span></div>
                   <div class="submit-row">
                     <button class="button primary" type="submit"><span data-i18n="提交解释，查看参考要点">提交解释，查看参考要点</span></button>
                     <span class="kbd-hint mono">Ctrl / ⌘ + Enter</span>
@@ -177,6 +192,18 @@
                     <span class="legend-hint"><span data-i18n="点灯切换，也可按 1 / 2 / 3">点灯切换，也可按 1 / 2 / 3</span></span>
                   </div>
                   <p id="light-live" class="visually-hidden" role="status" aria-live="polite"></p>
+                  <section id="ai-panel" hidden>
+                    <details id="ai-settings"><summary><span data-i18n="在线 AI 判定">在线 AI 判定</span></summary>
+                      <p><span data-i18n="离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。">离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。</span></p>
+                      <label class="field"><span data-i18n="服务地址">服务地址</span><input id="ai-base" type="url" value="https://api.deepseek.com"></label>
+                      <label class="field"><span data-i18n="模型">模型</span><input id="ai-model" value="deepseek-flash"></label>
+                      <label class="field">API Key<input id="ai-key" type="password" autocomplete="off" spellcheck="false"></label>
+                      <label class="field"><span data-i18n="代理地址（可选）">代理地址（可选）</span><input id="ai-proxy" type="url"></label>
+                      <button type="button" class="button secondary" id="ai-run"><span data-i18n="发送答案并判定">发送答案并判定</span></button>
+                      <button type="button" class="text-button" id="ai-clear"><span data-i18n="清除 Key，返回离线">清除 Key，返回离线</span></button>
+                    </details>
+                    <p id="ai-status" role="status"></p><p id="ai-followup"></p>
+                  </section>
                   <p id="suggestion-bar" class="suggestion" hidden><span data-i18n="有一条外部建议，还没有生效。">有一条外部建议，还没有生效。</span><button id="apply-suggestion" class="text-button" type="button"><span data-i18n="采用建议">采用建议</span></button></p>
                   <ul id="rubric" class="point-list rubric"></ul>
                   <div class="retry-area">
@@ -193,6 +220,7 @@
                   </div>
                 </div>
                 <p id="rating-status" class="rating-status" role="status"></p>
+                </div>
               </article>
             </div>
           </div>
@@ -212,7 +240,7 @@
                 <div class="heat-tools">
                   <div class="heat-toggle" role="group" aria-label="热力图密度" data-i18n-aria-label="热力图密度">
                     <button type="button" data-density="expanded" aria-pressed="true"><span data-i18n="展开">展开</span></button>
-                    <button type="button" data-density="compact" aria-pressed="false"><span data-i18n="紧凑">紧凑</span></button>
+                    <button type="button" data-density="compact" aria-pressed="false"><span data-i18n="Mini 版" translate="no">Mini 版</span></button>
                   </div>
                   <p class="mono" id="heat-caption"><span data-i18n="每个格子是最近一次判定">每个格子是最近一次判定</span></p>
                 </div>
@@ -251,7 +279,7 @@
 
       <footer class="site-footer">
         <span>Unscripted · <span data-i18n="脱稿">脱稿</span></span>
-        <span><span data-i18n="回答不上传">回答不上传</span></span>
+        <span><span data-i18n="离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。">离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。</span></span>
         <a href="https://github.com/JUDYLP/stem">GitHub</a>
       </footer>
     </div>

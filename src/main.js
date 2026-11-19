@@ -1,3 +1,7 @@
+import builtinPack from '../data/packs/unscripted-core.v1.json' with {type:'json'};
+import { openDemo } from './ai/demo-scenario.js';
+import { createAIProvider } from './ai/provider.js';
+import { judgeAnswer, buildEvaluationContext, requestGate } from './ai/judge.js';
 import { t, localized, getLanguage, initLanguage, setLanguage, applyLanguage } from './i18n.js';
 import { loadQuestions } from './questions.js';
 import { createProgressStore } from './storage.js';
@@ -155,6 +159,141 @@ function announcePoint(index, light) {
   setTimeout(() => { live.textContent = pointAnnouncement(index, light); }, 30);
 }
 
+const aiGate = requestGate();
+let aiEvidence = [];
+let suggestedDraft;
+function resetJudge() {
+  aiGate.cancel();
+  if (suggestedDraft && suggestedDraft.confirmed === null) suggestedDraft.lights = [];
+  suggestedDraft = null;
+  aiEvidence = [];
+  $('ai-run').disabled = false;
+  $('ai-followup').textContent = '';
+  $('ai-status').textContent = t('离线自评');
+  $('ai-panel').hidden = $('judge-mode').value !== 'live';
+  if (!$('ai-panel').hidden) $('ai-status').textContent = t('在线 AI 已选择');
+}
+$('ai-clear').onclick = () => {
+  $('ai-key').value = '';
+  $('ai-proxy').value = '';
+  $('ai-settings').open = false;
+  $('judge-mode').value = 'offline';
+  $('judge-mode').dispatchEvent(new Event('change'));
+};
+for (const id of ['ai-base','ai-model','ai-key','ai-proxy']) {
+  $(id).addEventListener('input', () => {
+    if (id === 'ai-base' || id === 'ai-proxy') $('ai-key').value = '';
+    resetJudge();
+    if (draft().submitted !== null) {
+      fillRubric();
+      renderLayerLight();
+      $('rating-status').textContent = '';
+    }
+  });
+}
+$('ai-run').onclick = async () => {
+  if ($('ai-run').disabled || $('judge-mode').value !== 'live') return;
+  resetJudge();
+  const d = draft();
+  if ($('ai-panel').hidden || d.submitted === null) return;
+  fillRubric();
+  renderLayerLight();
+  const signal = aiGate.start();
+  const answer = d.submitted;
+  $('ai-run').disabled = true;
+  $('ai-status').textContent = t('正在请求判定…');
+  try {
+    const provider = createAIProvider({baseURL:$('ai-base').value.trim(), model:$('ai-model').value.trim(),
+      apiKey:$('ai-key').value, proxyURL:$('ai-proxy').value.trim()});
+    const context = evaluationContext();
+    await judgeAnswer(provider, context, answer, signal, result => {
+      suggestedDraft = d;
+      aiEvidence = result.verdicts;
+      suggestLights(questionId,currentLayer().id,aiEvidence.map(row=>row.light));
+      d.lights = getSuggestion(questionId,currentLayer().id);
+      clearSuggestion(questionId,currentLayer().id);
+      d.confirmed = null;
+      fillRubric();
+      renderLayerLight();
+      $('rating-status').textContent = $('ai-status').textContent = t('AI 建议，待确认');
+      $('ai-followup').textContent = [result.followUp, t('原文引用仅证明出处，请自行核对技术判断。')].filter(Boolean).join(' ');
+    });
+  } catch (error) {
+    if (signal.aborted) return;
+    const messages = {NO_KEY:'缺少 Key',TIMEOUT:'请求超时',OFFLINE_NETWORK:'网络断开',NETWORK_OR_CORS:'网络或跨域请求失败，请检查网络和浏览器 CORS 提示'};
+    const code = /^(HTTP_[0-9]{3}|INVALID_JSON|EMPTY|TRUNCATED|INCOMPLETE|CONTRACT|ENDPOINT|PACK|RUBRIC_MISMATCH)$/.test(error.message) ? error.message : '';
+    $('ai-status').textContent = [t('未取得建议，可继续自评。'),messages[error.message] ? t(messages[error.message]) : code].join(' ');
+  } finally {
+    if (!signal.aborted) $('ai-run').disabled = false;
+  }
+};
+
+function evaluationContext() {
+  return buildEvaluationContext({pack: builtinPack, question: current(), layer: currentLayer(), language: getLanguage()});
+}
+
+function renderMode() {
+  const mode = $('judge-mode').value;
+  $('judge-demo-result').replaceChildren();
+  $('judge-demo').hidden = mode !== 'demo';
+  $('formal-practice').hidden = mode === 'demo';
+  $('ai-panel').hidden = mode !== 'live';
+  $('ai-settings').open = mode === 'live';
+  $('layer-light').hidden = mode === 'demo';
+  const topic = builtinPack.questions.find(q => q.id === questionId);
+  $('rubric-review').textContent = t(topic?.review.status === 'reviewed' ? '已审校评分标准' : '待审校评分标准 · 建议供参考');
+}
+
+$('judge-mode').addEventListener('change', () => {
+  aiGate.cancel();
+  $('ai-run').disabled = false;
+  if ($('judge-mode').value === 'offline') {
+    resetJudge();
+    if (draft().submitted !== null) fillRubric();
+    renderLayerLight();
+    $('rating-status').textContent = t('离线自评');
+  }
+  renderMode();
+  if ($('judge-mode').value === 'live' && !aiEvidence.length) $('ai-status').textContent = t('在线 AI 已选择');
+});
+
+$('demo-judge').addEventListener('click', () => {
+  if ($('judge-mode').value !== 'demo') return;
+  const panel = $('judge-demo-result');
+  panel.replaceChildren();
+  try {
+    const context = evaluationContext();
+    const sample = openDemo(context);
+    const list = byId('ul', 'point-list rubric');
+    const status = byId('p', 'fine-print');
+    for (const [index, row] of sample.verdicts.entries()) {
+      const item = byId('li', 'point-row');
+      const button = byId('button', 'point-lamp');
+      const lamp = createLamp(row.light, {label:false});
+      button.type = 'button';
+      const update = () => {
+        item.dataset.state = row.light;
+        button.setAttribute('aria-label', pointLabel(index, row.light));
+        setLampState(lamp, row.light);
+        status.textContent = '';
+      };
+      button.append(lamp);
+      button.onclick = () => { row.light = nextLight(row.light); update(); };
+      update();
+      const copy = byId('span', 'point-text', context.criteria[index].criterion);
+      copy.append(document.createElement('br'), byId('small','fine-print',row.reason + ' · “' + row.quote + '”'));
+      item.append(button, copy);
+      list.append(item);
+    }
+    const confirm = byId('button','button secondary',t('确认模拟灯号'));
+    confirm.type = 'button';
+    confirm.onclick = () => { status.textContent = t('模拟灯号已确认，仅在本页预览。'); };
+    panel.append(byId('p','answer-text',sample.answer), list, byId('p','',sample.followUp), confirm, status);
+  } catch {
+    panel.textContent = t('示例判定暂不可用');
+  }
+});
+
 function fillRubric() {
   const d = draft();
   const layer = currentLayer();
@@ -170,7 +309,16 @@ function fillRubric() {
     lamp.dataset.point = String(index);
     button.append(lamp);
     const body = byId('span', 'point-text', text);
+    const evidence = aiEvidence[index];
+    if (evidence) {
+      const detail = byId('small', 'fine-print', (evidence.reason || t('模型未评价此项，请自行确认。')) + ' · ' +
+        (evidence.quote ? '“' + evidence.quote + '”' : t('无可核验的原文引用')));
+      body.append(document.createElement('br'),detail);
+    }
     const update = light => {
+      aiGate.cancel();
+      if (!aiEvidence.length) $('ai-status').textContent = t('离线自评');
+      $('ai-run').disabled = false;
       d.lights[index] = light;
       item.dataset.state = light;
       setLampState(lamp, light);
@@ -210,6 +358,7 @@ function renderSuggestion() {
 }
 
 function renderLayer() {
+  resetJudge();
   const question = current();
   const layer = currentLayer();
   const d = draft();
@@ -229,6 +378,7 @@ function renderLayer() {
     $('rubric').replaceChildren();
   }
   $('rating-status').textContent = t('该层最近一次判定：{light}。', { light: lightLabel(lightOf(index(), questionId, layer.id)) });
+  renderMode();
   renderTabs();
   renderLayerLight();
   renderSuggestion();
@@ -491,6 +641,7 @@ $('random-question').addEventListener('click', () => {
 });
 
 $('answer').addEventListener('input', () => {
+  resetJudge();
   const d = draft();
   d.text = $('answer').value;
   d.submitted = null;
@@ -512,6 +663,7 @@ $('answer').addEventListener('keydown', event => {
 });
 
 $('answer-form').addEventListener('submit', event => {
+  resetJudge();
   event.preventDefault();
   const d = draft();
   d.text = $('answer').value;
@@ -534,6 +686,7 @@ $('answer-form').addEventListener('submit', event => {
 });
 
 $('confirm-rating').addEventListener('click', () => {
+  if ($('judge-mode').value === 'demo') return;
   const d = draft();
   if (d.submitted === null) return;
   const question = current();
@@ -554,6 +707,7 @@ $('confirm-rating').addEventListener('click', () => {
   $('export-message').textContent = '';
   renderLayer();
   renderRecords({ changed: cellKey(question.id, layer.id) });
+  $('ai-status').textContent = t('人工确认');
   $('rating-status').textContent = t('已记录：{light}。', { light: lightLabel(light) });
   const lamp = $('layer-light-slot').firstElementChild;
   if (lamp) {

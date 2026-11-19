@@ -97,3 +97,52 @@ T06当前BLOCKED，T07依赖T06也未满足。后续若允许T06，应固定已�
 唯一当前关键外部阻塞：有效Key/额度与一次受控计费请求的明确确认。用户已说明稍后配置，本轮就此停止，不执行T06/T07。
 
 自测：为什么401能读到反而说明这条响应的CORS通过？为什么json_object可解析不等于符合业务schema？为什么浏览器超时不保证服务商停止计费？
+
+## 2026-11-19｜Redis L1 真实判题验收
+
+**PASS（localhost）**。用户完成页面自测。Chrome 在 http://localhost:49404 加载静态训练页，向官方 DeepSeek Chat Completions 端点发起两次 Redis L1 判题。以下记录来自保留的网络请求，未再次调用模型。下文早期探测状态按当时结果保留。
+
+| 核查项 | 结果 |
+|---|---|
+| localhost 成功路径 CORS | 两次 OPTIONS（#93、#96）和两次实际 POST（#92、#95）均为 HTTP 200 |
+| 模型响应 | 两次均为 deepseek-flash，finish_reason 为 stop，message.content 可解析为 JSON，各有三个已知 rubricId 及非空理由 |
+| 脱敏判题样例 | #92 三项均为红灯，引用为空。#95 三项建议为绿灯，其中两项引用能在回答中逐字找到。按客户端规则应呈现两绿一琥珀，第三项留给学习者核对 |
+| 人工确认 | 用户报告自测通过。确认前后存储边界另有合成响应的独立页面验收，详见下文 |
+| 回归（代码 b10fcf8） | 164/164 测试通过，35 个 JS 文件语法通过，成功打包 16 项静态资源 |
+| 未独立验收 | 有效凭证的 curl 响应未留存；Pages 生产来源成功路径未测；没有留存真实判题当时的页面截图或录像 |
+
+### 历史记录：初次无凭证探测
+
+**LIVE_API_NOT_TESTED**。基线 2a615f1，分支 competition-ai-judging。当前进程没有注入 DEEPSEEK_API_KEY。以下是官方服务的真实网络与鉴权错误路径测试；未取得模型生成结果。
+
+接口为 POST https://api.deepseek.com/chat/completions 。官方列出模型 deepseek-flash 及 JSON 输出能力。[模型表](https://api-docs.deepseek.com/quick_start/pricing/) · [JSON Output](https://api-docs.deepseek.com/guides/json_mode/)
+
+探测使用合成消息 “Return JSON.”、response_format.type=json_object、stream=false、max_tokens=256、20 秒超时和无效 Bearer 占位值。Chrome 使用 credentials:omit。临时空白探测页来自 http://localhost:62268；没有打开训练页、读取学习记录或发送学生答案。
+
+| 项目 | 实测 |
+|---|---|
+| curl OPTIONS | 200，允许当前 localhost Origin、POST 和 authorization,content-type |
+| curl POST | HTTP 401，error.type=authentication_error，error.code=invalid_request_error |
+| Chrome 自动 OPTIONS | DevTools 请求 4，HTTP 200。Access-Control-Allow-Origin 为 http://localhost:62268，Allow-Headers 为 authorization,content-type，Allow-Methods 为 POST |
+| Chrome 实际 POST | DevTools 请求 3，HTTP 401。页面 fetch 取得 type=cors 的 Response，能读取 JSON authentication_error。此错误路径通过了浏览器跨域检查 |
+| 有效 Key、HTTP 200、choices[0].message.content、JSON 解析、finish_reason=stop | BLOCKED，缺有效凭证。鉴权失败发生在成功生成之前 |
+| 真实空 content、截断、429、超时 | NOT RUN。设置超时时限不等于观察到超时 |
+| Redis L1 逐点判题、两种灯色、原文证据、确认后热力图、线上来源 CORS | NOT RUN。无真实判定样例、截图或录像 |
+
+下一次实测先在本地安全注入有效 Key 并确认允许一次付费测试，禁止将其粘贴至聊天或命令文本。先以 curl 核对成功响应结构，再从 localhost 用同一合成 Redis L1 答案核验认证成功路径。保留脱敏 verdicts、finish_reason 和模型名；真实训练页面的成功演示需另行截图。localhost 鉴权错误路径不足以证明 Pages 来源或成功响应可直接访问。
+
+此阶段保留现有离线自评。若成功响应或生产来源实际被 CORS 拦截，可另行审查受保护的同源 Worker，仅转发固定上游并限制来源、认证、请求大小、时限、速率和预算，凭证与答案不写日志。本次没有部署代理。
+
+本地回归：npm ci 成功；npm test 为 151 通过、0 失败、0 跳过；npm run check:syntax 为 32 个文件通过；python tools/package_site.py work/deepseek-spike-package 在新目录打包 13 个静态资源成功。临时探测服务器已停止。提交范围仅 docs/API_SPIKE_REPORT.md，历史 Ant-Ling 实验保留。
+
+### Redis L1 页面接线及验收
+
+真实凭证测试等待用户在本地密码框中输入并主动点击发送。当前 LIVE_API_NOT_TESTED，暂无真实判定样例或演示截图。Key 仅在当前页临时使用，清除入口可切回离线。BYOK 直接发送至配置的服务地址，代理模式仅向配置的代理发送题目和答案。浏览器对部分 CORS 和网络故障只暴露 TypeError，页面提示两种可能，使用 DevTools 预检记录进一步区分。
+
+修改 src/ai/provider.js、src/ai/judge.js、src/main.js、index.html、src/i18n.js、tools/package_site.py、tests/ai-judge.test.mjs 和本报告。Redis L1 逐项核对当前屏幕及 core@1.0.0 的 prompt 与 rubric 原文，通过 rubricId 验证模型建议；未确认前只更新草稿灯和文本。证据与理由使用文本节点呈现。
+
+npm test：164通过、0失败、0跳过（原151加13项）。npm run check:syntax：35文件通过。独立目录打包16项资源。真实 Chrome 加载打包产物，中文 Redis L1 提交后无 Key 提示正常，仍可离线确认。另一个 localhost 测试来源使用**合成 provider 响应**验证 UI 接线，灯号为绿/琥珀/琥珀，确认前 progress.v1/history.v1 原文不变，点击人工确认后才写入。该测试不是模型能力证据。有效 Key 的 Chrome 判题、成功路径 CORS、真实双灯色截图及 Pages 线上验收仍待完成。未部署。
+
+## Stage AI-2 · 2026-11-19
+
+Chrome 从 localhost:49428 的静态打包页调用 DeepSeek Chat Completions。用户在本页提供 Key 并批准五次调用，测试完成后已使用页面清除入口。五次使用公开的合成示例答案，HTTP 均为 200，模型为 deepseek-flash，finish_reason 均为 stop，JSON 和逐项契约校验通过。Redis L1、Java L1、MySQL L1、Java L2、Redis L3 分别取得三、三、三、三、四项建议。未发现不存在于答案中的非空引用。Redis L3 对未解释 TTL 的答案给了绿灯，人工复核仍有必要。其余四层真实 API、生产来源均为 NOT RUN。完整矩阵见 [Stage AI-2 验收](architecture/STAGE_AI_2_REPORT.md)。

@@ -1,0 +1,22 @@
+name: Judging regression
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run check:syntax
+      - run: npm run build:pack-validator
+      - run: npm run build:pack-runtime
+      - run: python3 tools/package_site.py work/ai2-ci
+      - run: python3 tests/browser/run_ai2.py work/ai2-ci
