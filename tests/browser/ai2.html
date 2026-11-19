@@ -2,6 +2,7 @@
 <pre id="result">PENDING</pre>
 <iframe src="./index.html?lang=en"></iframe>
 <script type="module">
+import {HOSTED_PROXY_URL,HOSTED_MODEL_LABEL} from "./src/ai/hosted.js";
 const frame = document.querySelector('iframe');
 const result = document.querySelector('#result');
 const wait = () => new Promise(resolve => setTimeout(resolve, 25));
@@ -24,6 +25,59 @@ async function run() {
   const status = () => el('ai-status').textContent;
   const snapshot = () => ['unscripted.progress.v1','unscripted.history.v1'].map(k=>w.localStorage.getItem(k)).join('|');
   const before = snapshot();
+  if (HOSTED_PROXY_URL) {
+    assert(el('ai-connection').value === 'hosted' && !el('ai-hosted-details').hidden,
+      'Hosted proxy should be the default when configured');
+    assert(el('ai-hosted-model').textContent === HOSTED_MODEL_LABEL, 'Missing model disclosure');
+    input('answer','Hosted sample');
+    el('answer-form').requestSubmit();
+    select('judge-mode','live');
+    w.fetch = async (url,opts) => {
+      assert(url.href === new URL(HOSTED_PROXY_URL).href &&
+        !new w.Headers(opts.headers).has('Authorization'), 'Hosted success used the wrong transport');
+      return new w.Response(JSON.stringify({choices:[
+        {finish_reason:'stop',message:{content:'{"verdicts":[],"followUp":null}'}},
+      ]}));
+    };
+    await el('ai-run').onclick();
+    assert(status().includes('AI suggestion') && snapshot() === before,
+      'Hosted completion did not reach the normal suggestion flow');
+    for (const code of [429,503]) {
+      let request;
+      w.fetch = async (url,opts) => {
+        request = {url,opts};
+        return new w.Response(null,{status:code});
+      };
+      await el('ai-run').onclick();
+      assert(request.url.href === new URL(HOSTED_PROXY_URL).href &&
+        !new w.Headers(request.opts.headers).has('Authorization'), 'Hosted request used the wrong transport');
+      assert(status().includes('resets daily at 00:00 UTC') && !el('ai-offer-demo').hidden,
+        'Hosted failure should offer the simulated demo');
+    }
+    el('ai-offer-demo').click();
+    assert(el('judge-mode').value === 'demo' && !el('judge-demo').hidden,
+      'Hosted failure button did not switch to Judge Demo');
+    select('ai-connection','byok');
+  } else {
+    assert(!el('ai-connection').querySelector('[value="hosted"]') &&
+      el('ai-connection').value === 'byok','Empty URL should retain the own-key mode');
+  }
+  select('ai-connection','custom');
+  select('judge-mode','live');
+  input('answer','Custom proxy sample');
+  el('answer-form').requestSubmit();
+  input('ai-proxy','https://custom-proxy.invalid/');
+  let customRequest;
+  w.fetch = async (url,opts) => {
+    customRequest = {url,opts};
+    return new w.Response(null,{status:429});
+  };
+  await el('ai-run').onclick();
+  assert(customRequest.url.href === 'https://custom-proxy.invalid/' &&
+    !new w.Headers(customRequest.opts.headers).has('Authorization') &&
+    el('ai-offer-demo').hidden, 'Custom proxy should retain its original transport and error');
+  select('ai-connection','byok');
+  select('judge-mode','offline');
   let calls = 0;
   w.fetch = () => { calls++; throw Error('Unexpected network request'); };
   for (const topic of options) {

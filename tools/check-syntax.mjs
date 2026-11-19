@@ -8,7 +8,7 @@ function files(dir) {
     .flatMap(entry => entry.isDirectory() ? files(join(dir, entry.name))
       : /\.(?:js|mjs)$/.test(entry.name) ? [join(dir, entry.name)] : []);
 }
-const sources = ['src', 'tests', 'tools'].flatMap(dir => files(join(root, dir)));
+const sources = ['src', 'tests', 'tools', 'worker'].flatMap(dir => files(join(root, dir)));
 for (const file of sources) {
   const result = spawnSync(process.execPath, ['--check', file], { stdio: 'inherit' });
   if (result.error || result.status !== 0) process.exit(1);

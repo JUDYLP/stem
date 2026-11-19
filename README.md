@@ -2,7 +2,7 @@
 
 **AI can write your code. Can you explain it?**
 
-纯前端解释训练器。公开预览：https://judylp.github.io/stem/ 。无需登录或 API Key；尚未接入 Live AI。
+静态前端解释训练器。公开预览：https://judylp.github.io/stem/ 。离线练习与模拟演示无需登录或 API Key。
 英文入口：https://judylp.github.io/stem/?lang=en
 
 ## 产品是什么
@@ -17,7 +17,7 @@
 - 动态点阵背景：固定全屏 canvas，桌面 28px / 390px 32px 点阵，基础白点不透明度 0.12–0.20，双正弦慢波呼吸；只有首屏示例面板的三盏灯向背景染色（160px 内），点亮时扩散 320px 点阵波纹；导航 logo 与面板内的灯不染背景点，避免彩点残留。答题框聚焦时动效降到 30%；dpr≤2、30fps、页面隐藏暂停，`prefers-reduced-motion` 只画一帧静态点阵。
 - 灯的表现力：示例灯 32px、参考要点灯 24px（44px 点击区）、热力格图标 22px、层级灯与本层灯色 18px；亮芯为白到灯色的径向渐变，带灯罩内高光与左上方反光点、4/14/36px 三层光晕；未亮灯是深色玻璃。要点行与热力格有同色低亮度内发光；面板内有灯点亮时，1px 边框沿灯的方向短暂染成同色后淡出；键盘焦点显示 2px 白色环。
 - 整站中英双语，语言优先级为有效 `?lang=`、已保存偏好、浏览器语言；偏好独立存 `unscripted.language`。
-- 三题九层（JUC / Redis / MySQL），每题 L1 Explain / L2 Reason / L3 Stress-test，每题每层 2–4 条参考要点。
+- 三题九层（JUC / Redis / MySQL），每题 L1 Explain / L2 Reason / L3 Stress-test，每题每层 2–5 条参考要点。
 - 灯判定：参考要点下有常驻图例，每条要点的灯是 button，默认琥珀；空格/回车循环，1/2/3 直接设为 绿/琥珀/红，aria-label 写明当前与下一个状态，切换后 aria-live 播报。该层规则为全绿→绿、有红→红、其余→琥珀；确认后映射到既有 Pass/Review（只有全绿是 Pass），旧 `unscripted.progress.v1` 记录仍可读取。
 - 练习记录：3×3 热力矩阵，判定后整格填充灯色并保留 ✓ / ! / ✗，未作答为深灰；桌面 60px 方格、矩阵左对齐，窄屏题名独占一行后接三格；悬停补充时间，点击跳到该题该层。倒序时间线含灯色竖条、漏掉的要点与同题层变化条。
 - 「在本机保存我的回答，用于前后对比」默认关闭；只保存开启之后的回答，之前的判定没有原文。开启后同一题层可展开对比首次与最近一次回答，关闭时删除已保存原文。
@@ -60,7 +60,7 @@ npm run check:syntax
 - `unscripted.history.v1`：每次确认的判定 `{questionId, layer, ts, light, pointLights, missedPoints}`，最多 200 条；只有开启保存回答开关时才附加 `answer`，默认不保存，关闭时删除已存原文。
 - `unscripted.language`：语言偏好。
 
-记录只属于当前浏览器与站点 origin；换端口/域名后不会自动同步。没有账号、数据库、后端、遥测或第三方模型调用；页面只请求同源静态文件。
+记录只属于当前浏览器与站点 origin，换端口或域名后不会自动同步。在线判题会把答案、题干和评分要点发送到所选服务；演示代理不保存答案。离线练习与模拟演示在浏览器内运行。
 
 导出内容仅包括当前 review，改为 pass 后移除；灯色与漏点来自最近一次判定。浏览器下载策略可能阻止保存：测试已核对 Blob 的 UTF-8 Markdown 内容和下载触发，当前隔离测试环境未核实磁盘落盘，请在实际浏览器确认下载。
 
@@ -84,11 +84,17 @@ npm run check:syntax
 
 ## 后续
 
-T05 API Spike 因缺少有效 Key 为 BLOCKED，T06/T07 Live 未开工；T02 题目待人工审校；下载落盘、真实手机与其他浏览器未验证；视频与 Devpost 提交未完成。远程为 https://github.com/JUDYLP/stem ，Pages 由 `.github/workflows/pages.yml` 打包 12 个静态资源发布。本轮新增的测试门禁工作流尚未提交或运行远端CI。
+题目待人工审校。托管演示待部署并完成真实模型回归，部署步骤见 [Worker 指南](worker/README.md)。
 
 ## AI 辅助开发披露
 
-由用户指导 Codex 编写和测试。未启动 Subagent，具体底层模型子型号无法从本次工具回执核实。产品没有 Live AI；开发使用 AI 与产品集成 AI 分开陈述。题目来源和人工审校状态已记录，不冒称用户已掌握所有技术。
+Codex 在用户指导下辅助开发和测试。产品提供三种与判题有关的体验：
+
+- **托管演示**由 Cloudflare Workers AI 上的开放权重模型 **Qwen 3.8 27B**（`@cf/qwen/qwen3.8-27b`）判定。部署并配置 URL 后可免 Key 使用。仓库中的 URL 暂为空。
+- **自带 Key**支持 DeepSeek，另可选择自定义兼容代理。DeepSeek Key 仅用于直接模式。
+- **评委演示**展示预设模拟，页面标注 Simulated。
+
+真实模型输出为建议，由学习者确认正式判定。部署后的托管实测见 [托管回归报告](docs/HOSTED_REGRESSION.md)。
 
 ## Stage 2A：独立题库校验（未接入页面）
 

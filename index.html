@@ -195,14 +195,29 @@
                   <section id="ai-panel" hidden>
                     <details id="ai-settings"><summary><span data-i18n="在线 AI 判定">在线 AI 判定</span></summary>
                       <p><span data-i18n="离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。">离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。</span></p>
-                      <label class="field"><span data-i18n="服务地址">服务地址</span><input id="ai-base" type="url" value="https://api.deepseek.com"></label>
-                      <label class="field"><span data-i18n="模型">模型</span><input id="ai-model" value="deepseek-flash"></label>
-                      <label class="field">API Key<input id="ai-key" type="password" autocomplete="off" spellcheck="false"></label>
-                      <label class="field"><span data-i18n="代理地址（可选）">代理地址（可选）</span><input id="ai-proxy" type="url"></label>
+                      <label class="field"><span data-i18n="连接方式">连接方式</span>
+                        <select id="ai-connection">
+                          <option value="hosted" data-i18n="使用演示代理（无需 Key）">使用演示代理（无需 Key）</option>
+                          <option value="byok" data-i18n="使用自己的 Key（DeepSeek）">使用自己的 Key（DeepSeek）</option>
+                          <option value="custom" data-i18n="使用自定义代理">使用自定义代理</option>
+                        </select>
+                      </label>
+                      <div id="ai-hosted-details" hidden>
+                        <p><span data-i18n="模型">模型</span> · <span id="ai-hosted-model"></span></p>
+                        <p data-i18n="演示代理会将答案发送到作者的 Cloudflare Worker，由 Cloudflare Workers AI 上的开放权重模型判定。代理不保存答案。">演示代理会将答案发送到作者的 Cloudflare Worker，由 Cloudflare Workers AI 上的开放权重模型判定。代理不保存答案。</p>
+                      </div>
+                      <div id="ai-byok-fields">
+                        <label class="field"><span data-i18n="服务地址">服务地址</span><input id="ai-base" type="url" value="https://api.deepseek.com"></label>
+                        <label class="field">API Key<input id="ai-key" type="password" autocomplete="off" spellcheck="false"></label>
+                      </div>
+                      <label class="field" id="ai-model-field"><span data-i18n="模型">模型</span><input id="ai-model" value="deepseek-flash"></label>
+                      <label class="field" id="ai-proxy-field" hidden><span data-i18n="代理地址">代理地址</span><input id="ai-proxy" type="url"></label>
                       <button type="button" class="button secondary" id="ai-run"><span data-i18n="发送答案并判定">发送答案并判定</span></button>
                       <button type="button" class="text-button" id="ai-clear"><span data-i18n="清除 Key，返回离线">清除 Key，返回离线</span></button>
                     </details>
-                    <p id="ai-status" role="status"></p><p id="ai-followup"></p>
+                    <p id="ai-status" role="status"></p>
+                    <button type="button" class="button secondary" id="ai-offer-demo" data-i18n="切到评委演示模式" hidden>切到评委演示模式</button>
+                    <p id="ai-followup"></p>
                   </section>
                   <p id="suggestion-bar" class="suggestion" hidden><span data-i18n="有一条外部建议，还没有生效。">有一条外部建议，还没有生效。</span><button id="apply-suggestion" class="text-button" type="button"><span data-i18n="采用建议">采用建议</span></button></p>
                   <ul id="rubric" class="point-list rubric"></ul>
