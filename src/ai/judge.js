@@ -3,7 +3,7 @@ export function buildEvaluationContext({pack, question, layer, language}) {
   const suffix = locale === 'en' ? '_en' : '';
   const topic = pack.questions.find(item => item.id === question.id);
   const official = topic?.layers.find(item => item.id === layer.id);
-  if (pack.packId !== 'unscripted-core' || pack.packVersion !== '1.0.0' || !official)
+  if (pack.packId !== 'unscripted-core' || !official)
     throw Error('RUBRIC_MISMATCH');
   const criteria = official.rubric.map(row => ({pointId: row.rubricId, criterion: row.criterion[locale]}));
   const displayed = layer['rubric' + suffix];

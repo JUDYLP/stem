@@ -7,7 +7,7 @@ import {computePackDigest} from '../src/packs/digest.js';
 import {previewPack} from '../src/packs/preview.js';
 const read = path => JSON.parse(readFileSync(new URL(path,import.meta.url),'utf8'));
 const pack = read('../data/packs/unscripted-core.v1.json');
-const sample = (patch={}) => JSON.stringify({...pack,packId:'practice',...patch});
+const sample = (patch={}) => JSON.stringify({...pack,packId:'practice',packVersion:'1.0.0',...patch});
 
 test('builtin preserves each legacy question, both languages and rubric order',async()=>{
   const {validatedPack:p} = await createPackRegistry().registerBuiltin();
