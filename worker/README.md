@@ -28,10 +28,32 @@ The Worker uses Cloudflare's Workers AI binding. Site visitors do not need a key
    node tools/hosted-regression.mjs --url $workerUrl
    ```
 
-4. Set `HOSTED_PROXY_URL` in `src/ai/hosted.js` to the live URL. Update `HOSTED_MODEL_LABEL` whenever the deployed `MODEL` changes. Publish the static site and verify a real request from the GitHub Pages site. The checked-in URL is empty.
+4. Set `HOSTED_PROXY_URL` in `src/ai/hosted.js` to the live URL. The page shows the actual model ID from the Worker response after a completed request. The label in `src/ai/hosted.js` is only a pre-request placeholder. Publish the static site and verify a real request from the GitHub Pages site. The checked-in URL is empty.
 5. To change models, edit `MODEL` under `[vars]` in `worker/wrangler.toml` and deploy again. To disable inference, set `ENABLED = "false"` and redeploy. Browser preflights still succeed so the UI can read the POST's 503 and offer the simulated Judge Demo.
 
-The deployment configuration uses `@cf/qwen/qwen3.8-27b` with low reasoning effort. The requested built-in fallback `@cf/qwen/qwen3-30b-a3b-fp8` is scheduled to stop accepting requests on November 20, 2026. Keep an active MODEL in the config. The quality regression suggests `@cf/openai/gpt-oss-120b` only when more than one model Green disagrees with the presets. [Cloudflare retirement notice](https://developers.cloudflare.com/changelog/post/2026-11-05-planned-model-deprecations/) · [Qwen 3.8 27B model](https://developers.cloudflare.com/workers-ai/models/qwen3.8-27b/)
+## 选模型 · Compare models
+
+1. Set `MODEL = "@cf/qwen/qwen3.8-27b"` in `worker/wrangler.toml` and deploy from `worker/`. This is also the fallback model when `MODEL` is unset.
+2. From the repository root, run the Qwen regression with the Worker URL from the deployment steps.
+
+   ```powershell
+   node tools/hosted-regression.mjs --url $workerUrl --out docs/HOSTED_REGRESSION.qwen.md
+   ```
+
+3. Change `MODEL` to `@cf/google/gemma-4-26b-a4b-it`, redeploy the same Worker, and run again from the repository root.
+
+   ```powershell
+   node tools/hosted-regression.mjs --url $workerUrl --out docs/HOSTED_REGRESSION.gemma.md
+   ```
+
+Compare the false Greens, JSON and quote failures, latency, and average prompt and completion tokens. Each report lists the model from the response and excludes missing usage from the averages. To estimate daily capacity, use the model's input and output rates in Neurons per million tokens. Divide the daily allowance of 10,000 Neurons (or the remaining allowance for the account) by the estimated Neurons per judgment. Check the estimate against Cloudflare's usage dashboard. The regression suggests `@cf/openai/gpt-oss-120b` only if more than one hosted model Green disagrees with the presets. [Cloudflare Workers AI pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)
+
+```text
+Neurons per judgment = (mean prompt tokens × input rate + mean completion tokens × output rate) / 1,000,000
+estimated judgments = floor(available Neurons / Neurons per judgment)
+```
+
+Qwen receives `/no_think` and low reasoning effort. Gemma receives the same request contract without those Qwen controls. [Qwen model documentation](https://developers.cloudflare.com/workers-ai/models/qwen3.8-27b/) · [Gemma model documentation](https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/)
 
 ## Limits and privacy
 

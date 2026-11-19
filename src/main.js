@@ -276,13 +276,16 @@ $('ai-run').onclick = async () => {
     const proxyURL = connection === 'hosted' ? HOSTED_PROXY_URL :
       connection === 'custom' ? $('ai-proxy').value.trim() : '';
     if (connection === 'custom' && !proxyURL) throw Error('NO_PROXY');
+    let hostedModel;
     const provider = createAIProvider({baseURL:$('ai-base').value.trim(), model:$('ai-model').value.trim(),
-      apiKey:connection === 'byok' ? $('ai-key').value : '', proxyURL});
+      apiKey:connection === 'byok' ? $('ai-key').value : '', proxyURL,
+      onModel:connection === 'hosted' ? model => { hostedModel = model; } : undefined});
     const context = evaluationContext();
     let result;
     await judgeAnswer(provider, context, answer, signal, validated => { result = validated; });
     stop();
     if (signal.aborted) return;
+    if (hostedModel) $('ai-hosted-model').textContent = hostedModel;
     const lampEls = $('rubric').querySelectorAll('.point-lamp .lamp');
     await revealVerdict({verdicts:result.verdicts, answerEl, lampEls}, signal);
     if (signal.aborted) return;

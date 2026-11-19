@@ -90,7 +90,7 @@ npm run check:syntax
 
 Codex 在用户指导下辅助开发和测试。产品提供三种与判题有关的体验：
 
-- **托管演示**由 Cloudflare Workers AI 上的开放权重模型 **Qwen 3.8 27B**（`@cf/qwen/qwen3.8-27b`）判定。部署并配置 URL 后可免 Key 使用。仓库中的 URL 暂为空。
+- **托管演示**默认使用 Cloudflare Workers AI 上的开放权重模型 **Qwen 3.8 27B**（`@cf/qwen/qwen3.8-27b`）。部署并配置 URL 后可免 Key 使用，页面根据响应显示实际模型。仓库中的 URL 暂为空。
 - **自带 Key**支持 DeepSeek，另可选择自定义兼容代理。DeepSeek Key 仅用于直接模式。
 - **评委演示**展示预设模拟，页面标注 Simulated。
 

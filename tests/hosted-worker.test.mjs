@@ -100,7 +100,7 @@ test('rejects malformed JSON, non-JSON, illegal roles, messages and token bounds
 });
 
 test('uses server model and JSON mode, caps tokens and appends /no_think to last user message', async() => {
-  const model = '@cf/qwen/qwen3-30b-a3b-fp8';
+  const model = '@cf/qwen/qwen3.8-27b';
   const {env,calls,keys} = fixture();
   const data = {...payload, model:'untrusted',max_tokens:9999,response_format:{type:'text'},
     stream:true, messages:[...payload.messages,{role:'system',content:'Other.',name:'ignored'}]};
@@ -108,17 +108,40 @@ test('uses server model and JSON mode, caps tokens and appends /no_think to last
   assert.equal(res.status,200);
   assertCors(res,site);
   assert.deepEqual(calls,[[model,{
-    max_tokens:1600,response_format:{type:'json_object'},
+    max_tokens:1600,response_format:{type:'json_object'},reasoning_effort:'low',
     messages:[payload.messages[0],{role:'user',content:'Answer.\n/no_think'},{role:'system',content:'Other.'}],
   }]]);
   assert.deepEqual(keys,[ip]);
   assert.deepEqual(await res.json(),{choices:[{message:{role:'assistant',content:'{"verdicts":[],"followUp":null}'},
     finish_reason:'stop'}],model});
-  env.MODEL = '@cf/qwen/qwen3.8-27b';
+  env.MODEL = '@cf/qwen/other-model';
   await worker.fetch(req({data:{...payload,max_tokens:123}}),env);
   assert.equal(calls[1][0],env.MODEL);
   assert.equal(calls[1][1].max_tokens,123);
-  assert.equal(calls[1][1].reasoning_effort,'low');
+  assert.equal(calls[1][1].reasoning_effort,undefined);
+});
+
+test('Gemma receives unchanged messages with no Qwen-only options', async () => {
+  const model = '@cf/google/gemma-4-26b-a4b-it';
+  const {env,calls} = fixture({MODEL:model});
+  const res = await worker.fetch(req(),env);
+  assert.equal(res.status,200);
+  assert.deepEqual(calls,[[model,{messages:payload.messages,max_tokens:1600,response_format:{type:'json_object'}}]]);
+  assert.equal((await res.json()).model,model);
+});
+
+test('preserves upstream token usage in successful responses', async () => {
+  const usage = {prompt_tokens:41,completion_tokens:23,total_tokens:64,
+    completion_tokens_details:{reasoning_tokens:4}};
+  for (const output of [
+    {response:'{"ok":true}'},
+    {choices:[{message:{content:'{"ok":true}'}}]},
+  ]) {
+    const {env} = fixture({AI:{run:async()=>({...output,usage})}});
+    const res = await worker.fetch(req(),env);
+    assert.equal(res.status,200);
+    assert.deepEqual((await res.json()).usage,usage);
+  }
 });
 
 for (const [name,result] of [

@@ -1,4 +1,4 @@
-const DEFAULT_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
+const DEFAULT_MODEL = '@cf/qwen/qwen3.8-27b';
 const MAX_BODY_BYTES = 32 * 1024;
 const MAX_TOKENS = 1600;
 const RATE_LIMIT = 6;
@@ -121,7 +121,10 @@ async function handle(request, env, origin) {
   }
   try {
     const content = jsonContent(result);
-    return response(origin, 200, {choices:[{message:{role:'assistant',content},finish_reason:'stop'}], model});
+    const completion = {choices:[{message:{role:'assistant',content},finish_reason:'stop'}], model};
+    if (result.usage && typeof result.usage === 'object' && !Array.isArray(result.usage))
+      completion.usage = result.usage;
+    return response(origin, 200, completion);
   } catch {
     return response(origin, 502, {error:'INVALID_UPSTREAM_JSON'});
   }

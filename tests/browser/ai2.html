@@ -32,16 +32,21 @@ async function run() {
     input('answer','Hosted sample');
     el('answer-form').requestSubmit();
     select('judge-mode','live');
+    let reportedModel = '@cf/google/gemma-4-26b-a4b-it';
     w.fetch = async (url,opts) => {
       assert(url.href === new URL(HOSTED_PROXY_URL).href &&
         !new w.Headers(opts.headers).has('Authorization'), 'Hosted success used the wrong transport');
-      return new w.Response(JSON.stringify({choices:[
+      return new w.Response(JSON.stringify({model:reportedModel,choices:[
         {finish_reason:'stop',message:{content:'{"verdicts":[],"followUp":null}'}},
       ]}));
     };
     await el('ai-run').onclick();
     assert(status().includes('AI suggestion') && snapshot() === before,
       'Hosted completion did not reach the normal suggestion flow');
+    assert(el('ai-hosted-model').textContent === reportedModel, 'Hosted label ignored the returned Gemma name');
+    reportedModel = '@cf/qwen/qwen3.8-27b';
+    await el('ai-run').onclick();
+    assert(el('ai-hosted-model').textContent === reportedModel, 'Hosted label did not track a server-side model change');
     for (const code of [429,503]) {
       let request;
       w.fetch = async (url,opts) => {

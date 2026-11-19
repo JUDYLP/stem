@@ -1,5 +1,6 @@
 import {writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
+import {parseArgs} from 'node:util';
 import {pathToFileURL} from 'node:url';
 import {setTimeout as delay} from 'node:timers/promises';
 import {buildPackEvaluationContext,buildMessages,validateVerdicts} from '../src/ai/judge.js';
@@ -39,6 +40,15 @@ function compare(result, context, expected, answer, counts, overGreen) {
   }
 }
 
+function readUsage(usage) {
+  const validTokens = n => Number.isSafeInteger(n) && n >= 0 ? n : undefined;
+  const prompt = validTokens(usage?.prompt_tokens);
+  const completion = validTokens(usage?.completion_tokens);
+  const total = validTokens(usage?.total_tokens) ??
+    (prompt !== undefined && completion !== undefined ? prompt + completion : undefined);
+  return {prompt,completion,total};
+}
+
 export async function runHostedRegression(url, {request=fetch, pause=delay}={}) {
   const cases = preparedCases();
   const counts = {total:cases.reduce((sum,item) => sum + item.context.criteria.length,0),
@@ -51,6 +61,7 @@ export async function runHostedRegression(url, {request=fetch, pause=delay}={}) 
     const started = performance.now();
     let status = 'Network failure or timeout';
     let model = '';
+    let usage;
     try {
       const res = await request(url,{
         method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),
@@ -67,6 +78,7 @@ export async function runHostedRegression(url, {request=fetch, pause=delay}={}) 
         try {
           const wrapper = await res.json();
           model = typeof wrapper?.model === 'string' ? wrapper.model : '';
+          usage = readUsage(wrapper?.usage);
           if (typeof wrapper?.choices?.[0]?.message?.content !== 'string') throw Error('INVALID_JSON');
           completion = {value:JSON.parse(wrapper.choices[0].message.content)};
         } catch {
@@ -84,7 +96,7 @@ export async function runHostedRegression(url, {request=fetch, pause=delay}={}) 
     } catch {
       // Request errors have no stable contract. Keep only the status above.
     }
-    rows.push({questionId,layer,status,model,ms:Math.round(performance.now()-started)});
+    rows.push({questionId,layer,status,model,usage,ms:Math.round(performance.now()-started)});
     console.log(questionId,layer,status,rows.at(-1).ms+' ms');
   }
   return {rows,counts,overGreen};
@@ -93,8 +105,20 @@ export async function runHostedRegression(url, {request=fetch, pause=delay}={}) 
 function formatReport({rows,counts,overGreen}) {
   const percent = n => counts.compared ? (100*n/counts.compared).toFixed(1)+'%' : 'N/A';
   const cleanCell = s => s.replace(/[^\w./@ -]/g,'');
+  const models = [...new Set(rows.map(row => cleanCell(row.model)).filter(Boolean))];
+  const average = key => {
+    const values = rows.map(row => row.usage?.[key]).filter(value => value !== undefined);
+    if (!values.length) return 'N/A (0/'+rows.length+' requests)';
+    const mean = values.reduce((sum,value) => sum+value,0)/values.length;
+    return mean.toFixed(1)+' ('+values.length+'/'+rows.length+' requests)';
+  };
   return [
     '# Hosted proxy regression', '', 'Run at '+new Date().toISOString(), '',
+    '* Response models: '+(models.map(model => '`'+model+'`').join(', ') || 'N/A')+'.',
+    '* Mean prompt tokens per request: '+average('prompt')+'.',
+    '* Mean completion tokens per request: '+average('completion')+'.',
+    '* Mean total tokens per request: '+average('total')+'.',
+    '* Averages include only responses that report the relevant usage.',
     '* Model agreement with preset lamps: '+percent(counts.matches)+
       ' ('+counts.matches+'/'+counts.compared+' rubric points).',
     '* Agreement after frontend validation: '+percent(counts.displayMatches)+'.',
@@ -105,21 +129,24 @@ function formatReport({rows,counts,overGreen}) {
     ...(overGreen.length > 1 ? ['**More than one model Green disagreed with a non-Green preset.** Set MODEL to '+
       '@cf/openai/gpt-oss-120b and rerun for comparison.', ''] : []),
     ...overGreen.map(({pointId,wanted,display}) => '* `'+pointId+'` · preset '+wanted+' · frontend '+display),
-    '', '| Question | Layer | Model | Result | Duration (ms) |','| --- | --- | --- | --- | ---: |',
-    ...rows.map(row => '| '+[row.questionId,row.layer,cleanCell(row.model),row.status,row.ms].join(' | ')+' |'),
+    '', '| Question | Layer | Model | Result | Duration (ms) | Prompt tokens | Completion tokens | Total tokens |',
+    '| --- | --- | --- | --- | ---: | ---: | ---: | ---: |',
+    ...rows.map(row => '| '+[row.questionId,row.layer,cleanCell(row.model) || '—',row.status,row.ms,
+      row.usage?.prompt ?? '—',row.usage?.completion ?? '—',row.usage?.total ?? '—'].join(' | ')+' |'),
     '', 'The presets are comparison fixtures. Differences still require human review.', '',
   ].join('\n');
 }
 
 async function main() {
-  const [flag,address,...extra] = process.argv.slice(2);
-  if (flag !== '--url' || !address || extra.length) throw Error('Usage: node tools/hosted-regression.mjs --url <Worker URL>');
-  const url = new URL(address);
+  const {values} = parseArgs({options:{url:{type:'string'},out:{type:'string'}}});
+  if (!values.url || values.out === '') throw Error('Usage: node tools/hosted-regression.mjs --url <Worker URL> [--out <report.md>]');
+  const url = new URL(values.url);
   if (url.username || url.password || url.search || url.hash ||
       (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost','127.0.0.1'].includes(url.hostname))))
     throw Error('Use an HTTPS Worker URL or a local HTTP development URL.');
   const result = await runHostedRegression(url);
-  await writeFile(new URL('../docs/HOSTED_REGRESSION.md',import.meta.url),formatReport(result),'utf8');
+  const report = values.out ? resolve(values.out) : new URL('../docs/HOSTED_REGRESSION.md',import.meta.url);
+  await writeFile(report,formatReport(result),'utf8');
   if (result.rows.some(row => row.status !== 'HTTP 200')) process.exitCode = 1;
 }
 
