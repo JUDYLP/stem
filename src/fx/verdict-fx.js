@@ -107,7 +107,7 @@ function center(rect) {
 
 // A hairline curve plus a small dot, drawn in a fixed overlay. Motion uses
 // transform/opacity only; the trail stroke is paint-only. Resolves on arrival.
-function flyPulse(fromRect, toRect, light) {
+function flyPulse(fromRect, toRect, light, signal) {
   return new Promise(resolve => {
     const from = center(fromRect);
     const to = center(toRect);
@@ -159,17 +159,21 @@ function flyPulse(fromRect, toRect, light) {
       done = true;
       cancelAnimationFrame(raf);
       clearTimeout(watchdog);
+      signal.removeEventListener('abort', finish);
       dot.style.opacity = '0';
       svg.style.opacity = '0';
-      setTimeout(() => {
-        svg.remove();
-        dot.remove();
-      }, 220);
+      const remove = () => { svg.remove(); dot.remove(); };
+      if (signal.aborted) remove();
+      else {
+        signal.addEventListener('abort', remove, {once:true});
+        setTimeout(() => { remove(); signal.removeEventListener('abort', remove); }, 220);
+      }
       resolve();
     };
     // Watchdog: if rAF is throttled (background tab, virtual time, headless),
     // the verdict still completes instead of hanging mid-flight.
     const watchdog = setTimeout(finish, FLIGHT_MS + 200);
+    signal.addEventListener('abort', finish, {once:true});
     const frame = now => {
       if (done) return;
       const t = Math.min(1, (now - start) / FLIGHT_MS);
@@ -219,8 +223,7 @@ function layerLightOf(verdicts) {
 }
 
 // Layer score in the dot-matrix font, e.g. 2/3, coloured by the layer rule.
-function renderScore(verdicts) {
-  const host = document.getElementById('layer-light');
+function renderScore(verdicts, host) {
   if (!host || !verdicts.length) return;
   const greens = verdicts.filter(v => validLight(v.light) === 'green').length;
   const layerLight = layerLightOf(verdicts);
@@ -233,6 +236,7 @@ function renderScore(verdicts) {
   }
   score.dataset.light = layerLight;
   score.textContent = `${greens}/${verdicts.length}`;
+  return score;
 }
 
 // ---------------------------------------------------------------- reveal
@@ -240,11 +244,15 @@ function renderScore(verdicts) {
 // Play the full verdict: one point every ~350ms. With a quote, the matching
 // original text is underlined first, then a pulse flies to the lamp; the lamp
 // only ignites when the pulse arrives. Without a quote the lamp lights at once.
-export function playVerdict({ verdicts, answerEl, lampEls } = {}) {
+export function playVerdict({ verdicts, answerEl, lampEls, scoreHost = document.getElementById('layer-light') } = {}) {
   const list = Array.isArray(verdicts) ? verdicts : [];
   const lamps = Array.from(lampEls || []);
+  const originalLights = lamps.map(lamp => lamp.dataset.state || 'off');
   const reduced = reducedMotion();
   const timers = [];
+  const flight = new AbortController();
+  const marks = [];
+  let score;
   let cancelled = false;
   let finished = 0;
   let settle;
@@ -257,8 +265,9 @@ export function playVerdict({ verdicts, answerEl, lampEls } = {}) {
     const quote = typeof verdict.quote === 'string' ? verdict.quote.trim() : '';
     let anchor = null;
     if (quote && answerEl) anchor = highlightQuote(answerEl, quote, light);
+    if (anchor) marks.push(anchor);
     if (!reduced && anchor && lamp) {
-      await flyPulse(anchor.getBoundingClientRect(), lamp.getBoundingClientRect(), light);
+      await flyPulse(anchor.getBoundingClientRect(), lamp.getBoundingClientRect(), light, flight.signal);
       if (cancelled) return;
     }
     if (lamp) {
@@ -267,20 +276,32 @@ export function playVerdict({ verdicts, answerEl, lampEls } = {}) {
       if (light === 'red') lamp.classList.add('is-flash');
       if (!reduced) fireRipple(lamp, light);
     }
-    if (index === list.length - 1) renderScore(list.map(v => ({ light: validLight(v.light) })));
+    if (index === list.length - 1) score = renderScore(list, scoreHost);
     finished += 1;
     if (finished === list.length) settle();
   };
 
   list.forEach((verdict, index) => {
-    timers.push(setTimeout(() => reveal(verdict, index), index * STEP_MS));
+    if (reduced) reveal(verdict, index);
+    else timers.push(setTimeout(() => reveal(verdict, index), index * STEP_MS));
   });
   if (!list.length) settle();
 
   return {
     done,
     cancel() {
+      if (cancelled) return;
       cancelled = true;
+      flight.abort();
+      if (finished < list.length) {
+        lamps.forEach((lamp, index) => {
+          setLampState(lamp, originalLights[index]);
+          lamp.classList.remove('is-flash', 'is-on');
+        });
+      }
+      score?.remove();
+      for (const mark of marks.reverse()) mark.replaceWith(...mark.childNodes);
+      answerEl?.normalize();
       for (const timer of timers) clearTimeout(timer);
       settle();
     },

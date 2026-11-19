@@ -35,6 +35,9 @@ async function run() {
       select('judge-mode','demo');
       el('demo-judge').click();
       const demo = el('judge-demo-result');
+      const confirm = demo.querySelector('button.button');
+      for (let tick=0; tick<200 && confirm.disabled; tick++) await wait();
+      assert(!confirm.disabled, 'Demo animation did not finish');
       const lights = [...demo.querySelectorAll('.point-row')].map(e=>e.dataset.state);
       assert(new Set(lights).size === 3, 'Missing demo lamp');
       demo.querySelector('.point-lamp').click();
@@ -45,6 +48,10 @@ async function run() {
       assert(snapshot() === before, 'Demo changed learning records');
     }
   }
+  select('judge-mode','demo');
+  el('demo-judge').click();
+  layer(0);
+  assert(!w.document.querySelector('.fx-scanning, mark.fx-quote, .fx-score'), 'Navigation left demo effects');
   assert(calls === 0,'Demo called provider');
   select('judge-mode','live');
   await el('ai-run').onclick();
@@ -78,6 +85,27 @@ async function run() {
   w.fetch = () => Promise.reject(new w.TypeError('network error'));
   await el('ai-run').onclick();
   assert(!el('ai-run').disabled && snapshot()===before, 'Network failure changed records or blocked retry');
+  // Exercise the production handler with a local completion, including a mid-reveal cancellation.
+  select('question', options[0].value);
+  input('answer','Sample evidence');
+  el('answer-form').requestSubmit();
+  w.fetch = async (_url, opts) => {
+    const prompt = JSON.parse(opts.body).messages[0].content;
+    const context = JSON.parse(prompt.slice(prompt.lastIndexOf('{"packId"')));
+    const verdicts = context.criteria.map(({pointId}) => ({pointId,light:'green',reason:'Example',quote:'Sample'}));
+    return new w.Response(JSON.stringify({choices:[{finish_reason:'stop',message:{content:JSON.stringify({verdicts,followUp:null})}}]}));
+  };
+  const live = el('ai-run').onclick();
+  assert(el('before-answer').closest('details').open && el('confirm-rating').disabled,'Live scan or confirmation guard missing');
+  for (let i=0; i<80 && !el('before-answer').querySelector('mark'); i++) await wait();
+  assert(el('before-answer').querySelector('mark'),'Live reveal did not highlight evidence');
+  layer(1);
+  await live;
+  assert(!w.document.querySelector('.fx-scanning, mark.fx-quote, .fx-pulse-dot, .fx-pulse-layer, .fx-score'),'Live effects survived navigation');
+  layer(0);
+  await el('ai-run').onclick();
+  assert(!el('confirm-rating').disabled && [...el('rubric').children].every(row=>row.dataset.state==='green'),'Live verdict not adopted after playback');
+  assert(snapshot() === before, 'Animation wrote a formal rating');
   select('judge-mode','offline');
   el('confirm-rating').click();
   assert(snapshot() !== before,'Offline confirmation did not save');

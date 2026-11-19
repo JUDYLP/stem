@@ -1,3 +1,4 @@
+import { startScan, playVerdict } from './fx/verdict-fx.js';
 import builtinPack from '../data/packs/unscripted-core.v1.json' with {type:'json'};
 import { openDemo } from './ai/demo-scenario.js';
 import { createAIProvider } from './ai/provider.js';
@@ -160,6 +161,32 @@ function announcePoint(index, light) {
 }
 
 const aiGate = requestGate();
+// The request signal also owns playback, including highlights left after completion.
+function scanAnswer(answerEl, signal) {
+  const stop = startScan(answerEl);
+  signal.addEventListener('abort', stop, {once:true});
+  return () => { signal.removeEventListener('abort', stop); stop(); };
+}
+
+function revealVerdict(options, signal) {
+  const player = playVerdict(options);
+  signal.addEventListener('abort', () => player.cancel(), {once:true});
+  return player.done;
+}
+
+function demoScanDelay(signal) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return Promise.resolve();
+  return new Promise(resolve => {
+    const finish = () => {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', finish);
+      resolve();
+    };
+    const timer = setTimeout(finish, 1200);
+    signal.addEventListener('abort', finish, {once:true});
+  });
+}
+
 let aiEvidence = [];
 let suggestedDraft;
 function resetJudge() {
@@ -168,6 +195,7 @@ function resetJudge() {
   suggestedDraft = null;
   aiEvidence = [];
   $('ai-run').disabled = false;
+  $('confirm-rating').disabled = false;
   $('ai-followup').textContent = '';
   $('ai-status').textContent = t('离线自评');
   $('ai-panel').hidden = $('judge-mode').value !== 'live';
@@ -202,29 +230,39 @@ $('ai-run').onclick = async () => {
   const answer = d.submitted;
   $('ai-run').disabled = true;
   $('ai-status').textContent = t('正在请求判定…');
+  const answerEl = $('before-answer');
+  answerEl.closest('details').open = true;
+  const stop = scanAnswer(answerEl, signal);
+  $('confirm-rating').disabled = true;
   try {
     const provider = createAIProvider({baseURL:$('ai-base').value.trim(), model:$('ai-model').value.trim(),
       apiKey:$('ai-key').value, proxyURL:$('ai-proxy').value.trim()});
     const context = evaluationContext();
-    await judgeAnswer(provider, context, answer, signal, result => {
-      suggestedDraft = d;
-      aiEvidence = result.verdicts;
-      suggestLights(questionId,currentLayer().id,aiEvidence.map(row=>row.light));
-      d.lights = getSuggestion(questionId,currentLayer().id);
-      clearSuggestion(questionId,currentLayer().id);
-      d.confirmed = null;
-      fillRubric();
-      renderLayerLight();
-      $('rating-status').textContent = $('ai-status').textContent = t('AI 建议，待确认');
-      $('ai-followup').textContent = [result.followUp, t('原文引用仅证明出处，请自行核对技术判断。')].filter(Boolean).join(' ');
-    });
+    let result;
+    await judgeAnswer(provider, context, answer, signal, validated => { result = validated; });
+    stop();
+    if (signal.aborted) return;
+    const lampEls = $('rubric').querySelectorAll('.point-lamp .lamp');
+    await revealVerdict({verdicts:result.verdicts, answerEl, lampEls}, signal);
+    if (signal.aborted) return;
+    suggestedDraft = d;
+    aiEvidence = result.verdicts;
+    suggestLights(questionId,currentLayer().id,aiEvidence.map(row=>row.light));
+    d.lights = getSuggestion(questionId,currentLayer().id);
+    clearSuggestion(questionId,currentLayer().id);
+    d.confirmed = null;
+    fillRubric();
+    renderLayerLight();
+    $('rating-status').textContent = $('ai-status').textContent = t('AI 建议，待确认');
+    $('ai-followup').textContent = [result.followUp, t('原文引用仅证明出处，请自行核对技术判断。')].filter(Boolean).join(' ');
   } catch (error) {
     if (signal.aborted) return;
     const messages = {NO_KEY:'缺少 Key',TIMEOUT:'请求超时',OFFLINE_NETWORK:'网络断开',NETWORK_OR_CORS:'网络或跨域请求失败，请检查网络和浏览器 CORS 提示'};
     const code = /^(HTTP_[0-9]{3}|INVALID_JSON|EMPTY|TRUNCATED|INCOMPLETE|CONTRACT|ENDPOINT|PACK|RUBRIC_MISMATCH)$/.test(error.message) ? error.message : '';
     $('ai-status').textContent = [t('未取得建议，可继续自评。'),messages[error.message] ? t(messages[error.message]) : code].join(' ');
   } finally {
-    if (!signal.aborted) $('ai-run').disabled = false;
+    stop();
+    if (!signal.aborted) { $('ai-run').disabled = false; $('confirm-rating').disabled = false; }
   }
 };
 
@@ -246,6 +284,7 @@ function renderMode() {
 
 $('judge-mode').addEventListener('change', () => {
   aiGate.cancel();
+  $('confirm-rating').disabled = false;
   $('ai-run').disabled = false;
   if ($('judge-mode').value === 'offline') {
     resetJudge();
@@ -257,8 +296,9 @@ $('judge-mode').addEventListener('change', () => {
   if ($('judge-mode').value === 'live' && !aiEvidence.length) $('ai-status').textContent = t('在线 AI 已选择');
 });
 
-$('demo-judge').addEventListener('click', () => {
+$('demo-judge').addEventListener('click', async () => {
   if ($('judge-mode').value !== 'demo') return;
+  const signal = aiGate.start();
   const panel = $('judge-demo-result');
   panel.replaceChildren();
   try {
@@ -279,7 +319,9 @@ $('demo-judge').addEventListener('click', () => {
       };
       button.append(lamp);
       button.onclick = () => { row.light = nextLight(row.light); update(); };
-      update();
+      button.disabled = true;
+      button.setAttribute('aria-label', pointLabel(index, 'off'));
+      setLampState(lamp, 'off');
       const copy = byId('span', 'point-text', context.criteria[index].criterion);
       copy.append(document.createElement('br'), byId('small','fine-print',row.reason + ' · “' + row.quote + '”'));
       item.append(button, copy);
@@ -288,8 +330,26 @@ $('demo-judge').addEventListener('click', () => {
     const confirm = byId('button','button secondary',t('确认模拟灯号'));
     confirm.type = 'button';
     confirm.onclick = () => { status.textContent = t('模拟灯号已确认，仅在本页预览。'); };
-    panel.append(byId('p','answer-text',sample.answer), list, byId('p','',sample.followUp), confirm, status);
+    const answerEl = byId('p','answer-text',sample.answer);
+    const scoreHost = byId('span', 'mono');
+    confirm.disabled = true;
+    panel.append(answerEl, list, scoreHost, byId('p','',sample.followUp), confirm, status);
+    const stop = scanAnswer(answerEl, signal);
+    try { await demoScanDelay(signal); } finally { stop(); }
+    if (signal.aborted) return;
+    await revealVerdict({verdicts:sample.verdicts, answerEl,
+      lampEls:list.querySelectorAll('.lamp'), scoreHost}, signal);
+    if (signal.aborted) return;
+    for (const [index, item] of [...list.children].entries()) {
+      const light = sample.verdicts[index].light;
+      item.dataset.state = light;
+      const button = item.querySelector('button');
+      button.setAttribute('aria-label', pointLabel(index, light));
+      button.disabled = false;
+    }
+    confirm.disabled = false;
   } catch {
+    if (signal.aborted) return;
     panel.textContent = t('示例判定暂不可用');
   }
 });
@@ -317,6 +377,7 @@ function fillRubric() {
     }
     const update = light => {
       aiGate.cancel();
+      $('confirm-rating').disabled = false;
       if (!aiEvidence.length) $('ai-status').textContent = t('离线自评');
       $('ai-run').disabled = false;
       d.lights[index] = light;
