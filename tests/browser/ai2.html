@@ -1,0 +1,87 @@
+<!doctype html><meta charset="utf-8"><title>AI judging integration</title>
+<pre id="result">PENDING</pre>
+<iframe src="./index.html?lang=en"></iframe>
+<script type="module">
+const frame = document.querySelector('iframe');
+const result = document.querySelector('#result');
+const wait = () => new Promise(resolve => setTimeout(resolve, 25));
+const assert = (condition, msg) => { if (!condition) throw Error(msg); };
+async function run() {
+  const w = frame.contentWindow;
+  const el = id => w.document.getElementById(id);
+  for (let i=0; i<160 && !el('question')?.options.length; i++) await wait();
+  const options = [...el('question').options];
+  assert(options.length === 3, 'Packaged app did not load all three topics');
+  const input = (id, text) => {
+    el(id).value = text;
+    el(id).dispatchEvent(new w.Event('input'));
+  };
+  const select = (id, value) => {
+    el(id).value = value;
+    el(id).dispatchEvent(new w.Event('change'));
+  };
+  const layer = index => el('depth-meter').querySelectorAll('button')[index].click();
+  const status = () => el('ai-status').textContent;
+  const snapshot = () => ['unscripted.progress.v1','unscripted.history.v1'].map(k=>w.localStorage.getItem(k)).join('|');
+  const before = snapshot();
+  let calls = 0;
+  w.fetch = () => { calls++; throw Error('Unexpected network request'); };
+  for (const topic of options) {
+    select('question', topic.value);
+    for (let i=0; i<3; i++) {
+      layer(i);
+      input('answer','My private draft');
+      el('answer-form').requestSubmit();
+      select('judge-mode','demo');
+      el('demo-judge').click();
+      const demo = el('judge-demo-result');
+      const lights = [...demo.querySelectorAll('.point-row')].map(e=>e.dataset.state);
+      assert(new Set(lights).size === 3, 'Missing demo lamp');
+      demo.querySelector('.point-lamp').click();
+      demo.querySelector('button.button').click();
+      el('confirm-rating').click();
+      select('judge-mode','offline');
+      assert(el('answer').value === 'My private draft' && !el('self-check').hidden,'Lost real draft');
+      assert(snapshot() === before, 'Demo changed learning records');
+    }
+  }
+  assert(calls === 0,'Demo called provider');
+  select('judge-mode','live');
+  await el('ai-run').onclick();
+  assert(/key/i.test(status()), 'Missing key feedback');
+  input('ai-key','synthetic');
+  for (const change of [()=>select('question',options[0].value), ()=>layer(1),
+      ()=>input('answer','edited'), ()=>input('ai-key','new-synthetic'), ()=>select('judge-mode','demo')]) {
+    select('judge-mode','live');
+    input('answer','Sample');
+    el('answer-form').requestSubmit();
+    let complete, signal;
+    w.fetch = (_url, opts) => {
+      signal = opts.signal;
+      return new Promise(resolve=>{complete = resolve;});
+    };
+    const pending = el('ai-run').onclick();
+    assert(el('ai-run').disabled, 'Duplicate request enabled');
+    await el('ai-run').onclick();
+    change();
+    assert(signal.aborted, 'Old request still active');
+    complete(new w.Response(JSON.stringify({choices:[{finish_reason:'stop',message:{content:'{"verdicts":[],"followUp":"STALE"}'}}]})));
+    await pending;
+    assert(!el('ai-followup').textContent.includes('STALE'),'Stale result reached UI');
+  }
+  select('judge-mode','live');
+  input('answer','Ready for offline confirmation');
+  el('answer-form').requestSubmit();
+  w.fetch = () => Promise.reject(new w.DOMException('timeout','TimeoutError'));
+  await el('ai-run').onclick();
+  assert(!el('ai-run').disabled && /timed out|timeout/i.test(status()), 'Timeout recovery failed: '+status());
+  w.fetch = () => Promise.reject(new w.TypeError('network error'));
+  await el('ai-run').onclick();
+  assert(!el('ai-run').disabled && snapshot()===before, 'Network failure changed records or blocked retry');
+  select('judge-mode','offline');
+  el('confirm-rating').click();
+  assert(snapshot() !== before,'Offline confirmation did not save');
+}
+try { await run(); result.textContent='AI2_BROWSER_PASS'; }
+catch(error) { result.textContent='FAIL: '+error.message; }
+</script>

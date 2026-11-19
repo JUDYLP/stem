@@ -915,6 +915,19 @@ export const messages = {
     "zh": "去练习区试试真题 →",
     "en": "Try a real question in Practice →"
   }
+,
+"判定模式": {"zh": "判定模式", "en": "Judging mode"},
+"评委演示": {"zh": "评委演示", "en": "Judge Demo"},
+"在线 AI 判定": {"zh": "在线 AI 判定", "en": "Live AI"},
+"模拟判定 · 非真实 AI": {"zh": "模拟判定 · 非真实 AI", "en": "SIMULATED RESULT"},
+"使用内置英文示例。你的回答会保留，模拟结果不会保存。": {"zh": "使用内置英文示例。你的回答会保留，模拟结果不会保存。", "en": "This demo uses a preset English answer. Your own answer is preserved. Demo ratings stay in this preview."},
+"运行模拟判定": {"zh": "运行模拟判定", "en": "Judge the sample answer"},
+"待审校评分标准 · 建议供参考": {"zh": "待审校评分标准 · 建议供参考", "en": "Rubric awaiting human review · experimental guidance"},
+"已审校评分标准": {"zh": "已审校评分标准", "en": "Human-reviewed rubric"},
+"确认模拟灯号": {"zh": "确认模拟灯号", "en": "Confirm demo lamps"},
+"模拟灯号已确认，仅在本页预览。": {"zh": "模拟灯号已确认，仅在本页预览。", "en": "Demo lamps confirmed for this preview only."},
+"在线 AI 已选择": {"zh": "在线 AI 已选择", "en": "Live AI selected"},
+"原文引用仅证明出处，请自行核对技术判断。": {"zh": "原文引用仅证明出处，请自行核对技术判断。", "en": "A matching quote identifies the source. Check the technical judgment yourself."}
 };
 export const LANGUAGE_KEY = 'unscripted.language';
 let language = 'zh';

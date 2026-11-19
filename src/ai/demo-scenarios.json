@@ -1,0 +1,266 @@
+[
+  {
+    "packId": "unscripted-core",
+    "packVersion": "1.0.0",
+    "questionId": "juc-volatile-atomicity-v2",
+    "layerId": "L1",
+    "answer": "A volatile write happens-before a subsequent read of the same field. Reading i is atomic. So two threads take turns incrementing it.",
+    "verdicts": [
+      {
+        "pointId": "juc-volatile-atomicity-v2-l1-c01",
+        "light": "green",
+        "reason": "Connects visibility to the ordering guarantee.",
+        "quote": "A volatile write happens-before a subsequent read of the same field."
+      },
+      {
+        "pointId": "juc-volatile-atomicity-v2-l1-c02",
+        "light": "amber",
+        "reason": "Covers the read but leaves out the full read-modify-write sequence.",
+        "quote": "Reading i is atomic."
+      },
+      {
+        "pointId": "juc-volatile-atomicity-v2-l1-c03",
+        "light": "red",
+        "reason": "Visibility does not serialize increments.",
+        "quote": "So two threads take turns incrementing it."
+      }
+    ],
+    "followUp": "Where can a second thread intervene in i++?"
+  },
+  {
+    "packId": "unscripted-core",
+    "packVersion": "1.0.0",
+    "questionId": "juc-volatile-atomicity-v2",
+    "layerId": "L2",
+    "answer": "Both read 5, both compute 6, both write 6. Seven happens if they take turns. Joining the threads prevents the race.",
+    "verdicts": [
+      {
+        "pointId": "juc-volatile-atomicity-v2-l2-c01",
+        "light": "green",
+        "reason": "Traces the lost update through both writes.",
+        "quote": "Both read 5, both compute 6, both write 6."
+      },
+      {
+        "pointId": "juc-volatile-atomicity-v2-l2-c02",
+        "light": "amber",
+        "reason": "The second read and write are missing from this schedule.",
+        "quote": "Seven happens if they take turns."
+      },
+      {
+        "pointId": "juc-volatile-atomicity-v2-l2-c03",
+        "light": "red",
+        "reason": "Joining waits for completion without serializing the workers.",
+        "quote": "Joining the threads prevents the race."
+      }
+    ],
+    "followUp": "What value must the second thread read to produce 7?"
+  },
+  {
+    "packId": "unscripted-core",
+    "packVersion": "1.0.0",
+    "questionId": "juc-volatile-atomicity-v2",
+    "layerId": "L3",
+    "answer": "Both see 1, then decrement to 0 and -1 and both ship. Each decrement is atomic. I would decrement first and ship if the result is nonnegative.",
+    "verdicts": [
+      {
+        "pointId": "juc-volatile-atomicity-v2-l3-c01",
+        "light": "green",
+        "reason": "Gives a concrete overselling interleaving.",
+        "quote": "Both see 1, then decrement to 0 and -1 and both ship."
+      },
+      {
+        "pointId": "juc-volatile-atomicity-v2-l3-c02",
+        "light": "amber",
+        "reason": "Individual atomicity is identified but the check is left unexplained.",
+        "quote": "Each decrement is atomic."
+      },
+      {
+        "pointId": "juc-volatile-atomicity-v2-l3-c03",
+        "light": "red",
+        "reason": "The proposed fix can leave negative stock.",
+        "quote": "I would decrement first and ship if the result is nonnegative."
+      },
+      {
+        "pointId": "juc-volatile-atomicity-v2-l3-c04",
+        "light": "red",
+        "reason": "Negative stock still violates the invariant even if shipment is skipped.",
+        "quote": "I would decrement first and ship if the result is nonnegative."
+      }
+    ],
+    "followUp": "Which conditional update could reserve stock before shipping?"
+  },
+  {
+    "packId": "unscripted-core",
+    "packVersion": "1.0.0",
+    "questionId": "redis-expiration-v2",
+    "layerId": "L1",
+    "answer": "EXPIRE sets the lifetime to 60 seconds. Some keys stay forever. Expiration will run my job exactly on time.",
+    "verdicts": [
+      {
+        "pointId": "redis-expiration-v2-l1-c01",
+        "light": "green",
+        "reason": "States the TTL and its unit.",
+        "quote": "EXPIRE sets the lifetime to 60 seconds."
+      },
+      {
+        "pointId": "redis-expiration-v2-l1-c02",
+        "light": "amber",
+        "reason": "Does not explain the default for ordinarily created keys.",
+        "quote": "Some keys stay forever."
+      },
+      {
+        "pointId": "redis-expiration-v2-l1-c03",
+        "light": "red",
+        "reason": "Expiration provides no exact scheduling guarantee.",
+        "quote": "Expiration will run my job exactly on time."
+      }
+    ],
+    "followUp": "What happens to a key created with plain SET?"
+  },
+  {
+    "packId": "unscripted-core",
+    "packVersion": "1.0.0",
+    "questionId": "redis-expiration-v2",
+    "layerId": "L2",
+    "answer": "Unread expired keys could keep occupying memory. Redis also checks keys periodically. That gives an exact callback deadline.",
+    "verdicts": [
+      {
+        "pointId": "redis-expiration-v2-l2-c01",
+        "light": "green",
+        "reason": "Identifies the memory retained without access.",
+        "quote": "Unread expired keys could keep occupying memory."
+      },
+      {
+        "pointId": "redis-expiration-v2-l2-c02",
+        "light": "amber",
+        "reason": "Misses which keys active expiration checks.",
+        "quote": "Redis also checks keys periodically."
+      },
+      {
+        "pointId": "redis-expiration-v2-l2-c03",
+        "light": "red",
+        "reason": "Cleanup and logical expiration need not coincide.",
+        "quote": "That gives an exact callback deadline."
+      }
+    ],
+    "followUp": "Could a key already be expired before its memory is reclaimed?"
+  },
+  {
+    "packId": "unscripted-core",
+    "packVersion": "1.0.0",
+    "questionId": "redis-expiration-v2",
+    "layerId": "L3",
+    "answer": "SET stores 1 without a TTL; EXPIRE leaves 1 and sets 60 seconds. INCR changes it to 2. SET hits 9 keeps the previous deadline.",
+    "verdicts": [
+      {
+        "pointId": "redis-expiration-v2-l3-c01",
+        "light": "green",
+        "reason": "Correctly traces the first two operations.",
+        "quote": "SET stores 1 without a TTL; EXPIRE leaves 1 and sets 60 seconds."
+      },
+      {
+        "pointId": "redis-expiration-v2-l3-c02",
+        "light": "amber",
+        "reason": "Gives the new value without tracking the TTL.",
+        "quote": "INCR changes it to 2."
+      },
+      {
+        "pointId": "redis-expiration-v2-l3-c03",
+        "light": "red",
+        "reason": "Ordinary SET clears the previous TTL.",
+        "quote": "SET hits 9 keeps the previous deadline."
+      },
+      {
+        "pointId": "redis-expiration-v2-l3-c04",
+        "light": "red",
+        "reason": "No replacement command that preserves the TTL is supplied.",
+        "quote": "SET hits 9 keeps the previous deadline."
+      }
+    ],
+    "followUp": "How would you preserve the original deadline?"
+  },
+  {
+    "packId": "unscripted-core",
+    "packVersion": "1.0.0",
+    "questionId": "mysql-consistent-read-v2",
+    "layerId": "L1",
+    "answer": "A plain consistent SELECT uses MVCC to read a point-in-time snapshot. Later commits are invisible. My own earlier writes are invisible too.",
+    "verdicts": [
+      {
+        "pointId": "mysql-consistent-read-v2-l1-c01",
+        "light": "green",
+        "reason": "Identifies the snapshot mechanism.",
+        "quote": "A plain consistent SELECT uses MVCC to read a point-in-time snapshot."
+      },
+      {
+        "pointId": "mysql-consistent-read-v2-l1-c02",
+        "light": "amber",
+        "reason": "Leaves out other transactions’ uncommitted changes.",
+        "quote": "Later commits are invisible."
+      },
+      {
+        "pointId": "mysql-consistent-read-v2-l1-c03",
+        "light": "red",
+        "reason": "The transaction can see its own changes.",
+        "quote": "My own earlier writes are invisible too."
+      }
+    ],
+    "followUp": "What can change the result even if the snapshot stays the same?"
+  },
+  {
+    "packId": "unscripted-core",
+    "packVersion": "1.0.0",
+    "questionId": "mysql-consistent-read-v2",
+    "layerId": "L2",
+    "answer": "RR reads 100 from the first consistent read’s snapshot. RC reads 80. BEGIN already took the snapshot in both modes.",
+    "verdicts": [
+      {
+        "pointId": "mysql-consistent-read-v2-l2-c01",
+        "light": "green",
+        "reason": "Gives both the RR value and the snapshot boundary.",
+        "quote": "RR reads 100 from the first consistent read’s snapshot."
+      },
+      {
+        "pointId": "mysql-consistent-read-v2-l2-c02",
+        "light": "amber",
+        "reason": "Gives the RC value without explaining the fresh snapshot.",
+        "quote": "RC reads 80."
+      },
+      {
+        "pointId": "mysql-consistent-read-v2-l2-c03",
+        "light": "red",
+        "reason": "Ordinary BEGIN alone does not establish this read snapshot.",
+        "quote": "BEGIN already took the snapshot in both modes."
+      }
+    ],
+    "followUp": "When does RC choose a snapshot for the second SELECT?"
+  },
+  {
+    "packId": "unscripted-core",
+    "packVersion": "1.0.0",
+    "questionId": "mysql-consistent-read-v2",
+    "layerId": "L3",
+    "answer": "UPDATE uses the current 80 and subtracts 10, yielding 70. Writes behave differently. My SELECT sees 70 because every row got a fresh snapshot.",
+    "verdicts": [
+      {
+        "pointId": "mysql-consistent-read-v2-l3-c01",
+        "light": "green",
+        "reason": "Correctly derives the updated value from the current row.",
+        "quote": "UPDATE uses the current 80 and subtracts 10, yielding 70."
+      },
+      {
+        "pointId": "mysql-consistent-read-v2-l3-c02",
+        "light": "amber",
+        "reason": "Does not distinguish consistent reads from locking reads.",
+        "quote": "Writes behave differently."
+      },
+      {
+        "pointId": "mysql-consistent-read-v2-l3-c03",
+        "light": "red",
+        "reason": "Own-write visibility does not refresh every other row.",
+        "quote": "My SELECT sees 70 because every row got a fresh snapshot."
+      }
+    ],
+    "followUp": "Would an untouched row also show another transaction’s newer commit?"
+  }
+]

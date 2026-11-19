@@ -142,3 +142,7 @@ T06当前BLOCKED，T07依赖T06也未满足。后续若允许T06，应固定已�
 修改 src/ai/provider.js、src/ai/judge.js、src/main.js、index.html、src/i18n.js、tools/package_site.py、tests/ai-judge.test.mjs 和本报告。Redis L1 逐项核对当前屏幕及 core@1.0.0 的 prompt 与 rubric 原文，通过 rubricId 验证模型建议；未确认前只更新草稿灯和文本。证据与理由使用文本节点呈现。
 
 npm test：164通过、0失败、0跳过（原151加13项）。npm run check:syntax：35文件通过。独立目录打包16项资源。真实 Chrome 加载打包产物，中文 Redis L1 提交后无 Key 提示正常，仍可离线确认。另一个 localhost 测试来源使用**合成 provider 响应**验证 UI 接线，灯号为绿/琥珀/琥珀，确认前 progress.v1/history.v1 原文不变，点击人工确认后才写入。该测试不是模型能力证据。有效 Key 的 Chrome 判题、成功路径 CORS、真实双灯色截图及 Pages 线上验收仍待完成。未部署。
+
+## Stage AI-2 · 2026-11-19
+
+Chrome 从 localhost:49428 的静态打包页调用 DeepSeek Chat Completions。用户在本页提供 Key 并批准五次调用，测试完成后已使用页面清除入口。五次使用公开的合成示例答案，HTTP 均为 200，模型为 deepseek-flash，finish_reason 均为 stop，JSON 和逐项契约校验通过。Redis L1、Java L1、MySQL L1、Java L2、Redis L3 分别取得三、三、三、三、四项建议。未发现不存在于答案中的非空引用。Redis L3 对未解释 TTL 的答案给了绿灯，人工复核仍有必要。其余四层真实 API、生产来源均为 NOT RUN。完整矩阵见 [Stage AI-2 验收](architecture/STAGE_AI_2_REPORT.md)。

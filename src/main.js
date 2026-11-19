@@ -1,5 +1,7 @@
+import builtinPack from '../data/packs/unscripted-core.v1.json' with {type:'json'};
+import { openDemo } from './ai/demo-scenario.js';
 import { createAIProvider } from './ai/provider.js';
-import { judgeAnswer, redisContext, requestGate } from './ai/judge.js';
+import { judgeAnswer, buildEvaluationContext, requestGate } from './ai/judge.js';
 import { t, localized, getLanguage, initLanguage, setLanguage, applyLanguage } from './i18n.js';
 import { loadQuestions } from './questions.js';
 import { createProgressStore } from './storage.js';
@@ -168,23 +170,29 @@ function resetJudge() {
   $('ai-run').disabled = false;
   $('ai-followup').textContent = '';
   $('ai-status').textContent = t('离线自评');
-  $('ai-panel').hidden = questionId !== 'redis-expiration-v2' || currentLayer()?.id !== 'L1';
+  $('ai-panel').hidden = $('judge-mode').value !== 'live';
+  if (!$('ai-panel').hidden) $('ai-status').textContent = t('在线 AI 已选择');
 }
 $('ai-clear').onclick = () => {
   $('ai-key').value = '';
   $('ai-proxy').value = '';
   $('ai-settings').open = false;
-  resetJudge();
-  if (draft().submitted !== null) fillRubric();
+  $('judge-mode').value = 'offline';
+  $('judge-mode').dispatchEvent(new Event('change'));
 };
 for (const id of ['ai-base','ai-model','ai-key','ai-proxy']) {
   $(id).addEventListener('input', () => {
     if (id === 'ai-base' || id === 'ai-proxy') $('ai-key').value = '';
     resetJudge();
-    if (draft().submitted !== null) fillRubric();
+    if (draft().submitted !== null) {
+      fillRubric();
+      renderLayerLight();
+      $('rating-status').textContent = '';
+    }
   });
 }
 $('ai-run').onclick = async () => {
+  if ($('ai-run').disabled || $('judge-mode').value !== 'live') return;
   resetJudge();
   const d = draft();
   if ($('ai-panel').hidden || d.submitted === null) return;
@@ -197,11 +205,7 @@ $('ai-run').onclick = async () => {
   try {
     const provider = createAIProvider({baseURL:$('ai-base').value.trim(), model:$('ai-model').value.trim(),
       apiKey:$('ai-key').value, proxyURL:$('ai-proxy').value.trim()});
-    const response = await fetch(new URL('../data/packs/unscripted-core.v1.json',import.meta.url), {signal});
-    if (!response.ok) throw Error('PACK');
-    const pack = await response.json();
-    if (signal.aborted) return;
-    const context = redisContext(pack,current(),currentLayer(),getLanguage());
+    const context = evaluationContext();
     await judgeAnswer(provider, context, answer, signal, result => {
       suggestedDraft = d;
       aiEvidence = result.verdicts;
@@ -212,7 +216,7 @@ $('ai-run').onclick = async () => {
       fillRubric();
       renderLayerLight();
       $('rating-status').textContent = $('ai-status').textContent = t('AI 建议，待确认');
-      $('ai-followup').textContent = result.followUp || '';
+      $('ai-followup').textContent = [result.followUp, t('原文引用仅证明出处，请自行核对技术判断。')].filter(Boolean).join(' ');
     });
   } catch (error) {
     if (signal.aborted) return;
@@ -223,6 +227,72 @@ $('ai-run').onclick = async () => {
     if (!signal.aborted) $('ai-run').disabled = false;
   }
 };
+
+function evaluationContext() {
+  return buildEvaluationContext({pack: builtinPack, question: current(), layer: currentLayer(), language: getLanguage()});
+}
+
+function renderMode() {
+  const mode = $('judge-mode').value;
+  $('judge-demo-result').replaceChildren();
+  $('judge-demo').hidden = mode !== 'demo';
+  $('formal-practice').hidden = mode === 'demo';
+  $('ai-panel').hidden = mode !== 'live';
+  $('ai-settings').open = mode === 'live';
+  $('layer-light').hidden = mode === 'demo';
+  const topic = builtinPack.questions.find(q => q.id === questionId);
+  $('rubric-review').textContent = t(topic?.review.status === 'reviewed' ? '已审校评分标准' : '待审校评分标准 · 建议供参考');
+}
+
+$('judge-mode').addEventListener('change', () => {
+  aiGate.cancel();
+  $('ai-run').disabled = false;
+  if ($('judge-mode').value === 'offline') {
+    resetJudge();
+    if (draft().submitted !== null) fillRubric();
+    renderLayerLight();
+    $('rating-status').textContent = t('离线自评');
+  }
+  renderMode();
+  if ($('judge-mode').value === 'live' && !aiEvidence.length) $('ai-status').textContent = t('在线 AI 已选择');
+});
+
+$('demo-judge').addEventListener('click', () => {
+  if ($('judge-mode').value !== 'demo') return;
+  const panel = $('judge-demo-result');
+  panel.replaceChildren();
+  try {
+    const context = evaluationContext();
+    const sample = openDemo(context);
+    const list = byId('ul', 'point-list rubric');
+    const status = byId('p', 'fine-print');
+    for (const [index, row] of sample.verdicts.entries()) {
+      const item = byId('li', 'point-row');
+      const button = byId('button', 'point-lamp');
+      const lamp = createLamp(row.light, {label:false});
+      button.type = 'button';
+      const update = () => {
+        item.dataset.state = row.light;
+        button.setAttribute('aria-label', pointLabel(index, row.light));
+        setLampState(lamp, row.light);
+        status.textContent = '';
+      };
+      button.append(lamp);
+      button.onclick = () => { row.light = nextLight(row.light); update(); };
+      update();
+      const copy = byId('span', 'point-text', context.criteria[index].criterion);
+      copy.append(document.createElement('br'), byId('small','fine-print',row.reason + ' · “' + row.quote + '”'));
+      item.append(button, copy);
+      list.append(item);
+    }
+    const confirm = byId('button','button secondary',t('确认模拟灯号'));
+    confirm.type = 'button';
+    confirm.onclick = () => { status.textContent = t('模拟灯号已确认，仅在本页预览。'); };
+    panel.append(byId('p','answer-text',sample.answer), list, byId('p','',sample.followUp), confirm, status);
+  } catch {
+    panel.textContent = t('示例判定暂不可用');
+  }
+});
 
 function fillRubric() {
   const d = draft();
@@ -308,6 +378,7 @@ function renderLayer() {
     $('rubric').replaceChildren();
   }
   $('rating-status').textContent = t('该层最近一次判定：{light}。', { light: lightLabel(lightOf(index(), questionId, layer.id)) });
+  renderMode();
   renderTabs();
   renderLayerLight();
   renderSuggestion();
@@ -615,6 +686,7 @@ $('answer-form').addEventListener('submit', event => {
 });
 
 $('confirm-rating').addEventListener('click', () => {
+  if ($('judge-mode').value === 'demo') return;
   const d = draft();
   if (d.submitted === null) return;
   const question = current();
