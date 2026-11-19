@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {HOSTED_PROXY_URL, HOSTED_TIMEOUT_MS} from '../src/ai/hosted.js';
 import {createAIProvider} from '../src/ai/provider.js';
 import {judgeAnswer,validateVerdicts,redisContext,buildMessages,requestGate} from '../src/ai/judge.js';
 const load = path=>JSON.parse(readFileSync(new URL(path,import.meta.url)));
@@ -42,6 +43,15 @@ test('missing key stays offline; timeout reported explicitly',async t=>{
   await assert.rejects(createAIProvider()([]),/NO_KEY/);
   t.mock.method(globalThis,'fetch',async()=>{throw new DOMException('timed out','TimeoutError')});
   await assert.rejects(createAIProvider(settings)([]),/TIMEOUT/);
+});
+
+test('hosted requests use the 35-second timeout, with 20 seconds for standard connections',async t=>{
+  const timing=t.mock.method(AbortSignal,'timeout',()=>new AbortController().signal);
+  t.mock.method(globalThis,'fetch',async()=>new Response(
+    '{"choices":[{"finish_reason":"stop","message":{"content":"{}"}}]}'));
+  await createAIProvider({proxyURL:HOSTED_PROXY_URL,timeoutMs:HOSTED_TIMEOUT_MS})([]);
+  await createAIProvider(settings)([]);
+  assert.deepEqual(timing.mock.calls.map(call=>call.arguments[0]),[35000,20000]);
 });
 
 test('judge only emits suggestions; a superseded completion cannot reach the view',async t=>{

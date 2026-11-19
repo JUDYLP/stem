@@ -38,6 +38,7 @@ export const messages = {
 "清除 Key，返回离线": {"zh": "清除 Key，返回离线", "en": "Clear key and return offline"},
 "发送答案并判定": {"zh": "发送答案并判定", "en": "Send answer for AI review"},
 "离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。": {"zh": "离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。", "en": "Offline review keeps answers on this device. Online review sends this answer, question and criteria to your selected provider."},
+"正在请求判定，可能需要十几秒…": {"zh": "正在请求判定，可能需要十几秒…", "en": "Requesting review. This may take 10–30 seconds."},
 "正在请求判定…": {"zh": "正在请求判定…", "en": "Requesting review…"},
 "AI 建议，待确认": {"zh": "AI 建议，待确认", "en": "AI suggestion, pending your confirmation"},
 "离线自评": {"zh": "离线自评", "en": "Offline self-review"},

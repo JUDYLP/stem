@@ -6,7 +6,7 @@
 - Source repository: https://github.com/JUDYLP/stem (currently private; must become public for submission).
 - Live website: not yet verified; Pages setup is pending.
 - Video: not recorded or uploaded.
-- Live AI: learners can use their own DeepSeek key. Hosted judging is pending Worker deployment and URL configuration.
+- Live AI: learners can use their own DeepSeek key. The hosted Worker URL is configured for the site; production publication and Gemma regression are pending.
 - Question content: source-checked draft, pending participant review.
 - User study / learning outcome evidence: none collected yet.
 
@@ -28,7 +28,7 @@ HTML, CSS, native JavaScript modules, a JSON question bank, and browser localSto
 
 ### AI use and limitations
 
-Codex assisted with planning, implementation, debugging and tests. The participant must review the content and explain their own contribution before submission. The hosted demo is configured for the open-weight Qwen 3.8 27B model on Cloudflare Workers AI and becomes available when its Worker URL is deployed and configured. Live AI also supports a learner-provided DeepSeek key. Judge Demo uses labeled preset responses. The learner confirms the rating. We have not measured learning gains or validated the tool as a measure of mastery.
+Codex assisted with planning, implementation, debugging and tests. The participant must review the content and explain their own contribution before submission. The hosted demo is configured for the open-weight Gemma 4 26B model on Cloudflare Workers AI. Live AI also supports a learner-provided DeepSeek key. Judge Demo uses labeled preset responses. The learner confirms the rating. We have not measured learning gains or validated the tool as a measure of mastery.
 
 ### What I learned
 

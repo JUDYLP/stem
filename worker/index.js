@@ -62,10 +62,13 @@ async function withinLimit(env, ip) {
 }
 
 async function runWithDeadline(env, model, input) {
+  const configured = Number(env.DEADLINE_MS);
+  const deadline = Number.isInteger(configured) && configured > 0 && configured <= 2147483647
+    ? configured : 30000;
   let timeout;
   try {
     const expired = new Promise((_, reject) => {
-      timeout = setTimeout(() => reject(Error('UPSTREAM_TIMEOUT')), 18000);
+      timeout = setTimeout(() => reject(Error('UPSTREAM_TIMEOUT')), deadline);
     });
     return await Promise.race([env.AI.run(model, input), expired]);
   } finally {

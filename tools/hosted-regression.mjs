@@ -3,6 +3,7 @@ import {resolve} from 'node:path';
 import {parseArgs} from 'node:util';
 import {pathToFileURL} from 'node:url';
 import {setTimeout as delay} from 'node:timers/promises';
+import {HOSTED_TIMEOUT_MS} from '../src/ai/hosted.js';
 import {buildPackEvaluationContext,buildMessages,validateVerdicts} from '../src/ai/judge.js';
 import scenarios from '../src/ai/demo-scenarios.json' with {type:'json'};
 import core from '../data/packs/unscripted-core.v1.json' with {type:'json'};
@@ -64,7 +65,7 @@ export async function runHostedRegression(url, {request=fetch, pause=delay}={}) 
     let usage;
     try {
       const res = await request(url,{
-        method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),
+        method:'POST',redirect:'error',signal:AbortSignal.timeout(HOSTED_TIMEOUT_MS),
         headers:{'Origin':'http://localhost:5174','Content-Type':'application/json'},
         body:JSON.stringify({messages:buildMessages(context,answer),
           response_format:{type:'json_object'},stream:false,max_tokens:1600}),

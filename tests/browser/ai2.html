@@ -83,7 +83,9 @@ async function run() {
         {finish_reason:'stop',message:{content:'{"verdicts":[],"followUp":null}'}},
       ]}));
     };
-    await el('ai-run').onclick();
+    const hostedRun = el('ai-run').onclick();
+    assert(status().includes('10–30 seconds'),'Hosted request did not explain the wait');
+    await hostedRun;
     assert(status().includes('AI suggestion') && snapshot() === before,
       'Hosted completion did not reach the normal suggestion flow');
     assert(el('ai-hosted-model').textContent === reportedModel, 'Hosted label ignored the returned Gemma name');

@@ -127,7 +127,10 @@ test('Gemma receives unchanged messages with no Qwen-only options', async () => 
   const res = await worker.fetch(req(),env);
   assert.equal(res.status,200);
   assert.deepEqual(calls,[[model,{messages:payload.messages,max_tokens:1600,response_format:{type:'json_object'}}]]);
-  assert.equal((await res.json()).model,model);
+  const completion = await res.json();
+  assert.equal(completion.model,model);
+  assert.equal(completion.choices[0].message.content,'{"verdicts":[],"followUp":null}',
+    'Gemma JSON without think tags should pass through');
 });
 
 test('preserves upstream token usage in successful responses', async () => {
@@ -207,16 +210,20 @@ test('opt-in isolate memory rate limit allows six posts per IP then rejects', as
   assert.equal(calls.length,7);
 });
 
-test('slow inference gets a 503 after the 18-second deadline', async t => {
-  t.mock.timers.enable({apis:['setTimeout']});
-  let started;
-  const began = new Promise(resolve => {started = resolve;});
-  const {env} = fixture({AI:{run:()=>{started();return new Promise(()=>{});}}});
-  const pending = worker.fetch(req(),env);
-  await began;
-  t.mock.timers.tick(18000);
-  const res = await pending;
-  assert.equal(res.status,503);
-  assertCors(res,site);
-  assert.deepEqual(await res.json(),{error:'UPSTREAM_TIMEOUT'});
-});
+for (const [setting,ms] of [[undefined,30000],['4500',4500],['invalid',30000]]) {
+  test('slow inference gets a 503 at the deadline for DEADLINE_MS='+setting, async t => {
+    t.mock.timers.enable({apis:['setTimeout']});
+    const timeout = t.mock.method(globalThis,'setTimeout',globalThis.setTimeout);
+    let started;
+    const began = new Promise(resolve => {started = resolve;});
+    const {env} = fixture({DEADLINE_MS:setting,AI:{run:()=>{started();return new Promise(()=>{});}}});
+    const pending = worker.fetch(req(),env);
+    await began;
+    assert.equal(timeout.mock.calls[0].arguments[1],ms);
+    t.mock.timers.tick(ms);
+    const res = await pending;
+    assert.equal(res.status,503);
+    assertCors(res,site);
+    assert.deepEqual(await res.json(),{error:'UPSTREAM_TIMEOUT'});
+  });
+}

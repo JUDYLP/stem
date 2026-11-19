@@ -1,4 +1,4 @@
-import { HOSTED_PROXY_URL, HOSTED_MODEL_LABEL } from './ai/hosted.js';
+import { HOSTED_PROXY_URL, HOSTED_MODEL_LABEL, HOSTED_TIMEOUT_MS } from './ai/hosted.js';
 import { startScan, playVerdict } from './fx/verdict-fx.js';
 import { openDemo } from './ai/demo-scenario.js';
 import { createAIProvider } from './ai/provider.js';
@@ -278,13 +278,13 @@ $('ai-run').onclick = async () => {
   renderLayerLight();
   const signal = aiGate.start();
   const answer = d.submitted;
+  const connection = aiConnection.value;
   $('ai-run').disabled = true;
-  $('ai-status').textContent = t('正在请求判定…');
+  $('ai-status').textContent = t(connection === 'hosted' ? '正在请求判定，可能需要十几秒…' : '正在请求判定…');
   const answerEl = $('before-answer');
   answerEl.closest('details').open = true;
   const stop = scanAnswer(answerEl, signal);
   $('confirm-rating').disabled = true;
-  const connection = aiConnection.value;
   try {
     const proxyURL = connection === 'hosted' ? HOSTED_PROXY_URL :
       connection === 'custom' ? $('ai-proxy').value.trim() : '';
@@ -292,6 +292,7 @@ $('ai-run').onclick = async () => {
     let hostedModel;
     const provider = createAIProvider({baseURL:$('ai-base').value.trim(), model:$('ai-model').value.trim(),
       apiKey:connection === 'byok' ? $('ai-key').value : '', proxyURL,
+      timeoutMs:connection === 'hosted' ? HOSTED_TIMEOUT_MS : undefined,
       onModel:connection === 'hosted' ? model => { hostedModel = model; } : undefined});
     const context = evaluationContext();
     let result;
