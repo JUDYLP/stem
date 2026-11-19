@@ -36,7 +36,10 @@ export function createMigrationService({storage,locks,registry}){
   async function prepare(){
     const raw=sources(storage);
     const {items,entries}=strictLegacy(raw);
-    const r=registry.get('unscripted-core','1.0.0');
+    // Legacy progress must be attached to the currently registered built-in Core pack.
+    // Do not pin migration to an old version: the built-in pack is versioned immutably.
+    const builtinVersion=registry.versions('unscripted-core').at(-1);
+    const r=builtinVersion ? registry.get('unscripted-core',builtinVersion) : null;
     check(r?.source==='builtin','BUILTIN_REQUIRED');
     const state=empty(),v=version(state,r,true),unmapped=[];
     for(const [key,i] of Object.entries(items)){

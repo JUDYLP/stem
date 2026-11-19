@@ -71,7 +71,8 @@ All demo quotes are intended to be exact substrings of their sample answers; aut
 ## Validation status
 
 - JSON parsing and in-memory structural checks: performed during preparation.
-- Repository Node test suite / syntax check: **NOT RUN in this environment**.
+- Initial GitHub Actions run exposed a version-pinning regression in legacy migration: `src/storage/migration.js` still requested Core 1.0.0 after the built-in pack advanced to 1.0.1. The migration now resolves the latest registered built-in Core version, and the storage migration test asserts the migrated snapshot targets that version.
+- Repository Node test suite / syntax check: pending rerun after the CI fix.
 - Real provider / API-key model regression: **NOT RUN**; assigned to the local agent after merge-ready review.
 - Browser integration of the intro pack: **NOT INCLUDED**; this PR adds the supplied pack as data only.
 - Human owner approval: pending.
