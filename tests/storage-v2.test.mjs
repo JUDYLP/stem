@@ -9,7 +9,7 @@ const registry=createPackRegistry(),core=await registry.registerBuiltin();
 const q=core.validatedPack.questions[0], layer=q.layers[0],key=q.id+'::L1';
 const ctx=r=>({packId:r.packId,packVersion:r.packVersion,contentDigest:r.contentDigest,questionId:q.id,layerId:'L1'});
 const input={confirmed:true,ts,criterionResults:layer.rubric.map(r=>({rubricId:r.rubricId,light:'green'})),answer:'synthetic'};
-const imported=await registry.registerImported(JSON.stringify({...core.validatedPack,packId:'study'}));
+const imported=await registry.registerImported(JSON.stringify({...core.validatedPack,packId:'study',packVersion:'1.0.0'}));
 const newer=await registry.registerImported(JSON.stringify({...core.validatedPack,packId:'study',packVersion:'1.0.1'}));
 function fixture(){
   const map=new Map(),writes=[];
@@ -65,6 +65,8 @@ test('preview, archive, reconfirmation, repeated migration and post-commit sourc
   assert.deepEqual(p.unmapped,['unknown::L2']);assert.equal(p.archivedHistory,1);
   const calls=await Promise.all([1,2].map(()=>f.m.migrateLegacyData({confirmed:true,token:p.token})));
   assert.ok(calls.every(r=>r.state==='committed'));assert.equal(f.writes.filter(k=>k===V2).length,1);
+  const migrated=JSON.parse(f.map.get(V2));
+  assert.deepEqual(Object.keys(migrated.packs[core.packId].versions),[core.packVersion]);
   for(const [k,v] of before)assert.equal(f.map.get(k),v);
   const view=f.s.view(ctx(core));assert.deepEqual(view.items,{});assert.equal(view.history.length,0);
   assert.equal(Object.values(view.legacyItems)[0].needsReconfirmation,true);

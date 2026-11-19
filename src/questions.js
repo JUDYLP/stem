@@ -12,7 +12,7 @@ export function validateQuestions(data) {
     if (!Array.isArray(question.layers) || question.layers.length !== 3) throw new Error('每题必须有三层');
     question.layers.forEach((layer, index) => {
       if (!layer || layer.id !== `L${index + 1}` || !nonempty(layer.label) || !nonempty(layer.prompt) || !nonempty(layer.prompt_en)) throw new Error('层级顺序或内容无效');
-      if (!Array.isArray(layer.rubric) || layer.rubric.length < 2 || layer.rubric.length > 4 || !layer.rubric.every(nonempty)) throw new Error('每层需要 2–4 条非空参考要点');
+      if (!Array.isArray(layer.rubric) || layer.rubric.length < 2 || layer.rubric.length > 5 || !layer.rubric.every(nonempty)) throw new Error('每层需要 2–5 条非空参考要点');
       if (!Array.isArray(layer.rubric_en) || layer.rubric_en.length !== layer.rubric.length || !layer.rubric_en.every(nonempty)) throw new Error('English rubric must match the Chinese rubric item count');
     });
   }

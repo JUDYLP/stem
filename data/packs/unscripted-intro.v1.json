@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "packId": "unscripted-intro",
+  "packVersion": "1.0.0",
+  "title": {
+    "zh-CN": "人人能懂的入门题",
+    "en": "Starter Pack"
+  },
+  "description": {
+    "zh-CN": "不需要后端背景：用浮点数这个人人都会踩的坑，练习三层解释。",
+    "en": "No backend background needed: practice three levels of explanation on a bug everyone hits, floating-point numbers."
+  },
+  "defaultLanguage": "en",
+  "supportedLanguages": [
+    "zh-CN",
+    "en"
+  ],
+  "questions": [
+    {
+      "id": "float-equality-v1",
+      "category": {
+        "zh-CN": "Python",
+        "en": "Python"
+      },
+      "title": {
+        "zh-CN": "为什么 0.1 + 0.2 不等于 0.3？",
+        "en": "Why is 0.1 + 0.2 not equal to 0.3?"
+      },
+      "review": {
+        "status": "unreviewed"
+      },
+      "layers": [
+        {
+          "id": "L1",
+          "label": "Explain",
+          "prompt": {
+            "zh-CN": "在 Python 里，0.1 + 0.2 == 0.3 的结果是 False。为什么？这是 Python 的 bug 吗？",
+            "en": "In Python, 0.1 + 0.2 == 0.3 evaluates to False. Why? Is this a bug in Python?"
+          },
+          "rubric": [
+            {
+              "rubricId": "float-equality-v1-l1-c01",
+              "criterion": {
+                "zh-CN": "Python 的内置 float 通常采用 IEEE 754 binary64（双精度）二进制浮点格式存储数值。",
+                "en": "Python's built-in float typically uses the IEEE 754 binary64 (double-precision) binary floating-point format."
+              }
+            },
+            {
+              "rubricId": "float-equality-v1-l1-c02",
+              "criterion": {
+                "zh-CN": "0.1、0.2、0.3 都无法用有限位二进制精确表示，存的是最接近的可表示值。",
+                "en": "0.1, 0.2 and 0.3 have no exact finite binary form, so each is stored as the nearest representable value."
+              }
+            },
+            {
+              "rubricId": "float-equality-v1-l1-c03",
+              "criterion": {
+                "zh-CN": "二进制浮点近似与运算舍入使结果显示为 0.30000000000000004，与存储的 0.3 不完全相等。这是二进制浮点表示的正常结果，不是 Python 特有的 Bug。",
+                "en": "Binary floating-point approximation and rounding produce 0.30000000000000004, which is not exactly equal to the stored representation of 0.3. This is normal binary floating-point behavior, not a Python-specific bug."
+              }
+            }
+          ]
+        },
+        {
+          "id": "L2",
+          "label": "Reason",
+          "prompt": {
+            "zh-CN": "AI 写了这段代码，但 \"done\" 从来没打印出来：\ntotal = 0.0\nfor _ in range(10):\n    total += 0.1\nif total == 1.0:\n    print(\"done\")\n为什么？应该怎么比较？有没有比“容差比较”更根本的写法？",
+            "en": "An AI wrote this code, but \"done\" never prints:\ntotal = 0.0\nfor _ in range(10):\n    total += 0.1\nif total == 1.0:\n    print(\"done\")\nWhy? How should the comparison be written? Is there a more fundamental fix than comparing with a tolerance?"
+          },
+          "rubric": [
+            {
+              "rubricId": "float-equality-v1-l2-c01",
+              "criterion": {
+                "zh-CN": "在该循环中，每次加法运算都会将结果舍入到可表示的浮点值，最终 total 为 0.9999999999999999，而不是精确的 1.0，因此严格相等比较失败。",
+                "en": "In this loop, each addition rounds the result to a representable floating-point value. The final total is 0.9999999999999999 rather than exactly 1.0, so strict equality fails."
+              }
+            },
+            {
+              "rubricId": "float-equality-v1-l2-c02",
+              "criterion": {
+                "zh-CN": "应按数值量级用容差比较，例如 math.isclose(total, 1.0)，而不是 ==。",
+                "en": "Compare with a tolerance suited to the magnitude, such as math.isclose(total, 1.0), instead of ==."
+              }
+            },
+            {
+              "rubricId": "float-equality-v1-l2-c03",
+              "criterion": {
+                "zh-CN": "根据数据领域选择精确表示方式：固定精度计数可使用整数最小单位；十进制业务计算可使用 Decimal 并从字符串构造；适合有理数运算的场景可使用 Fraction。不能仅依赖容差来掩盖不合适的数据表示。",
+                "en": "Choose an exact representation suited to the domain: use integer smallest units for fixed-precision counting, Decimal constructed from strings for decimal arithmetic, or Fraction where rational arithmetic is appropriate. Do not rely solely on tolerance to hide an unsuitable representation."
+              }
+            }
+          ]
+        },
+        {
+          "id": "L3",
+          "label": "Stress-test",
+          "prompt": {
+            "zh-CN": "AI 写的购物车结算：\nprice = 0.10\nqty = 3\ntotal = price * qty   # 0.30000000000000004\nprint(f\"${total:.2f}\")  # 显示 $0.30\n显示是对的，为什么用在钱上仍然危险？应该怎么改？如果改用 Decimal，要注意什么？",
+            "en": "An AI wrote this checkout code:\nprice = 0.10\nqty = 3\ntotal = price * qty   # 0.30000000000000004\nprint(f\"${total:.2f}\")  # shows $0.30\nThe display looks right. Why is this still risky for money? How should it be fixed? If you switch to Decimal, what must you watch out for?"
+          },
+          "rubric": [
+            {
+              "rubricId": "float-equality-v1-l3-c01",
+              "criterion": {
+                "zh-CN": ":.2f 只改变显示格式，不会修复底层浮点误差。后续计算、比较或转换为最小货币单位时，近似误差可能导致结果偏差。",
+                "en": "`:.2f` changes only the display format; it does not fix the underlying floating-point error. Subsequent calculations, comparisons, or conversions to the smallest currency unit may produce incorrect results due to approximation."
+              }
+            },
+            {
+              "rubricId": "float-equality-v1-l3-c02",
+              "criterion": {
+                "zh-CN": "金额应使用精确表示：整数分，或用字符串构造的 Decimal，例如 Decimal(\"0.10\")。",
+                "en": "Store money exactly: as integer cents, or as Decimal built from a string, such as Decimal(\"0.10\")."
+              }
+            },
+            {
+              "rubricId": "float-equality-v1-l3-c03",
+              "criterion": {
+                "zh-CN": "Decimal(float) 会精确转换该 float 已经存储的二进制近似值，因此 Decimal(0.1) 并不等于精确的十进制 0.1。应从字符串构造 Decimal。金额舍入时还必须明确业务舍入规则；Python 默认 Decimal context 使用 ROUND_HALF_EVEN。",
+                "en": "Decimal(float) exactly converts the binary approximation already stored in the float. Therefore, Decimal(0.1) is not the exact decimal value 0.1. Construct Decimal from a string instead. Monetary rounding must also follow an explicit business rule; Python's default Decimal context uses ROUND_HALF_EVEN."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

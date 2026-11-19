@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packId": "unscripted-core",
-  "packVersion": "1.0.0",
+  "packVersion": "1.0.1",
   "title": {
     "zh-CN": "技术理解基础",
     "en": "Technical Understanding Essentials"
@@ -48,15 +48,8 @@
             {
               "rubricId": "juc-volatile-atomicity-v2-l1-c02",
               "criterion": {
-                "zh-CN": "单次读写的原子性不等于整个读-改-写表达式的原子性。",
-                "en": "Atomic individual reads and writes do not make an entire read-modify-write expression atomic."
-              }
-            },
-            {
-              "rubricId": "juc-volatile-atomicity-v2-l1-c03",
-              "criterion": {
-                "zh-CN": "volatile 不会自动让 i++ 这样的复合操作互斥执行。",
-                "en": "volatile does not automatically make compound operations such as i++ mutually exclusive."
+                "zh-CN": "i++ 是由读取、计算和写回组成的复合操作。即使 volatile 字段的单次读写具有原子性，也不能保证整个复合操作不可交错执行，因此可能发生丢失更新。",
+                "en": "i++ is a compound operation consisting of a read, calculation, and write. Although individual accesses to a volatile field are atomic, the entire operation is not indivisible, so updates can be lost."
               }
             }
           ]
@@ -171,8 +164,8 @@
             {
               "rubricId": "redis-expiration-v2-l1-c03",
               "criterion": {
-                "zh-CN": "到期键会被过期机制移除；不能把过期时间当作精确的业务任务调度器。",
-                "en": "Expired keys are removed by the expiration mechanism; expiration is not a precise scheduler for business tasks."
+                "zh-CN": "当键的 TTL 到期后，Redis 会将其视为已过期并按过期机制删除；不能假设物理内存回收一定发生在精确的到期时刻。",
+                "en": "Once a key's TTL expires, Redis treats it as expired and removes it through its expiration mechanism; physical memory reclamation is not guaranteed to occur at the exact expiration instant."
               }
             }
           ]
@@ -226,8 +219,8 @@
             {
               "rubricId": "redis-expiration-v2-l3-c02",
               "criterion": {
-                "zh-CN": "INCR 后值为 2，原到期时刻保留，不会把倒计时重新开始。",
-                "en": "After INCR, the value is 2. The original expiration time remains; the countdown does not restart."
+                "zh-CN": "INCR 后，键的值从 1 变为 2。",
+                "en": "After INCR, the key's value changes from 1 to 2."
               }
             },
             {
@@ -242,6 +235,13 @@
               "criterion": {
                 "zh-CN": "将最后一条改为 SET hits 9 KEEPTTL 可保留题设中的原到期时刻；重新 EXPIRE 60 是重设期限，不等同于保留原时刻。",
                 "en": "Use SET hits 9 KEEPTTL to retain the original expiration time in this scenario. EXPIRE 60 would set a new deadline, not preserve the original one."
+              }
+            },
+            {
+              "rubricId": "redis-expiration-v2-l3-c05",
+              "criterion": {
+                "zh-CN": "INCR 不会清除或重设已有 TTL，原绝对到期时刻保持不变。只有明确指出 TTL 被保留，才能获得 Green；只说明数值变为 2 不足以通过本评分点。",
+                "en": "INCR neither clears nor resets an existing TTL. The original absolute expiration time is preserved. Green requires explicitly identifying TTL preservation; stating only that the value becomes 2 is insufficient."
               }
             }
           ]
@@ -328,15 +328,15 @@
           "id": "L3",
           "label": "Stress-test",
           "prompt": {
-            "zh-CN": "沿用上一层初始数据，隔离级别为 RR。A 第一次普通 SELECT 读到 100；B 随后将同一行改成 80 并提交。\n此时 A 执行 UPDATE account SET balance = balance - 10 WHERE id = 1，再普通 SELECT 该行。无其他事务操作，语句均成功。\n最后读到 90、70 还是 100？解释为什么，指出“RR 中所有语句都只看旧快照”的错误。",
-            "en": "Use the previous initial data with RR isolation. A’s first plain SELECT reads 100; B then changes the same row to 80 and commits.\nA now executes UPDATE account SET balance = balance - 10 WHERE id = 1, followed by a plain SELECT of that row. No other transactions act, and all statements succeed.\nDoes the last read return 90, 70, or 100? Explain why the claim “all statements in RR only see the old snapshot” is wrong."
+            "zh-CN": "MySQL 8.4 InnoDB，隔离级别为 RR。account 表中 id=1 的 balance 初始为 100。A、B 是两个显式事务。\n1. A 执行第一次普通 SELECT，读到 100。\n2. B 随后将同一行的 balance 修改为 80，并提交。\n3. A 接着执行：\nUPDATE account SET balance = balance - 10 WHERE id = 1;\n然后 A 再执行普通 SELECT 读取该行。无其他事务操作，所有语句均成功。\n最后读到 90、70 还是 100？解释 UPDATE 使用的行版本、普通 SELECT 的快照规则，以及为什么 A 能看到自己的修改。",
+            "en": "MySQL 8.4 InnoDB, using RR isolation. The initial balance for id=1 in the account table is 100. A and B are explicit transactions.\n1. A performs its first plain SELECT and reads 100.\n2. B then changes the same row's balance to 80 and commits.\n3. A executes:\nUPDATE account SET balance = balance - 10 WHERE id = 1;\nA then performs another plain SELECT on that row. There are no other transactions, and all statements succeed.\nDoes the final read return 90, 70, or 100? Explain the row version used by UPDATE, the snapshot rules for plain SELECT, and why A can see its own modification."
           },
           "rubric": [
             {
               "rubricId": "mysql-consistent-read-v2-l3-c01",
               "criterion": {
-                "zh-CN": "读到 70：UPDATE 在 B 提交后的当前行值 80 上减 10，不是对旧快照的 100 减 10。",
-                "en": "It reads 70. UPDATE subtracts 10 from the current value 80 after B’s commit, not from the old snapshot value 100."
+                "zh-CN": "UPDATE 使用当前读和行锁，基于 B 已提交的当前值 80 执行减 10，因此 A 将余额更新为 70，而不是基于旧快照中的 100 更新为 90。",
+                "en": "UPDATE uses a current read with row locking. It subtracts 10 from B's committed current value of 80, updating the balance to 70 rather than using the old snapshot value of 100."
               }
             },
             {

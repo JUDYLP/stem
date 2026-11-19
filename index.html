@@ -264,7 +264,7 @@
               <label class="switch-row" for="save-answers">
                 <input type="checkbox" id="save-answers">
                 <span class="switch-track" aria-hidden="true"></span>
-                <span class="switch-text"><span data-i18n="在本机保存我的回答，用于前后对比">在本机保存我的回答，用于前后对比</span><small><span data-i18n="默认关闭。只保存开启之后的回答，之前的判定没有原文；关闭时会删除已存回答。">默认关闭。只保存开启之后的回答，之前的判定没有原文；关闭时会删除已存回答。</span></small></span>
+                <span class="switch-text"><span data-i18n="在本机保存我的回答，用于前后对比">在本机保存我的回答，用于前后对比</span><small><span data-i18n="关闭时会删除本页保存的回答。来自 v2 的历史为只读。">关闭时会删除本页保存的回答。来自 v2 的历史为只读。</span></small></span>
               </label>
               <div class="actions records-buttons">
                 <button id="export-review" class="button primary" type="button" disabled><span data-i18n="导出复习单 .md">导出复习单 .md</span></button>
@@ -285,8 +285,8 @@
     </div>
 
     <dialog id="clear-dialog" class="dialog" aria-labelledby="clear-title">
-      <h2 id="clear-title"><span data-i18n="清空所有练习记录？">清空所有练习记录？</span></h2>
-      <p><span data-i18n="热力矩阵、时间线和已保存的回答都会被删除，清空后无法恢复。">热力矩阵、时间线和已保存的回答都会被删除，清空后无法恢复。</span></p>
+      <h2 id="clear-title"><span data-i18n="清空本页练习记录？">清空本页练习记录？</span></h2>
+      <p><span data-i18n="清空将删除本页保存的练习和回答。来自 v2 的历史为只读。">清空将删除本页保存的练习和回答。来自 v2 的历史为只读。</span></p>
       <div class="actions dialog-actions">
         <button id="clear-export" class="button secondary" type="button"><span data-i18n="先导出复习单">先导出复习单</span></button>
         <button id="clear-cancel" class="button secondary" type="button"><span data-i18n="取消">取消</span></button>

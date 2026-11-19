@@ -6,8 +6,9 @@ import { judgeAnswer, buildEvaluationContext, requestGate } from './ai/judge.js'
 import { t, localized, getLanguage, initLanguage, setLanguage, applyLanguage } from './i18n.js';
 import { loadQuestions } from './questions.js';
 import { createProgressStore } from './storage.js';
-import { createHistoryStore, latestByCell, shouldUseCompact } from './history.js';
-import { reviewItems, buildCrashSheet, downloadCrashSheet } from './export.js';
+import { createHistoryStore, latestByCell, makeRubricSnapshot, shouldUseCompact } from './history.js';
+import { historyRubric, historyVersionLabel } from './history-rubric.js';
+import { crashSheetRows, buildCrashSheet, downloadCrashSheet } from './export.js';
 import { initDemo } from './demo.js';
 import { initDotfield } from './dotfield.js';
 import {
@@ -102,6 +103,11 @@ function draft() {
 function index() {
   const entries = log.snapshot().entries;
   return { entries, latest: latestByCell(entries), progress: store.snapshot() };
+}
+
+function timelineEntries(entries) {
+  return [...entries, ...log.versionedEntries(builtinPack.packId)]
+    .sort((a, b) => Date.parse(a.ts) - Date.parse(b.ts));
 }
 
 function lightOf(data, id, layerId) {
@@ -486,7 +492,8 @@ function historyText(entries) {
 
 function heatTooltip(question, layer, entry, entries) {
   const time = entry ? formatTime(entry.ts) : t('未作答');
-  return `${localized(question, 'title')} · ${layer.id} · ${historyText(entries)} · ${time}`;
+  return [localized(question, 'title'), layer.id, historyText(entries), time,
+    entry && historyVersionLabel(historyRubric(entry, getLanguage()))].filter(Boolean).join(' · ');
 }
 
 function heatStat(state, key, count) {
@@ -498,7 +505,8 @@ function heatStat(state, key, count) {
 function renderRecords({ changed = null } = {}) {
   if (!questions.length) return;
   const data = index();
-  const review = reviewItems(questions, data.progress);
+  const timeline = timelineEntries(data.entries);
+  const review = crashSheetRows(questions, data.progress, timeline);
   const counts = { green: 0, amber: 0, red: 0, off: 0 };
   const histories = new Map();
   for (const entry of data.entries) {
@@ -598,27 +606,18 @@ function renderRecords({ changed = null } = {}) {
   $('export-hint').hidden = review.length > 0;
   $('storage-warning').textContent = [store.warning, log.warning].filter(Boolean).join(' ');
   $('storage-warning').hidden = !$('storage-warning').textContent;
-  renderTimeline(data);
+  renderTimeline(timeline);
   observeHeatmap();
 }
 
-function traceFor(data, entry, upTo) {
-  const sequence = [];
-  for (const item of data.entries) {
-    if (item.questionId === entry.questionId && item.layer === entry.layer) sequence.push(item);
-    if (item === upTo) break;
-  }
-  return sequence;
-}
-
-function renderTimeline(data) {
-  const entries = [...data.entries].reverse();
+function renderTimeline(chronologicalEntries) {
+  const rows = chronologicalEntries.map(entry => ({ entry, history:historyRubric(entry, getLanguage()) }));
+  const entries = [...rows].reverse();
   $('timeline-empty').hidden = entries.length > 0;
   $('timeline-count').textContent = entries.length ? t('{count} 次判定', { count: entries.length }) : '';
-  $('timeline').replaceChildren(...entries.map(entry => {
+  $('timeline').replaceChildren(...entries.map(({entry, history}) => {
     const question = questions.find(item => item.id === entry.questionId);
     if (!question) return byId('li');
-    const layer = question.layers.find(item => item.id === entry.layer);
     const item = byId('li', 'tl-item');
     const bar = byId('span', 'tl-bar');
     bar.dataset.state = entry.light;
@@ -630,21 +629,20 @@ function renderTimeline(data) {
     jump.addEventListener('click', () => openCell(question.id, entry.layer));
     main.append(head, jump);
 
-    if (layer && entry.missedPoints.length) {
-      const rubric = localized(layer, 'rubric');
-      const missed = entry.missedPoints.map(index => rubric[index]).filter(Boolean);
-      if (missed.length) {
-        const list = byId('ul', 'tl-missed-list');
-        for (const text of missed) {
-          const point = byId('li');
-          point.append(createLamp('red', { label: false }), byId('span', '', text));
-          list.append(point);
-        }
-        main.append(list);
-      }
+    main.append(byId('p', 'fine-print', historyVersionLabel(history)));
+    const list = byId('ul', 'tl-missed-list');
+    for (const {light, text} of history.points) {
+      const point = byId('li');
+      point.append(createLamp(light), byId('span', '', text));
+      list.append(point);
     }
+    main.append(list);
 
-    const trace = traceFor(data, entry, entry);
+    const sameVersion = rows.filter(row => (history.packVersion || row.entry === entry) && row.entry.questionId === entry.questionId &&
+      row.entry.layer === entry.layer && row.history.packVersion === history.packVersion &&
+      row.history.packId === history.packId);
+    const position = sameVersion.findIndex(row => row.entry === entry);
+    const trace = sameVersion.slice(0, position + 1).map(row => row.entry);
     if (trace.length > 1) {
       const strip = byId('div', 'tl-trace');
       strip.setAttribute('aria-label', t('同一题层的灯色变化'));
@@ -655,9 +653,13 @@ function renderTimeline(data) {
       main.append(strip);
     }
 
-    const lastForCell = data.entries.filter(item => item.questionId === entry.questionId && item.layer === entry.layer).at(-1);
-    if (lastForCell === entry && log.saveAnswers && entry.answer) {
-      const answers = data.entries.filter(item => item.questionId === entry.questionId && item.layer === entry.layer && item.answer);
+    if (entry.packVersion && entry.answer) {
+      const details = byId('details', 'tl-answers');
+      details.append(byId('summary', '', t('已保存的判定回答')), byId('p', 'tl-answer', entry.answer));
+      main.append(details);
+    }
+    if (sameVersion.filter(row => !row.entry.packVersion).at(-1)?.entry === entry && log.saveAnswers && entry.answer) {
+      const answers = sameVersion.map(row => row.entry).filter(item => !item.packVersion && item.answer);
       const first = answers[0];
       const last = answers[answers.length - 1];
       if (first && last) {
@@ -761,6 +763,8 @@ $('confirm-rating').addEventListener('click', () => {
     layer: layer.id,
     light,
     pointLights: [...d.lights],
+    rubricSnapshot: makeRubricSnapshot(builtinPack, builtinPack.questions.find(q => q.id === question.id)
+      .layers.find(item => item.id === layer.id)),
     missedPoints: d.lights.map((value, index) => (value === 'red' ? index : -1)).filter(index => index >= 0),
     answer: d.submitted,
   });
@@ -784,11 +788,11 @@ $('save-answers').addEventListener('change', event => {
   renderRecords();
   $('export-message').textContent = event.target.checked
     ? t('已开启：之后的判定会保存回答原文，仅在本机。')
-    : t('已关闭：已保存的回答原文已删除。');
+    : t('已关闭：本页练习记录中的回答原文已删除。');
 });
 
 $('export-review').addEventListener('click', () => {
-  const text = buildCrashSheet(questions, store.snapshot(), getLanguage(), log.snapshot().entries);
+  const text = buildCrashSheet(questions, store.snapshot(), getLanguage(), timelineEntries(log.snapshot().entries));
   downloadCrashSheet(text);
   $('export-message').textContent = t('已生成 Markdown 复习单，请在浏览器下载列表中查看。');
 });
@@ -796,12 +800,12 @@ $('export-review').addEventListener('click', () => {
 $('clear-history').addEventListener('click', () => {
   const dialog = $('clear-dialog');
   if (typeof dialog.showModal === 'function') dialog.showModal();
-  else if (window.confirm(t('清空所有练习记录？'))) confirmClear();
+  else if (window.confirm(t('清空本页练习记录？'))) confirmClear();
 });
 $('clear-cancel').addEventListener('click', () => $('clear-dialog').close());
 $('clear-export').addEventListener('click', () => {
-  if (!reviewItems(questions, store.snapshot()).length) return;
-  downloadCrashSheet(buildCrashSheet(questions, store.snapshot(), getLanguage(), log.snapshot().entries));
+  if (!crashSheetRows(questions, store.snapshot(), timelineEntries(log.snapshot().entries)).length) return;
+  downloadCrashSheet(buildCrashSheet(questions, store.snapshot(), getLanguage(), timelineEntries(log.snapshot().entries)));
   $('clear-dialog').close();
   $('export-message').textContent = t('已生成 Markdown 复习单，请在浏览器下载列表中查看。');
 });
@@ -813,7 +817,7 @@ function confirmClear() {
   $('clear-dialog').close();
   renderLayer();
   renderRecords();
-  $('export-message').textContent = t('记录已清空。');
+  $('export-message').textContent = t('本页练习记录已清空。');
 }
 $('clear-confirm').addEventListener('click', confirmClear);
 

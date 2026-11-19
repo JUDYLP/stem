@@ -1,3 +1,4 @@
+import {validRubricSnapshot} from '../history.js';
 import {parseStrictJson} from '../packs/strict-json.js';
 import {summarizeLights,statusForLight} from '../lights.js';
 
@@ -60,12 +61,17 @@ export function readState(storage){
       }
       const latest=new Map();
       for(const h of v.history){
-        shape(h,['packId','packVersion','questionId','layerId','ts','light','criterionResults'],['answer']);
+        shape(h,['packId','packVersion','questionId','layerId','ts','light','criterionResults'],['answer','rubricSnapshot']);
         check(h.packId===pid && h.packVersion===ver && id(h.questionId) && /^L[123]$/.test(h.layerId) && timestamp(h.ts));
         check(!('answer' in h)||(s.saveAnswers && typeof h.answer==='string'));
         check(Array.isArray(h.criterionResults)&&h.criterionResults.length>0&&h.criterionResults.length<=12);
         const ids=new Set();
         for(const r of h.criterionResults){shape(r,['rubricId','light']);check(id(r.rubricId)&&light(r.light)&&!ids.has(r.rubricId));ids.add(r.rubricId);}
+        if ('rubricSnapshot' in h) {
+          const snapshot=h.rubricSnapshot;
+          check(validRubricSnapshot(snapshot,h.criterionResults.length)&&snapshot.packId===pid&&snapshot.packVersion===ver&&
+            snapshot.rubric.every((row,index)=>row.rubricId===h.criterionResults[index].rubricId));
+        }
         check(h.light===summarizeLights(h.criterionResults.map(r=>r.light)));
         latest.set([pid,h.questionId,h.layerId].join('::'),h);
       }
