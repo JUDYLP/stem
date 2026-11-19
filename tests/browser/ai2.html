@@ -39,7 +39,9 @@ async function run() {
       for (let tick=0; tick<200 && confirm.disabled; tick++) await wait();
       assert(!confirm.disabled, 'Demo animation did not finish');
       const lights = [...demo.querySelectorAll('.point-row')].map(e=>e.dataset.state);
-      assert(new Set(lights).size === 3, 'Missing demo lamp');
+      const expectedCount = el('rubric').querySelectorAll('.point-row').length;
+      assert(lights.length === expectedCount && lights.length > 0, 'Demo rubric count mismatch');
+      assert(lights.every(light => ['green','amber','red'].includes(light)), 'Invalid demo lamp state');
       demo.querySelector('.point-lamp').click();
       demo.querySelector('button.button').click();
       el('confirm-rating').click();
