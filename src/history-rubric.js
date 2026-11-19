@@ -1,8 +1,10 @@
 import frozen from '../data/packs/unscripted-core.v1.0.0.json' with {type:'json'};
 import current from '../data/packs/unscripted-core.v1.json' with {type:'json'};
+import intro from '../data/packs/unscripted-intro.v1.json' with {type:'json'};
 import { t } from './i18n.js';
 
-const knownPacks = [frozen, current];
+const knownPacks = [frozen, current, intro];
+const activeVersions = new Map([current, intro].map(pack => [pack.packId, pack.packVersion]));
 const rubricFor = (pack, entry) => pack.questions.find(q => q.id === entry.questionId)
   ?.layers.find(layer => layer.id === entry.layer)?.rubric;
 
@@ -37,8 +39,7 @@ export function historyRubric(entry, lang) {
     const text = row?.criterion[locale] ?? row?.criterion.en ?? (row && Object.values(row.criterion)[0]) ?? rubricId ?? t('历史评分点 #{n}', {n:index + 1}, lang);
     return {rubricId, text, light, missed:entry.missedPoints.includes(index)};
   });
-  const needsReconfirmation = (!snapshot && !entry.packVersion) || packId !== current.packId ||
-    packVersion !== current.packVersion || points.some((_, index) => !rubric?.[index]);
+  const needsReconfirmation = (!snapshot && !entry.packVersion) || activeVersions.get(packId) !== packVersion || points.some((_, index) => !rubric?.[index]);
   return {packId, packVersion, points, needsReconfirmation};
 }
 

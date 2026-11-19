@@ -1,4 +1,4 @@
-import {validRubricSnapshot} from '../history.js';
+import {historyWithinRetention,validRubricSnapshot} from '../history.js';
 import {P1,H1,V2,PREFIX,shape,object,check,parse,empty,version,readState,keys,locked,writeChecked,legacyTimestamp,light} from './snapshot.js';
 const known=new Set(['juc-volatile-atomicity-v2','redis-expiration-v2','mysql-consistent-read-v2']);
 const sources=storage=>({progress:storage.getItem(P1),history:storage.getItem(H1)});
@@ -25,6 +25,7 @@ function strictLegacy(raw){
     check(!('rubricSnapshot' in e)||validRubricSnapshot(e.rubricSnapshot,e.pointLights.length));
     check(!('answer' in e)||typeof e.answer==='string');
   }
+  check(historyWithinRetention(h.entries).length===h.entries.length);
   return {items:p.items,entries:h.entries};
 }
 

@@ -1,4 +1,4 @@
-export function createAIProvider({baseURL='https://api.deepseek.com',model='deepseek-flash',apiKey='',proxyURL='',offline=false}={}) {
+export function createAIProvider({baseURL='https://api.deepseek.com',model='deepseek-flash',apiKey='',proxyURL='',offline=false,onModel}={}) {
   return async function complete(messages, signal) {
     if (offline || (!proxyURL && !apiKey.trim())) throw Error('NO_KEY');
     const url = new URL(proxyURL || baseURL);
@@ -20,7 +20,10 @@ export function createAIProvider({baseURL='https://api.deepseek.com',model='deep
       if (choice?.finish_reason==='length') throw Error('TRUNCATED');
       if (typeof choice?.message?.content!=='string' || !choice.message.content.trim()) throw Error('EMPTY');
       if (choice.finish_reason!=='stop') throw Error('INCOMPLETE');
-      return JSON.parse(choice.message.content);
+      const result = JSON.parse(choice.message.content);
+      const reportedModel = typeof data.model === 'string' ? data.model.trim() : '';
+      if (reportedModel && !signal?.aborted) onModel?.(reportedModel);
+      return result;
     } catch (error) {
       if (signal?.aborted) throw Error('CANCELLED');
       if (timeout.aborted || error.name==='TimeoutError') throw Error('TIMEOUT');

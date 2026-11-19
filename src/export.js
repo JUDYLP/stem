@@ -38,7 +38,7 @@ export function buildCrashSheet(questions, progress, lang = 'zh', entries = []) 
   for (const { question, layer, entry, history } of items) {
     const light = entry?.light || lightForStatus(progress.items[`${question.id}::${layer.id}`]?.status);
     lines.push(
-      `## ${markdown(question.category)} / ${layer.id} · ${markdown(localized(question, 'title', lang))}`, '',
+      `## ${markdown(localized(question, 'category', lang) ?? question.category)} / ${layer.id} · ${markdown(localized(question, 'title', lang))}`, '',
       `${tr('灯色')}：${tr(LIGHT_WORD[light])}`, '',
     );
     if (history) {

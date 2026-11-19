@@ -1,7 +1,9 @@
-import builtin from '../../data/packs/unscripted-core.v1.json' with {type:'json'};
+import core from '../../data/packs/unscripted-core.v1.json' with {type:'json'};
+import intro from '../../data/packs/unscripted-intro.v1.json' with {type:'json'};
 import {validateQuestionPackText, validateQuestionPackBytes, comparePackVersions} from './validate.js';
 import {computePackDigest} from './digest.js';
-const builtinText = JSON.stringify(builtin);
+const coreText = JSON.stringify(core);
+const introText = JSON.stringify(intro);
 
 export function createPackRegistry() {
   const packs = new Map();
@@ -23,7 +25,16 @@ export function createPackRegistry() {
     return structuredClone(record);
   }
   return {
-    registerBuiltin: () => register(builtinText, 'builtin'),
+    registerBuiltin: () => register(coreText, 'builtin'),
+    async registerBuiltins() {
+      const coreRecord = await register(coreText, 'builtin');
+      const introRecord = await register(introText, 'builtin');
+      const records = [coreRecord, introRecord];
+      // v1 persistence uses question IDs without pack prefixes.
+      const ids = records.flatMap(record => record.validatedPack.questions.map(question => question.id));
+      if (new Set(ids).size !== ids.length) throw Error('DUPLICATE_BUILTIN_QUESTION_ID');
+      return records;
+    },
     registerImported: input => register(input, 'imported'),
     get: (id, version) => structuredClone(packs.get(id)?.get(version)),
     versions: id => [...(packs.get(id)?.keys() ?? [])].sort(comparePackVersions),

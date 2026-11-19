@@ -131,7 +131,7 @@
           <div class="section-head">
             <p class="kicker"><span data-i18n="练习">练习</span></p>
             <h2 id="practice-title"><span data-i18n="先回答，再对照。">先回答，再对照。</span></h2>
-            <p class="lede"><span data-i18n="3 道题 · 先写解释，再看参考要点 · 自己点灯判定">3 道题 · 先写解释，再看参考要点 · 自己点灯判定</span></p>
+            <p class="lede"><span data-i18n="先写解释，再看参考要点 · 自己点灯判定">先写解释，再看参考要点 · 自己点灯判定</span></p>
           </div>
           <div class="practice-panel">
             <p id="load-message" role="status"><span data-i18n="正在加载题库…">正在加载题库…</span></p>
@@ -140,6 +140,7 @@
             <div id="practice-body" hidden>
               <p id="storage-warning" class="warning" role="status" hidden></p>
               <div class="selectors">
+                <label class="field"><span data-i18n="题库">题库</span><select id="question-pack"></select></label>
                 <label class="field"><span><span data-i18n="分类">分类</span></span><select id="category"><option value="" data-i18n="全部分类">全部分类</option></select></label>
                 <label class="field question-selector"><span><span data-i18n="题目">题目</span></span><select id="question"></select></label>
                 <button id="random-question" class="button secondary" type="button"><span data-i18n="随机选题">随机选题</span></button>
@@ -155,6 +156,9 @@
                 </div>
                 <h3 id="question-title"></h3>
                 <p id="layer-prompt"></p>
+                <p id="question-impact" class="fine-print" hidden>
+                  <strong data-i18n="答错会怎样">答错会怎样</strong> · <span id="question-impact-text"></span>
+                </p>
                 <label class="field"><span data-i18n="判定模式">判定模式</span>
                   <select id="judge-mode">
                     <option value="offline" data-i18n="离线自评">离线自评</option>
@@ -195,14 +199,29 @@
                   <section id="ai-panel" hidden>
                     <details id="ai-settings"><summary><span data-i18n="在线 AI 判定">在线 AI 判定</span></summary>
                       <p><span data-i18n="离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。">离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。</span></p>
-                      <label class="field"><span data-i18n="服务地址">服务地址</span><input id="ai-base" type="url" value="https://api.deepseek.com"></label>
-                      <label class="field"><span data-i18n="模型">模型</span><input id="ai-model" value="deepseek-flash"></label>
-                      <label class="field">API Key<input id="ai-key" type="password" autocomplete="off" spellcheck="false"></label>
-                      <label class="field"><span data-i18n="代理地址（可选）">代理地址（可选）</span><input id="ai-proxy" type="url"></label>
+                      <label class="field"><span data-i18n="连接方式">连接方式</span>
+                        <select id="ai-connection">
+                          <option value="hosted" data-i18n="使用演示代理（无需 Key）">使用演示代理（无需 Key）</option>
+                          <option value="byok" data-i18n="使用自己的 Key（DeepSeek）">使用自己的 Key（DeepSeek）</option>
+                          <option value="custom" data-i18n="使用自定义代理">使用自定义代理</option>
+                        </select>
+                      </label>
+                      <div id="ai-hosted-details" hidden>
+                        <p><span data-i18n="模型">模型</span> · <span id="ai-hosted-model"></span></p>
+                        <p data-i18n="演示代理会将答案发送到作者的 Cloudflare Worker，由 Cloudflare Workers AI 上的开放权重模型判定。代理不保存答案。">演示代理会将答案发送到作者的 Cloudflare Worker，由 Cloudflare Workers AI 上的开放权重模型判定。代理不保存答案。</p>
+                      </div>
+                      <div id="ai-byok-fields">
+                        <label class="field"><span data-i18n="服务地址">服务地址</span><input id="ai-base" type="url" value="https://api.deepseek.com"></label>
+                        <label class="field">API Key<input id="ai-key" type="password" autocomplete="off" spellcheck="false"></label>
+                      </div>
+                      <label class="field" id="ai-model-field"><span data-i18n="模型">模型</span><input id="ai-model" value="deepseek-flash"></label>
+                      <label class="field" id="ai-proxy-field" hidden><span data-i18n="代理地址">代理地址</span><input id="ai-proxy" type="url"></label>
                       <button type="button" class="button secondary" id="ai-run"><span data-i18n="发送答案并判定">发送答案并判定</span></button>
                       <button type="button" class="text-button" id="ai-clear"><span data-i18n="清除 Key，返回离线">清除 Key，返回离线</span></button>
                     </details>
-                    <p id="ai-status" role="status"></p><p id="ai-followup"></p>
+                    <p id="ai-status" role="status"></p>
+                    <button type="button" class="button secondary" id="ai-offer-demo" data-i18n="切到评委演示模式" hidden>切到评委演示模式</button>
+                    <p id="ai-followup"></p>
                   </section>
                   <p id="suggestion-bar" class="suggestion" hidden><span data-i18n="有一条外部建议，还没有生效。">有一条外部建议，还没有生效。</span><button id="apply-suggestion" class="text-button" type="button"><span data-i18n="采用建议">采用建议</span></button></p>
                   <ul id="rubric" class="point-list rubric"></ul>

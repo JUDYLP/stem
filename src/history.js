@@ -61,6 +61,18 @@ function normalize(entry) {
   return clean;
 }
 
+// All unversioned production v1 entries were written by the Core-only trainer.
+export function historyWithinRetention(entries) {
+  const counts = new Map();
+  return entries.slice().reverse().filter(entry => {
+    const packId = entry.rubricSnapshot?.packId ?? 'unscripted-core';
+    const count = counts.get(packId) ?? 0;
+    if (count >= MAX_ENTRIES) return false;
+    counts.set(packId, count + 1);
+    return true;
+  }).reverse();
+}
+
 // A damaged or newer record is never overwritten; the session continues in memory.
 export function parseHistory(raw) {
   if (raw === null) return emptyHistory();
@@ -68,7 +80,7 @@ export function parseHistory(raw) {
   if (!isObject(data) || data.schemaVersion !== 1 || !Array.isArray(data.entries)) {
     throw new Error('历史记录版本或格式不兼容');
   }
-  const entries = data.entries.filter(isEntry).map(normalize).slice(-MAX_ENTRIES);
+  const entries = historyWithinRetention(data.entries.filter(isEntry).map(normalize));
   return { schemaVersion: 1, saveAnswers: data.saveAnswers === true, entries };
 }
 
@@ -124,7 +136,7 @@ export function createHistoryStore(getStorage = () => window.localStorage) {
       });
       if (!isEntry(entry)) throw new Error('无效判定');
       data.entries.push(entry);
-      if (data.entries.length > MAX_ENTRIES) data.entries.splice(0, data.entries.length - MAX_ENTRIES);
+      data.entries = historyWithinRetention(data.entries);
       persist();
       return entry;
     },

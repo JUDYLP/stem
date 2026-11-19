@@ -15,6 +15,10 @@ with tempfile.TemporaryDirectory() as temporary:
     root = Path(temporary)
     site = root / 'site'
     shutil.copytree(sys.argv[1], site)
+    if '--hosted' in sys.argv[2:]:
+        (site / 'src/ai/hosted.js').write_text(
+            "export const HOSTED_PROXY_URL = 'https://hosted-demo.invalid/';\n"
+            "export const HOSTED_MODEL_LABEL = 'Cloudflare test model';\n", encoding='utf-8')
     shutil.copyfile(Path(__file__).with_name('ai2.html'), site / 'ai2.html')
     handler = functools.partial(SimpleHTTPRequestHandler, directory=site)
     with ThreadingHTTPServer(('127.0.0.1', 0), handler) as server:

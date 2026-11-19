@@ -27,6 +27,8 @@ test('packager ships HTML entries and every browser module dependency, including
           assert.match(args.path,/^\.{1,2}\//, 'Browser module must use a local path: '+args.path);
           const name = path.relative(root,path.resolve(args.resolveDir,args.path)).split(path.sep).join('/');
           imports.add(name);
+          // The clean-checkout test verifies this allowance before CI builds the runtime.
+          if (name === 'work/pack-runtime.mjs') return {path:args.path,external:true};
           return fullGraph ? undefined : {path:args.path,external:true};
         });
       }}]});
@@ -42,5 +44,7 @@ test('packager ships HTML entries and every browser module dependency, including
     const file = path.join(root,'src',name);
     await inspect(await readFile(file,'utf8'),path.dirname(file),false);
   }
+  assert.ok(files.has('data/packs/unscripted-intro.v1.json'));
+  assert.ok(files.has('work/pack-runtime.mjs'));
   assert.ok(files.has('assets/fonts/doto-latin-wght-normal.woff2'));
 });
