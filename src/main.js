@@ -1,3 +1,5 @@
+import { createAIProvider } from './ai/provider.js';
+import { judgeAnswer, redisContext, requestGate } from './ai/judge.js';
 import { t, localized, getLanguage, initLanguage, setLanguage, applyLanguage } from './i18n.js';
 import { loadQuestions } from './questions.js';
 import { createProgressStore } from './storage.js';
@@ -155,6 +157,73 @@ function announcePoint(index, light) {
   setTimeout(() => { live.textContent = pointAnnouncement(index, light); }, 30);
 }
 
+const aiGate = requestGate();
+let aiEvidence = [];
+let suggestedDraft;
+function resetJudge() {
+  aiGate.cancel();
+  if (suggestedDraft && suggestedDraft.confirmed === null) suggestedDraft.lights = [];
+  suggestedDraft = null;
+  aiEvidence = [];
+  $('ai-run').disabled = false;
+  $('ai-followup').textContent = '';
+  $('ai-status').textContent = t('离线自评');
+  $('ai-panel').hidden = questionId !== 'redis-expiration-v2' || currentLayer()?.id !== 'L1';
+}
+$('ai-clear').onclick = () => {
+  $('ai-key').value = '';
+  $('ai-proxy').value = '';
+  $('ai-settings').open = false;
+  resetJudge();
+  if (draft().submitted !== null) fillRubric();
+};
+for (const id of ['ai-base','ai-model','ai-key','ai-proxy']) {
+  $(id).addEventListener('input', () => {
+    if (id === 'ai-base' || id === 'ai-proxy') $('ai-key').value = '';
+    resetJudge();
+    if (draft().submitted !== null) fillRubric();
+  });
+}
+$('ai-run').onclick = async () => {
+  resetJudge();
+  const d = draft();
+  if ($('ai-panel').hidden || d.submitted === null) return;
+  fillRubric();
+  renderLayerLight();
+  const signal = aiGate.start();
+  const answer = d.submitted;
+  $('ai-run').disabled = true;
+  $('ai-status').textContent = t('正在请求判定…');
+  try {
+    const provider = createAIProvider({baseURL:$('ai-base').value.trim(), model:$('ai-model').value.trim(),
+      apiKey:$('ai-key').value, proxyURL:$('ai-proxy').value.trim()});
+    const response = await fetch(new URL('../data/packs/unscripted-core.v1.json',import.meta.url), {signal});
+    if (!response.ok) throw Error('PACK');
+    const pack = await response.json();
+    if (signal.aborted) return;
+    const context = redisContext(pack,current(),currentLayer(),getLanguage());
+    await judgeAnswer(provider, context, answer, signal, result => {
+      suggestedDraft = d;
+      aiEvidence = result.verdicts;
+      suggestLights(questionId,currentLayer().id,aiEvidence.map(row=>row.light));
+      d.lights = getSuggestion(questionId,currentLayer().id);
+      clearSuggestion(questionId,currentLayer().id);
+      d.confirmed = null;
+      fillRubric();
+      renderLayerLight();
+      $('rating-status').textContent = $('ai-status').textContent = t('AI 建议，待确认');
+      $('ai-followup').textContent = result.followUp || '';
+    });
+  } catch (error) {
+    if (signal.aborted) return;
+    const messages = {NO_KEY:'缺少 Key',TIMEOUT:'请求超时',OFFLINE_NETWORK:'网络断开',NETWORK_OR_CORS:'网络或跨域请求失败，请检查网络和浏览器 CORS 提示'};
+    const code = /^(HTTP_[0-9]{3}|INVALID_JSON|EMPTY|TRUNCATED|INCOMPLETE|CONTRACT|ENDPOINT|PACK|RUBRIC_MISMATCH)$/.test(error.message) ? error.message : '';
+    $('ai-status').textContent = [t('未取得建议，可继续自评。'),messages[error.message] ? t(messages[error.message]) : code].join(' ');
+  } finally {
+    if (!signal.aborted) $('ai-run').disabled = false;
+  }
+};
+
 function fillRubric() {
   const d = draft();
   const layer = currentLayer();
@@ -170,7 +239,16 @@ function fillRubric() {
     lamp.dataset.point = String(index);
     button.append(lamp);
     const body = byId('span', 'point-text', text);
+    const evidence = aiEvidence[index];
+    if (evidence) {
+      const detail = byId('small', 'fine-print', (evidence.reason || t('模型未评价此项，请自行确认。')) + ' · ' +
+        (evidence.quote ? '“' + evidence.quote + '”' : t('无可核验的原文引用')));
+      body.append(document.createElement('br'),detail);
+    }
     const update = light => {
+      aiGate.cancel();
+      if (!aiEvidence.length) $('ai-status').textContent = t('离线自评');
+      $('ai-run').disabled = false;
       d.lights[index] = light;
       item.dataset.state = light;
       setLampState(lamp, light);
@@ -210,6 +288,7 @@ function renderSuggestion() {
 }
 
 function renderLayer() {
+  resetJudge();
   const question = current();
   const layer = currentLayer();
   const d = draft();
@@ -491,6 +570,7 @@ $('random-question').addEventListener('click', () => {
 });
 
 $('answer').addEventListener('input', () => {
+  resetJudge();
   const d = draft();
   d.text = $('answer').value;
   d.submitted = null;
@@ -512,6 +592,7 @@ $('answer').addEventListener('keydown', event => {
 });
 
 $('answer-form').addEventListener('submit', event => {
+  resetJudge();
   event.preventDefault();
   const d = draft();
   d.text = $('answer').value;
@@ -554,6 +635,7 @@ $('confirm-rating').addEventListener('click', () => {
   $('export-message').textContent = '';
   renderLayer();
   renderRecords({ changed: cellKey(question.id, layer.id) });
+  $('ai-status').textContent = t('人工确认');
   $('rating-status').textContent = t('已记录：{light}。', { light: lightLabel(light) });
   const lamp = $('layer-light-slot').firstElementChild;
   if (lamp) {

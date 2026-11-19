@@ -1,4 +1,24 @@
 export const messages = {
+"在线 AI 判定（Redis L1）": {"zh": "在线 AI 判定（Redis L1）", "en": "Online AI review (Redis L1)"},
+"服务地址": {"zh": "服务地址", "en": "Provider base URL"},
+"代理地址（可选）": {"zh": "代理地址（可选）", "en": "Proxy endpoint (optional)"},
+"模型": {"zh": "模型", "en": "Model"},
+"清除 Key，返回离线": {"zh": "清除 Key，返回离线", "en": "Clear key and return offline"},
+"发送答案并判定": {"zh": "发送答案并判定", "en": "Send answer for AI review"},
+"离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。": {"zh": "离线自评不上传答案。在线判题会将当前答案、题目和评分要点发送给所选服务商。", "en": "Offline review keeps answers on this device. Online review sends this answer, question and criteria to your selected provider."},
+"正在请求判定…": {"zh": "正在请求判定…", "en": "Requesting review…"},
+"AI 建议，待确认": {"zh": "AI 建议，待确认", "en": "AI suggestion, pending your confirmation"},
+"离线自评": {"zh": "离线自评", "en": "Offline self-review"},
+"人工确认": {"zh": "人工确认", "en": "Manually confirmed"},
+"模型未评价此项，请自行确认。": {"zh": "模型未评价此项，请自行确认。", "en": "No verdict for this criterion. Review it yourself."},
+"无可核验的原文引用": {"zh": "无可核验的原文引用", "en": "No verifiable quote from the answer"},
+"未取得建议，可继续自评。": {"zh": "未取得建议，可继续自评。", "en": "No suggestion received. You can continue self-review."},
+"缺少 Key": {"zh": "缺少 Key", "en": "Enter a key or select a proxy"},
+"请求超时": {"zh": "请求超时", "en": "Request timed out"},
+"网络断开": {"zh": "网络断开", "en": "Network offline"},
+"网络或跨域请求失败，请检查网络和浏览器 CORS 提示": {"zh": "网络或跨域请求失败，请检查网络和浏览器 CORS 提示", "en": "Network or cross-origin request failed. Check connectivity and browser CORS diagnostics."},
+"草稿暂存在本页，刷新会清空。": {"zh": "草稿暂存在本页，刷新会清空。", "en": "Drafts stay in this tab until reload."},
+
   "跳到主要内容": {
     "zh": "跳到主要内容",
     "en": "Skip to main content"

@@ -121,3 +121,11 @@ T06当前BLOCKED，T07依赖T06也未满足。后续若允许T06，应固定已�
 此阶段保留现有离线自评。若成功响应或生产来源实际被 CORS 拦截，可另行审查受保护的同源 Worker，仅转发固定上游并限制来源、认证、请求大小、时限、速率和预算，凭证与答案不写日志。本次没有部署代理。
 
 本地回归：npm ci 成功；npm test 为 151 通过、0 失败、0 跳过；npm run check:syntax 为 32 个文件通过；python tools/package_site.py work/deepseek-spike-package 在新目录打包 13 个静态资源成功。临时探测服务器已停止。提交范围仅 docs/API_SPIKE_REPORT.md，历史 Ant-Ling 实验保留。
+
+### Redis L1 页面接线及验收
+
+真实凭证测试等待用户在本地密码框中输入并主动点击发送。当前 LIVE_API_NOT_TESTED，暂无真实判定样例或演示截图。Key 仅在当前页临时使用，清除入口可切回离线。BYOK 直接发送至配置的服务地址，代理模式仅向配置的代理发送题目和答案。浏览器对部分 CORS 和网络故障只暴露 TypeError，页面提示两种可能，使用 DevTools 预检记录进一步区分。
+
+修改 src/ai/provider.js、src/ai/judge.js、src/main.js、index.html、src/i18n.js、tools/package_site.py、tests/ai-judge.test.mjs 和本报告。Redis L1 逐项核对当前屏幕及 core@1.0.0 的 prompt 与 rubric 原文，通过 rubricId 验证模型建议；未确认前只更新草稿灯和文本。证据与理由使用文本节点呈现。
+
+npm test：164通过、0失败、0跳过（原151加13项）。npm run check:syntax：35文件通过。独立目录打包16项资源。真实 Chrome 加载打包产物，中文 Redis L1 提交后无 Key 提示正常，仍可离线确认。另一个 localhost 测试来源使用**合成 provider 响应**验证 UI 接线，灯号为绿/琥珀/琥珀，确认前 progress.v1/history.v1 原文不变，点击人工确认后才写入。该测试不是模型能力证据。有效 Key 的 Chrome 判题、成功路径 CORS、真实双灯色截图及 Pages 线上验收仍待完成。未部署。
