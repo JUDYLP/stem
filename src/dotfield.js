@@ -169,7 +169,7 @@ export function initDotfield(canvas) {
     const intensity = quiet ? 0.3 : 1;
     if (!staticMode) {
       updatePointer();
-      ripples = ripples.filter(ripple => now - ripple.start < RIPPLE_MS);
+      ripples = ripples.filter(ripple => now - ripple.start < ripple.duration);
     } else {
       pointer.strength = 0;
       ripples = [];
@@ -215,14 +215,14 @@ export function initDotfield(canvas) {
 
       for (const ripple of ripples) {
         const age = now - ripple.start;
-        if (age < 0 || age > RIPPLE_MS) continue;
-        const radius = (age / RIPPLE_MS) * RIPPLE_SPREAD;
+        if (age < 0 || age > ripple.duration) continue;
+        const radius = (age / ripple.duration) * ripple.spread;
         const dx = dot.x - ripple.x;
         const dy = dot.y - ripple.y;
         const distance = Math.hypot(dx, dy);
         if (Math.abs(distance - radius) > RIPPLE_BAND) continue;
-        const fade = Math.pow(1 - age / RIPPLE_MS, 0.6);
-        const strength = 0.8 * fade * falloff(Math.abs(distance - radius), RIPPLE_BAND) * intensity;
+        const fade = Math.pow(1 - age / ripple.duration, 0.6);
+        const strength = ripple.strength * fade * falloff(Math.abs(distance - radius), RIPPLE_BAND) * intensity;
         if (strength > bestTint) {
           bestTint = strength;
           alpha = Math.min(0.7, alpha + strength);
@@ -313,6 +313,12 @@ export function initDotfield(canvas) {
     if (reduced) drawStatic();
   }
 
+  function pushRipple(x, y, color, { spread = RIPPLE_SPREAD, duration = RIPPLE_MS, strength = 0.8 } = {}) {
+    if (!STATE_INDEX[color]) return;
+    ripples.push({ x, y, color, start: performance.now(), spread, duration, strength });
+    if (ripples.length > 8) ripples.shift();
+  }
+
   function onLampLit(event) {
     const element = event.detail && event.detail.element;
     if (!element || !element.dataset) return;
@@ -323,10 +329,11 @@ export function initDotfield(canvas) {
       drawStatic();
       return;
     }
+    // FX choreography fires its own tuned ripple; skip the default one then.
+    if (event.detail.ripple === false) return;
     const rect = element.getBoundingClientRect();
     if (rect.bottom < 0 || rect.top > height || rect.right < 0 || rect.left > width) return;
-    ripples.push({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, color, start: performance.now() });
-    if (ripples.length > 4) ripples.shift();
+    pushRipple(rect.left + rect.width / 2, rect.top + rect.height / 2, color);
   }
 
   document.addEventListener('focusin', event => {
@@ -397,7 +404,21 @@ export function initDotfield(canvas) {
       if (!reduced) draw(performance.now(), false);
     },
     get finePointer() { return finePointer; },
+    // Tuned ripple for choreographed moments (e.g. verdict FX). No-op while
+    // reduced motion is on.
+    ripple(x, y, color, options) {
+      if (reduced) return;
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+      pushRipple(x, y, color, options);
+    },
   };
   window.__dotfield = api;
+
+  // Optional verdict-moment demo (?fx=demo). Loaded dynamically so node tests
+  // never touch DOM code and main.js stays free for the Codex wiring.
+  if (new URLSearchParams(window.location.search).get('fx') === 'demo') {
+    import('./fx/verdict-fx.js').catch(() => {});
+  }
+
   return api;
 }
