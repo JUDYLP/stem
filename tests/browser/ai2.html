@@ -111,6 +111,69 @@ async function run() {
   select('judge-mode','offline');
   el('confirm-rating').click();
   assert(snapshot() !== before,'Offline confirmation did not save');
+
+  for (const [q,index,answer,id] of [
+    ['redis-expiration-v2',2,'INCR changes the value to 2.','redis-expiration-v2-l3-c05'],
+    ['juc-volatile-atomicity-v2',0,'i++ is not atomic.','juc-volatile-atomicity-v2-l1-c02'],
+  ]) {
+    select('question', q);
+    layer(index);
+    select('judge-mode','live');
+    input('answer',answer);
+    el('answer-form').requestSubmit();
+    w.fetch = async () => new w.Response(JSON.stringify({choices:[{finish_reason:'stop',message:{
+      content:JSON.stringify({verdicts:[{pointId:id,light:'green',quote:answer,reason:'False Green'}],followUp:null}),
+    }}]}));
+    await el('ai-run').onclick();
+    const point = [...el('rubric').children].at(-1);
+    assert(point.dataset.state === 'amber' && !point.textContent.includes('False Green'),
+      'Insufficient evidence reached the page as a Green');
+  }
+
+  const ts = '2026-11-19T00:00:00Z';
+  const oldJava = {questionId:'juc-volatile-atomicity-v2',layer:'L1',ts,light:'red',
+    pointLights:['green','amber','red'],missedPoints:[2],answer:'Old Java answer'};
+  const oldRedis = {questionId:'redis-expiration-v2',layer:'L3',ts,light:'red',
+    pointLights:['green','red','green','green'],missedPoints:[1],answer:'Old Redis answer'};
+  const v1 = {schemaVersion:1,saveAnswers:true,entries:[oldJava,oldRedis]};
+  const existingV1 = w.localStorage.getItem('unscripted.history.v1');
+  const currentHistory = JSON.parse(existingV1).entries[0];
+  assert(currentHistory.rubricSnapshot.packVersion === '1.0.1' &&
+    currentHistory.rubricSnapshot.rubric.length === 2, 'New Java history snapshot mismatch');
+  const rawHistory = JSON.stringify(v1);
+  const rawProgress = w.localStorage.getItem('unscripted.progress.v1');
+  w.localStorage.setItem('unscripted.history.v1', rawHistory);
+  const versionEntry = {questionId:oldJava.questionId,layerId:'L1',packId:'unscripted-core',
+    packVersion:'1.0.1',ts:'2026-11-19T01:00:00Z',light:'green',
+    criterionResults:currentHistory.rubricSnapshot.rubric.map(({rubricId})=>({rubricId,light:'green'}))};
+  const digest = async raw => {
+    const hash = await w.crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+    return 'sha256:' + [...new Uint8Array(hash)].map(byte=>byte.toString(16).padStart(2,'0')).join('');
+  };
+  const transactionId = w.crypto.randomUUID();
+  const migration = {transactionId,state:'committed',sourceHistoryDigest:await digest(rawHistory),
+    sourceProgressDigest:await digest(rawProgress)};
+  w.localStorage.setItem('unscripted.migration.v2.'+transactionId+'.backup',
+    JSON.stringify({progress:rawProgress,history:rawHistory}));
+  const progressV2 = {schemaVersion:2,saveAnswers:false,migration,packs:{'unscripted-core':{versions:{'1.0.1':{
+    contentDigest:'sha256:'+'a'.repeat(64),
+    items:{['unscripted-core::'+oldJava.questionId+'::L1']:{status:'pass',updatedAt:versionEntry.ts}},
+    history:[versionEntry],
+  }}}}};
+  w.localStorage.setItem('unscripted.progress.v2', JSON.stringify(progressV2));
+  const loaded = new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+  frame.src = './index.html?lang=en&history-fixture';
+  await loaded;
+  for (let tick=0; tick<200 && el('timeline').children.length<3; tick++) await wait();
+  const timeline = [...el('timeline').querySelectorAll('.tl-item')];
+  assert(timeline.length === 3,'v1 and v2 did not appear together');
+  const oldJavaRow = timeline.find(row=>row.textContent.includes('volatile does not automatically make compound operations'));
+  const oldRedisRow = timeline.find(row=>row.textContent.includes('The original expiration time remains; the countdown does not restart.'));
+  assert(oldJavaRow?.querySelectorAll('.tl-missed-list li').length === 3,'Java L1 lost historical c03');
+  assert(oldRedisRow?.querySelectorAll('.tl-missed-list li').length === 4 &&
+    oldRedisRow.textContent.includes('Old Redis answer'), 'Redis L3 lost historical criterion or answer');
+  assert(timeline[0].textContent.includes('unscripted-core@1.0.1') &&
+    timeline[0].querySelectorAll('.tl-missed-list li').length === 2,'Versioned Java history did not render');
 }
 try { await run(); result.textContent='AI2_BROWSER_PASS'; }
 catch(error) { result.textContent='FAIL: '+error.message; }

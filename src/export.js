@@ -1,3 +1,4 @@
+import { historyRubric, historyVersionLabel } from './history-rubric.js';
 import { t, localized } from './i18n.js';
 import { lightForStatus } from './lights.js';
 
@@ -11,31 +12,47 @@ export function reviewItems(questions, progress) {
 
 const markdown = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/[\\`*_\[\]#]/g, '\\$&');
 
+export function crashSheetRows(questions, progress, entries = [], lang = 'zh') {
+  const byCell = new Map();
+  for (const entry of entries) {
+    const key = `${entry.questionId}::${entry.layer}`;
+    const history = historyRubric(entry, lang);
+    if (!byCell.has(key)) byCell.set(key, new Map());
+    byCell.get(key).set(`${history.packId ?? ''}@${history.packVersion ?? ''}`, {entry, history});
+  }
+  return questions.flatMap(question => question.layers.flatMap(layer => {
+    const key = `${question.id}::${layer.id}`;
+    const records = [...(byCell.get(key)?.values() ?? [])];
+    const rated = records.filter(({entry}) => entry.light !== 'green')
+      .map(record => ({question, layer, ...record}));
+    return rated.length || records.length || progress.items[key]?.status !== 'review'
+      ? rated : [{question, layer}];
+  }));
+}
+
 export function buildCrashSheet(questions, progress, lang = 'zh', entries = []) {
-  const items = reviewItems(questions, progress);
+  const items = crashSheetRows(questions, progress, entries, lang);
   const tr = key => t(key, {}, lang);
-  const latest = new Map();
-  for (const entry of entries) latest.set(`${entry.questionId}::${entry.layer}`, entry);
-  const lines = ['# Unscripted · ' + tr('当前复习单'), '', tr('仅包含当前最后一次判定为「需要复习」的题目层级；不是历史错误次数或能力评分。'), ''];
+  const lines = ['# Unscripted · ' + tr('当前复习单'), '', tr('按题库版本列出最近需要复习的判定。'), ''];
   if (!items.length) lines.push(tr('当前没有需要复习的条目。'));
-  for (const { question, layer } of items) {
-    const entry = latest.get(`${question.id}::${layer.id}`);
+  for (const { question, layer, entry, history } of items) {
     const light = entry?.light || lightForStatus(progress.items[`${question.id}::${layer.id}`]?.status);
     lines.push(
-      `## ${markdown(question.category)} / ${layer.id} · ${markdown(localized(question, 'title', lang))}`,
-      '',
-      `${tr('灯色')}：${tr(LIGHT_WORD[light])}`,
-      '',
-      markdown(localized(layer, 'prompt', lang)),
-      '',
-      tr('再次解释时检查：'),
-      ...localized(layer, 'rubric', lang).map(point => `- ${markdown(point)}`),
-      '',
+      `## ${markdown(question.category)} / ${layer.id} · ${markdown(localized(question, 'title', lang))}`, '',
+      `${tr('灯色')}：${tr(LIGHT_WORD[light])}`, '',
     );
-    const rubric = localized(layer, 'rubric', lang);
-    const missed = (entry?.missedPoints || []).map(index => rubric[index]).filter(Boolean);
-    if (missed.length) lines.push(tr('漏掉的要点：'), ...missed.map(point => `- ${markdown(point)}`), '');
-    lines.push(tr('用参考要点自行检查解释。'), '');
+    if (history) {
+      lines.push(markdown(historyVersionLabel(history, lang)), '', tr('历史评分标准：'));
+      for (const point of history.points) {
+        lines.push(`- ${tr(LIGHT_WORD[point.light])} · ${markdown(point.text)}`);
+      }
+      lines.push('');
+      const missed = history.points.filter(point => point.missed);
+      if (missed.length) lines.push(tr('漏掉的要点：'), ...missed.map(point => `- ${markdown(point.text)}`), '');
+    }
+    lines.push(markdown(localized(layer, 'prompt', lang)), '', tr('再次解释时检查：'),
+      ...localized(layer, 'rubric', lang).map(point => `- ${markdown(point)}`), '',
+      tr('用参考要点自行检查解释。'), '');
   }
   return lines.join('\n') + '\n';
 }

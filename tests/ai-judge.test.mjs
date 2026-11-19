@@ -58,3 +58,55 @@ test('judge only emits suggestions; a superseded completion cannot reach the vie
   await judgeAnswer(async()=>({verdicts:[row],followUp:null}),context,answer,gate.start(),v=>applied.push(v));
   assert.equal(applied.length,1);
 });
+
+const targets = [
+  {
+    q: 'redis-expiration-v2', layer: 2, id: 'redis-expiration-v2-l3-c05',
+    counterexamples: ['INCR changes the value to 2.', 'After INCR, the value becomes 2.', 'INCR 后数值变为 2。'],
+    supported: [
+      'INCR changes the value to 2 and keeps the original TTL deadline.',
+      'The counter reaches two and the key still dies at the very same instant as before.',
+      '加一到二，仍在原定时刻失效。',
+    ],
+  },
+  {
+    q: 'juc-volatile-atomicity-v2', layer: 0, id: 'juc-volatile-atomicity-v2-l1-c02',
+    counterexamples: ['i++ is not atomic.', 'The increment isn’t thread-safe.', 'i++ 不是原子操作。'],
+    supported: [
+      'Both threads read the same old value, compute the same successor and write it back, losing one update.',
+      'Both workers fetch five, each adds one, and each stores six. Two increments advance the count only once.',
+      '两个线程同时取到五，各加一，各存六。两次增量只生效一次。',
+    ],
+  },
+];
+
+for (const {q,layer,id,counterexamples,supported} of targets) {
+  const topic=load('../data/questions.json').find(entry=>entry.id===q);
+  const modelVerdict=quote=>({pointId:id,light:'green',reason:'Claims the point is covered.',quote});
+  test(id+' downgrades a model Green that quotes only the conclusion', async()=>{
+    for (const [index, answer] of counterexamples.entries()) {
+      const ctx=redisContext(pack,topic,topic.layers[layer],index===2?'zh':'en');
+      const result=await new Promise((resolve,reject)=>{
+        judgeAnswer(async()=>({verdicts:[modelVerdict(answer)],followUp:null}),ctx,answer,
+          new AbortController().signal,resolve).catch(reject);
+      });
+      const point=result.verdicts.find(row=>row.pointId===id);
+      assert.equal(point.light,'amber');
+      assert.notEqual(point.reason,modelVerdict(answer).reason);
+      assert.equal(point.quote,answer);
+      if (q==='redis-expiration-v2') {
+        const value={...modelVerdict(answer),pointId:'redis-expiration-v2-l3-c02'};
+        assert.equal(validateVerdicts({verdicts:[value],followUp:null},ctx.criteria,answer)
+          .verdicts.find(row=>row.pointId===value.pointId).light,'green');
+      }
+    }
+  });
+  test(id+' accepts model Green for complete evidence including paraphrases',()=>{
+    const ctx=redisContext(pack,topic,topic.layers[layer],'en');
+    assert.match(buildMessages(ctx,supported[0])[0].content,/supports all necessary parts/);
+    for (const answer of supported) {
+      const result=validateVerdicts({verdicts:[modelVerdict(answer)],followUp:null},ctx.criteria,answer);
+      assert.equal(result.verdicts.find(row=>row.pointId===id).light,'green');
+    }
+  });
+}

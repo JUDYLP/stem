@@ -1,3 +1,4 @@
+import {validRubricSnapshot} from '../history.js';
 import {P1,H1,V2,PREFIX,shape,object,check,parse,empty,version,readState,keys,locked,writeChecked,legacyTimestamp,light} from './snapshot.js';
 const known=new Set(['juc-volatile-atomicity-v2','redis-expiration-v2','mysql-consistent-read-v2']);
 const sources=storage=>({progress:storage.getItem(P1),history:storage.getItem(H1)});
@@ -17,10 +18,11 @@ function strictLegacy(raw){
   shape(h,['schemaVersion','saveAnswers','entries']);
   check(h.schemaVersion===1 && typeof h.saveAnswers==='boolean' && Array.isArray(h.entries)&&h.entries.length<=200);
   for(const e of h.entries){
-    shape(e,['questionId','layer','ts','light','pointLights','missedPoints'],['answer']);
+    shape(e,['questionId','layer','ts','light','pointLights','missedPoints'],['answer','rubricSnapshot']);
     check(typeof e.questionId==='string' && /^[a-z0-9-]+$/.test(e.questionId) && /^L[123]$/.test(e.layer)&&legacyTimestamp(e.ts)&&light(e.light));
     check(Array.isArray(e.pointLights)&&e.pointLights.length && e.pointLights.every(light));
     check(Array.isArray(e.missedPoints)&&e.missedPoints.every(i=>Number.isInteger(i)&&i>=0&&i<e.pointLights.length));
+    check(!('rubricSnapshot' in e)||validRubricSnapshot(e.rubricSnapshot,e.pointLights.length));
     check(!('answer' in e)||typeof e.answer==='string');
   }
   return {items:p.items,entries:h.entries};

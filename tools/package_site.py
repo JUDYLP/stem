@@ -9,7 +9,8 @@ FILES = [
     'src/ai/demo-scenario.js', 'src/ai/demo-scenarios.json', 'src/ai/provider.js', 'src/ai/judge.js', 'data/packs/unscripted-core.v1.json',
     'src/fx/verdict-fx.js', 'assets/fonts/doto-latin-wght-normal.woff2',
     'src/main.js', 'src/questions.js', 'src/storage.js', 'src/export.js', 'src/demo.js', 'src/i18n.js',
-    'src/lights.js', 'src/history.js', 'src/dotfield.js',
+    'data/packs/unscripted-core.v1.0.0.json',
+    'src/lights.js', 'src/history.js', 'src/history-rubric.js', 'src/dotfield.js',
 ]
 
 

@@ -1,3 +1,4 @@
+import {makeRubricSnapshot} from './history.js';
 import {V2,P1,H1,PREFIX,readState,check,locked,version,keys,writeChecked,light,timestamp} from './storage/snapshot.js';
 import {summarizeLights,statusForLight} from './lights.js';
 
@@ -43,7 +44,8 @@ export function createLearningStore({storage,locks,registry}){
         const v=version(s,r,true);
         const aggregate=summarizeLights(results.map(c=>c.light));
         v.items[[r.packId,questionId,layerId].join('::')]={status:statusForLight(aggregate),updatedAt:ts};
-        const h={packId:r.packId,packVersion:r.packVersion,questionId,layerId,ts,light:aggregate,criterionResults:results};
+        const h={packId:r.packId,packVersion:r.packVersion,questionId,layerId,ts,light:aggregate,criterionResults:results,
+          rubricSnapshot:makeRubricSnapshot(r,layer)};
         if(s.saveAnswers && answer!==undefined)h.answer=answer;
         v.history.push(h);v.history=v.history.slice(-200);
       });
