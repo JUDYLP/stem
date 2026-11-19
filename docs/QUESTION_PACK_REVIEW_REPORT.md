@@ -72,7 +72,8 @@ All demo quotes are intended to be exact substrings of their sample answers; aut
 
 - JSON parsing and in-memory structural checks: performed during preparation.
 - Initial GitHub Actions run exposed a version-pinning regression in legacy migration: `src/storage/migration.js` still requested Core 1.0.0 after the built-in pack advanced to 1.0.1. The migration now resolves the latest registered built-in Core version, and the storage migration test asserts the migrated snapshot targets that version.
-- Repository Node test suite / syntax check: pending rerun after the CI fix.
+- The next CI run exposed two further compatibility assumptions: AI context was pinned to Core 1.0.0, and the legacy array loader capped each layer at four rubric items. The judge now checks the Core pack identity and exact displayed-vs-official content without pinning a stale version; the legacy loader now accepts up to five items. Test fixtures were also corrected to keep imported 1.0.0 and 1.0.1 versions distinct, and demo light coverage is asserted across the built-in scenario set rather than every individual layer.
+- Repository Node test suite / syntax check: pending rerun after these compatibility updates.
 - Real provider / API-key model regression: **NOT RUN**; assigned to the local agent after merge-ready review.
 - Browser integration of the intro pack: **NOT INCLUDED**; this PR adds the supplied pack as data only.
 - Human owner approval: pending.
