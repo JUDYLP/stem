@@ -9,7 +9,7 @@ const registry=createPackRegistry(),core=await registry.registerBuiltin();
 const q=core.validatedPack.questions[0], layer=q.layers[0],key=q.id+'::L1';
 const ctx=r=>({packId:r.packId,packVersion:r.packVersion,contentDigest:r.contentDigest,questionId:q.id,layerId:'L1'});
 const input={confirmed:true,ts,criterionResults:layer.rubric.map(r=>({rubricId:r.rubricId,light:'green'})),answer:'synthetic'};
-const imported=await registry.registerImported(JSON.stringify({...core.validatedPack,packId:'study'}));
+const imported=await registry.registerImported(JSON.stringify({...core.validatedPack,packId:'study',packVersion:'1.0.0'}));
 const newer=await registry.registerImported(JSON.stringify({...core.validatedPack,packId:'study',packVersion:'1.0.1'}));
 function fixture(){
   const map=new Map(),writes=[];

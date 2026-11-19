@@ -37,7 +37,7 @@ for (const question of questions) {
       assert.equal(matches.length, 1);
       const [source] = matches;
       assert.deepEqual(source.verdicts.map(r=>r.pointId).sort(),context.criteria.map(r=>r.pointId).sort());
-      assert.deepEqual(new Set(source.verdicts.map(r=>r.light)), new Set(['green','amber','red']));
+      assert.ok(source.verdicts.every(r => ['green','amber','red'].includes(r.light)));
       assert.ok(source.followUp.trim());
       for (const row of source.verdicts) assert.ok(row.quote.trim() && source.answer.includes(row.quote));
       const sample = openDemo(context);
@@ -46,6 +46,11 @@ for (const question of questions) {
     });
   }
 }
+test('built-in demo set exercises all three verdict lights', () => {
+  const lights = new Set(scenarios.filter(s => s.packId === pack.packId && s.packVersion === pack.packVersion)
+    .flatMap(s => s.verdicts.map(row => row.light)));
+  assert.deepEqual(lights, new Set(['green','amber','red']));
+});
 test('follow-up contract and short paraphrased evidence', () => {
   const criteria = [{pointId:'stable'}];
   const answer = 'The two reads can both see five.';
