@@ -1,4 +1,4 @@
-// Verdict-moment FX: scan beam, quote highlight, light pulse, dotfield ripple.
+// Verdict-moment FX: scan beam, quote highlight, light pulse, in-row halo.
 // This module owns choreography only. Judging logic stays in main.js / src/ai/;
 // Codex wires the two exports into the live-AI flow. The ?fx=demo bootstrap at
 // the bottom is deliberately kept here so main.js does not have to change.
@@ -10,12 +10,6 @@ const LIGHT_RGB = { green: '34, 197, 94', amber: '245, 165, 36', red: '255, 69, 
 const SCAN_MS = 1600;   // scan beam period
 const STEP_MS = 350;    // per-point reveal interval
 const FLIGHT_MS = 400;  // pulse flight time
-// Ripple tuning per light: red is shorter and dimmer, green the brightest.
-const RIPPLE = {
-  green: { spread: 240, duration: 700, strength: 1 },
-  amber: { spread: 210, duration: 650, strength: 0.8 },
-  red: { spread: 150, duration: 550, strength: 0.45 },
-};
 
 const reducedMotion = () =>
   typeof window !== 'undefined' &&
@@ -34,7 +28,7 @@ export function startScan(answerEl) {
   beam.className = 'fx-scanbeam';
   beam.setAttribute('aria-hidden', 'true');
   const measure = () =>
-    answerEl.style.setProperty('--fx-scan-h', `${answerEl.clientHeight + 26}px`);
+    answerEl.style.setProperty('--fx-scan-h', `${answerEl.clientHeight}px`);
   measure();
   let observer = null;
   if (typeof ResizeObserver === 'function') {
@@ -199,15 +193,21 @@ function igniteLamp(lamp) {
   window.dispatchEvent(new CustomEvent('lamp:lit', { detail: { element: lamp, ripple: false } }));
 }
 
-function fireRipple(lamp, light) {
+// A halo that grows from the lamp along its own rubric row: the dot field is
+// hidden behind the opaque card, so the ripple lives on the row surface.
+function waveRow(lamp, light) {
+  const row = lamp.closest('.point-row');
+  if (!row) return;
+  row.querySelector('.fx-row-wave')?.remove();
+  const rowRect = row.getBoundingClientRect();
   const rect = lamp.getBoundingClientRect();
-  if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) return;
-  window.__dotfield?.ripple?.(
-    rect.left + rect.width / 2,
-    rect.top + rect.height / 2,
-    light,
-    RIPPLE[light],
-  );
+  const wave = document.createElement('span');
+  wave.className = 'fx-row-wave';
+  wave.dataset.light = light;
+  wave.setAttribute('aria-hidden', 'true');
+  wave.style.setProperty('--fx-wave-x', `${rect.left + rect.width / 2 - rowRect.left}px`);
+  wave.addEventListener('animationend', () => wave.remove(), { once: true });
+  row.append(wave);
 }
 
 // Layer light rule (mirrors lights.js): all green -> green; any red -> red.
@@ -265,7 +265,10 @@ export function playVerdict({ verdicts, answerEl, lampEls } = {}) {
       setLampState(lamp, light);
       igniteLamp(lamp);
       if (light === 'red') lamp.classList.add('is-flash');
-      if (!reduced) fireRipple(lamp, light);
+      // The row carrying this point lights up with its lamp, so row, lamp and
+      // quote stay one visual unit while the sequence plays.
+      lamp.closest('.point-row')?.setAttribute('data-state', light);
+      if (!reduced) waveRow(lamp, light);
     }
     if (index === list.length - 1) renderScore(list.map(v => ({ light: validLight(v.light) })));
     finished += 1;
@@ -289,15 +292,31 @@ export function playVerdict({ verdicts, answerEl, lampEls } = {}) {
 
 // ------------------------------------------------------------- ?fx=demo
 
-// Local demo switch for screen recordings: one green, one amber, one red,
-// two of them carrying a quote. The demo drives the existing practice form
-// so no judging logic is duplicated here.
+// Local demo switch for screen recordings. It first switches to the Redis
+// question's L1, so the fake verdicts carry that layer's real rubric IDs and
+// the answer maps one-to-one onto the three points shown on screen.
+const DEMO_QUESTION = 'redis-expiration-v2';
 const DEMO_ANSWER =
-  'Redis 的 GET 和 SET 是两个独立操作，先读后写之间存在空隙，两个请求可能同时读到同一个库存值，导致超卖。可以用 DECR 让扣减原子化，再检查返回值。';
+  '对已有的键执行 EXPIRE key 60，就是把它的生存时间设成 60 秒，到期之后由过期机制移除。普通新建的键默认没有过期时间，除非写入时就显式设置，或者之后再补上。但要记住过期删除并不精确，不能拿它当业务任务调度器。';
 const demoVerdicts = () => [
-  { pointId: 'P1', light: 'green', reason: '讲清了读写分离带来的竞态。', quote: 'GET 和 SET 是两个独立操作' },
-  { pointId: 'P2', light: 'amber', reason: '提到了超卖但没说清两个请求如何交错。', quote: '' },
-  { pointId: 'P3', light: 'red', reason: '只给结论没解释 DECR 为什么原子。', quote: '可以用 DECR 让扣减原子化' },
+  {
+    pointId: 'redis-expiration-v2-l1-c01',
+    light: 'green',
+    reason: '说清了 EXPIRE 的含义和秒级单位。',
+    quote: '把它的生存时间设成 60 秒',
+  },
+  {
+    pointId: 'redis-expiration-v2-l1-c02',
+    light: 'amber',
+    reason: '提到了默认没有过期时间，但没点明是普通新建的键。',
+    quote: '',
+  },
+  {
+    pointId: 'redis-expiration-v2-l1-c03',
+    light: 'red',
+    reason: '把过期删除当成精确调度，结论文不对题。',
+    quote: '不能拿它当业务任务调度器',
+  },
 ];
 
 function bootDemo() {
@@ -317,6 +336,17 @@ function bootDemo() {
       const form = $('answer-form');
       const before = $('before-answer');
       if (!answer || !form || !before) return;
+      // Pin the demo to the Redis question's L1 before typing anything.
+      const category = $('category');
+      if (category && category.value) {
+        category.value = '';
+        category.dispatchEvent(new Event('change'));
+      }
+      const picker = $('question');
+      if (picker && picker.value !== DEMO_QUESTION) {
+        picker.value = DEMO_QUESTION;
+        picker.dispatchEvent(new Event('change'));
+      }
       answer.value = DEMO_ANSWER;
       form.requestSubmit();
       await new Promise(resolve => setTimeout(resolve, 60));

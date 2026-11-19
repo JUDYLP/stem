@@ -589,6 +589,7 @@ textarea:focus { outline: none; border-color: #5a5a64; box-shadow: 0 0 0 3px #ff
 .legend-item .lamp { width: 12px; height: 12px; }
 .legend-hint { margin-left: auto; color: #77777f; }
 .point-row {
+  position: relative;
   display: flex; align-items: flex-start; gap: 10px;
   padding: 10px 12px;
   background: #101013; border: 1px solid #222227; border-radius: 10px;
@@ -1018,19 +1019,22 @@ summary:hover { color: var(--text); }
 }
 .fx-scanning { position: relative; }
 .fx-scanbeam {
-  position: absolute; left: 0; right: 0; top: 0; height: 26px;
+  position: absolute; left: 0; right: 0; top: 0; height: 2px;
   pointer-events: none;
-  background:
-    linear-gradient(to bottom,
-      transparent 0%, rgba(255, 255, 255, .07) 26%,
-      rgba(255, 255, 255, .55) 50%, rgba(255, 255, 255, .07) 74%, transparent 100%);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, .32);
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, .62) 10%,
+    rgba(255, 255, 255, .62) 90%,
+    rgba(255, 255, 255, 0) 100%);
+  box-shadow:
+    0 0 6px 1px rgba(255, 255, 255, .26),
+    0 0 20px 5px rgba(255, 255, 255, .1);
   mix-blend-mode: screen;
   animation: fx-scan 1.6s linear infinite;
   will-change: transform;
 }
 @keyframes fx-scan {
-  from { transform: translateY(-26px); }
+  from { transform: translateY(-2px); }
   to { transform: translateY(var(--fx-scan-h, 160px)); }
 }
 mark.fx-quote {
@@ -1058,6 +1062,30 @@ mark.fx-quote[data-light="red"] { border-bottom-color: rgba(255, 69, 58, .9); te
 .fx-pulse-dot[data-light="green"] { background: var(--green); box-shadow: 0 0 8px rgba(34, 197, 94, .9), 0 0 18px rgba(34, 197, 94, .45); }
 .fx-pulse-dot[data-light="amber"] { background: var(--amber); box-shadow: 0 0 8px rgba(245, 165, 36, .9), 0 0 18px rgba(245, 165, 36, .45); }
 .fx-pulse-dot[data-light="red"] { background: var(--red); box-shadow: 0 0 8px rgba(255, 69, 58, .9), 0 0 18px rgba(255, 69, 58, .45); }
+/* Ripple lives inside the rubric row: a same-colour halo that grows from the
+   lamp towards both ends. No extra canvas, transform/opacity only. */
+.fx-row-wave {
+  position: absolute; inset: 0; border-radius: inherit; overflow: hidden;
+  pointer-events: none;
+}
+.fx-row-wave::before {
+  content: "";
+  position: absolute; top: 50%; left: var(--fx-wave-x, 24px);
+  width: 130%; height: 240%;
+  background: radial-gradient(ellipse at center,
+    rgba(var(--fx-wave-rgb), var(--fx-wave-a, .55)) 0%,
+    rgba(var(--fx-wave-rgb), var(--fx-wave-a2, .22)) 42%,
+    transparent 72%);
+  animation: fx-row-wave var(--fx-wave-dur, 500ms) cubic-bezier(.2, .68, .31, 1) forwards;
+  will-change: transform, opacity;
+}
+.fx-row-wave[data-light="green"] { --fx-wave-rgb: 34, 197, 94; }
+.fx-row-wave[data-light="amber"] { --fx-wave-rgb: 245, 165, 36; --fx-wave-a: .46; --fx-wave-a2: .18; --fx-wave-dur: 480ms; }
+.fx-row-wave[data-light="red"] { --fx-wave-rgb: 255, 69, 58; --fx-wave-a: .36; --fx-wave-a2: .14; --fx-wave-dur: 420ms; }
+@keyframes fx-row-wave {
+  from { transform: translate(-50%, -50%) scale(.05); opacity: .95; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
 .fx-score {
   font-family: 'Doto', var(--mono);
   font-size: 15px; font-weight: 700; letter-spacing: .08em; line-height: 1;
@@ -1066,6 +1094,9 @@ mark.fx-quote[data-light="red"] { border-bottom-color: rgba(255, 69, 58, .9); te
 .fx-score[data-light="amber"] { color: var(--amber); }
 .fx-score[data-light="red"] { color: var(--red); }
 .fx-demo-replay { position: fixed; right: 16px; bottom: 16px; z-index: 70; width: auto; }
+@media (max-width: 480px) {
+  .fx-demo-replay { right: 10px; bottom: 10px; padding: 8px 10px; font-size: 12px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

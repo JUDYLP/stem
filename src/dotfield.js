@@ -404,13 +404,6 @@ export function initDotfield(canvas) {
       if (!reduced) draw(performance.now(), false);
     },
     get finePointer() { return finePointer; },
-    // Tuned ripple for choreographed moments (e.g. verdict FX). No-op while
-    // reduced motion is on.
-    ripple(x, y, color, options) {
-      if (reduced) return;
-      if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-      pushRipple(x, y, color, options);
-    },
   };
   window.__dotfield = api;
 
