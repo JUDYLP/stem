@@ -17,11 +17,11 @@
 - 动态点阵背景：固定全屏 canvas，桌面 28px / 390px 32px 点阵，基础白点不透明度 0.12–0.20，双正弦慢波呼吸；只有首屏示例面板的三盏灯向背景染色（160px 内），点亮时扩散 320px 点阵波纹；导航 logo 与面板内的灯不染背景点，避免彩点残留。答题框聚焦时动效降到 30%；dpr≤2、30fps、页面隐藏暂停，`prefers-reduced-motion` 只画一帧静态点阵。
 - 灯的表现力：示例灯 32px、参考要点灯 24px（44px 点击区）、热力格图标 22px、层级灯与本层灯色 18px；亮芯为白到灯色的径向渐变，带灯罩内高光与左上方反光点、4/14/36px 三层光晕；未亮灯是深色玻璃。要点行与热力格有同色低亮度内发光；面板内有灯点亮时，1px 边框沿灯的方向短暂染成同色后淡出；键盘焦点显示 2px 白色环。
 - 整站中英双语，语言优先级为有效 `?lang=`、已保存偏好、浏览器语言；偏好独立存 `unscripted.language`。
-- 三题九层（JUC / Redis / MySQL），每题 L1 Explain / L2 Reason / L3 Stress-test，每题每层 2–4 条参考要点。
+- 两个内置题库：Core Software Engineering（三题，JUC / Redis / MySQL）与 Python Starter Pack（一题）。每题包含 Explain、Reason、Stress-test 三层。
 - 灯判定：参考要点下有常驻图例，每条要点的灯是 button，默认琥珀；空格/回车循环，1/2/3 直接设为 绿/琥珀/红，aria-label 写明当前与下一个状态，切换后 aria-live 播报。该层规则为全绿→绿、有红→红、其余→琥珀；确认后映射到既有 Pass/Review（只有全绿是 Pass），旧 `unscripted.progress.v1` 记录仍可读取。
 - 练习记录：3×3 热力矩阵，判定后整格填充灯色并保留 ✓ / ! / ✗，未作答为深灰；桌面 60px 方格、矩阵左对齐，窄屏题名独占一行后接三格；悬停补充时间，点击跳到该题该层。倒序时间线含灯色竖条、漏掉的要点与同题层变化条。
 - 「在本机保存我的回答，用于前后对比」默认关闭；只保存开启之后的回答，之前的判定没有原文。开启后同一题层可展开对比首次与最近一次回答，关闭时删除已保存原文。
-- 循环判定写入 `unscripted.history.v1`，最多 200 条，超出删除最早；不改 `unscripted.progress.v1` 结构。
+- 循环判定写入 `unscripted.history.v1`，每个 Pack 最多 200 条，超出从该 Pack 裁剪最早记录；不改 `unscripted.progress.v1` 结构。
 - 导出当前 review 的 UTF-8 Markdown 复习单，含灯色与漏掉的要点。
 - 「清空记录」二次确认，弹窗内可先导出复习单；确认后同时清空 history 与 progress。
 - 独立英文模拟示例（首屏面板）依次点亮 绿、绿、红，再浮现追问；持续标注 Simulated，不写正式记录、不发请求。
@@ -35,10 +35,12 @@
 在项目根目录打开 PowerShell：
 
 ```powershell
+npm ci
+npm run build:pack-runtime
 python -m http.server 5174 --bind 127.0.0.1
 ```
 
-访问 http://127.0.0.1:5174/ ，练习入口为 #practice 。按 Ctrl+C 停止服务。本机 python 为 3.14.2；py 启动器不可用，使用 python。页面运行无需 npm 依赖或构建；仅开发校验/测试需安装下述devDependencies；不要用 file:// 正式测试。
+访问 http://127.0.0.1:5174/ ，练习入口为 #practice 。按 Ctrl+C 停止服务。本机 python 为 3.14.2；py 启动器不可用，使用 python。本地启动前需生成浏览器 Pack Runtime。Pages 发布自动构建，浏览器只加载生成的静态模块。请通过 HTTP 打开。
 
 ## 测试
 
@@ -57,7 +59,7 @@ npm run check:syntax
 回答与 Retry 仅保存在页面内存，切题保留，刷新清空。localStorage 有三个键：
 
 - `unscripted.progress.v1`：题目×层级最后一次人工评价（pass/review）和更新时间，结构未变。
-- `unscripted.history.v1`：每次确认的判定 `{questionId, layer, ts, light, pointLights, missedPoints}`，最多 200 条；只有开启保存回答开关时才附加 `answer`，默认不保存，关闭时删除已存原文。
+- `unscripted.history.v1`：每次确认的判定 `{questionId, layer, ts, light, pointLights, missedPoints}`，每个 Pack 最多 200 条；只有开启保存回答开关时才附加 `answer`，默认不保存，关闭时删除已存原文。
 - `unscripted.language`：语言偏好。
 
 记录只属于当前浏览器与站点 origin；换端口/域名后不会自动同步。没有账号、数据库、后端、遥测或第三方模型调用；页面只请求同源静态文件。

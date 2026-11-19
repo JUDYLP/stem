@@ -1,10 +1,9 @@
 import { startScan, playVerdict } from './fx/verdict-fx.js';
-import builtinPack from '../data/packs/unscripted-core.v1.json' with {type:'json'};
 import { openDemo } from './ai/demo-scenario.js';
 import { createAIProvider } from './ai/provider.js';
 import { judgeAnswer, buildEvaluationContext, requestGate } from './ai/judge.js';
 import { t, localized, getLanguage, initLanguage, setLanguage, applyLanguage } from './i18n.js';
-import { loadQuestions } from './questions.js';
+import { questionsFromBuiltin } from './questions.js';
 import { createProgressStore } from './storage.js';
 import { createHistoryStore, latestByCell, makeRubricSnapshot, shouldUseCompact } from './history.js';
 import { historyRubric, historyVersionLabel } from './history-rubric.js';
@@ -75,6 +74,13 @@ initDemo();
 const store = createProgressStore();
 const log = createHistoryStore();
 const drafts = new Map();
+const packPositions = new Map();
+const packLabels = new Map([
+  ['unscripted-core', '软件工程核心题库'],
+  ['unscripted-intro', 'Python 入门题库'],
+]);
+let registeredPacks = new Map();
+let activePack;
 let questions = [];
 let questionId = '';
 let layerIndex = 0;
@@ -96,17 +102,23 @@ const formatTime = ts => new Date(ts).toLocaleString(getLanguage() === 'zh' ? 'z
 });
 
 function draft() {
-  if (!drafts.has(key())) drafts.set(key(), { text: '', submitted: null, retry: '', lights: [], confirmed: null });
-  return drafts.get(key());
+  const draftKey = `${activePack.packId}@${activePack.packVersion}::${key()}`;
+  if (!drafts.has(draftKey)) drafts.set(draftKey, { text: '', submitted: null, retry: '', lights: [], confirmed: null });
+  return drafts.get(draftKey);
 }
 
 function index() {
-  const entries = log.snapshot().entries;
+  const entries = log.snapshot().entries.filter(belongsToActivePack);
   return { entries, latest: latestByCell(entries), progress: store.snapshot() };
 }
 
+function belongsToActivePack(entry) {
+  const owner = entry.rubricSnapshot?.packId ?? entry.packId;
+  return (!owner || owner === activePack.packId) && questions.some(question => question.id === entry.questionId);
+}
+
 function timelineEntries(entries) {
-  return [...entries, ...log.versionedEntries(builtinPack.packId)]
+  return [...entries, ...log.versionedEntries(activePack.packId)].filter(belongsToActivePack)
     .sort((a, b) => Date.parse(a.ts) - Date.parse(b.ts));
 }
 
@@ -273,7 +285,7 @@ $('ai-run').onclick = async () => {
 };
 
 function evaluationContext() {
-  return buildEvaluationContext({pack: builtinPack, question: current(), layer: currentLayer(), language: getLanguage()});
+  return buildEvaluationContext({pack: activePack, question: current(), layer: currentLayer(), language: getLanguage()});
 }
 
 function renderMode() {
@@ -284,8 +296,7 @@ function renderMode() {
   $('ai-panel').hidden = mode !== 'live';
   $('ai-settings').open = mode === 'live';
   $('layer-light').hidden = mode === 'demo';
-  const topic = builtinPack.questions.find(q => q.id === questionId);
-  $('rubric-review').textContent = t(topic?.review.status === 'reviewed' ? '已审校评分标准' : '待审校评分标准 · 建议供参考');
+  $('rubric-review').textContent = t(current().review.status === 'reviewed' ? '已审校评分标准' : '待审校评分标准 · 建议供参考');
 }
 
 $('judge-mode').addEventListener('change', () => {
@@ -429,7 +440,7 @@ function renderLayer() {
   const question = current();
   const layer = currentLayer();
   const d = draft();
-  $('layer-label').textContent = `${question.category} / ${layer.id} ${layer.label}`;
+  $('layer-label').textContent = `${localized(question, 'category')} / ${layer.id} ${layer.label}`;
   $('question-title').textContent = localized(question, 'title');
   $('layer-prompt').textContent = localized(layer, 'prompt');
   $('answer').value = d.text;
@@ -451,9 +462,9 @@ function renderLayer() {
   renderSuggestion();
 }
 
-function selectQuestion(id) {
+function selectQuestion(id, preferredLayer = 0) {
   questionId = id;
-  layerIndex = 0;
+  layerIndex = preferredLayer;
   $('question').value = id;
   renderLayer();
 }
@@ -462,11 +473,43 @@ function filtered() {
   return questions.filter(question => !$('category').value || question.category === $('category').value);
 }
 
-function renderOptions(preferred = questionId) {
+function renderOptions(preferred = questionId, preferredLayer = 0) {
   const list = filtered();
   $('question').replaceChildren(...list.map(question => option(question.id, localized(question, 'title'))));
   if (!list.length) return;
-  selectQuestion(list.some(question => question.id === preferred) ? preferred : list[0].id);
+  if (list.some(question => question.id === preferred)) selectQuestion(preferred, preferredLayer);
+  else selectQuestion(list[0].id);
+}
+
+function renderCategories(preferred = $('category').value) {
+  const categories = new Map(questions.map(question => [question.category, localized(question, 'category')]));
+  $('category').replaceChildren(option('', t('全部分类')),
+    ...Array.from(categories, ([id, label]) => option(id, label)));
+  $('category').value = categories.has(preferred) ? preferred : '';
+}
+
+function renderPackOptions() {
+  $('question-pack').replaceChildren(...Array.from(registeredPacks, ([id, pack]) =>
+    option(id, t(packLabels.get(id) ?? pack.validatedPack.title.en))));
+  $('question-pack').value = activePack.packId;
+  $('load-message').textContent = t('已加载 {pack} · v{version} · {count} 道题', {
+    pack:activePack.title[getLanguage() === 'en' ? 'en' : 'zh-CN'],
+    version:activePack.packVersion, count:questions.length,
+  });
+}
+
+function selectPack(id) {
+  const next = registeredPacks.get(id);
+  if (!next) return;
+  if (activePack) packPositions.set(activePack.packId, { questionId, layerIndex, category:$('category').value });
+  activePack = next.validatedPack;
+  questions = questionsFromBuiltin(next);
+  const position = packPositions.get(id);
+  renderCategories(position?.category ?? '');
+  renderPackOptions();
+  renderOptions(position?.questionId ?? '', position?.layerIndex ?? 0);
+  $('export-message').textContent = '';
+  renderRecords();
 }
 
 function openCell(id, layerId) {
@@ -523,7 +566,7 @@ function renderRecords({ changed = null } = {}) {
     const rowEl = byId('div', 'heat-row');
     const label = byId('div', 'heat-question');
     label.append(
-      byId('span', 'mono heat-category', question.category),
+      byId('span', 'mono heat-category', localized(question, 'category')),
       byId('span', 'heat-index', String(row + 1).padStart(2, '0')),
       byId('span', 'heat-title', localized(question, 'title')),
     );
@@ -624,7 +667,7 @@ function renderTimeline(chronologicalEntries) {
     const main = byId('div', 'tl-main');
     const head = byId('div', 'tl-head');
     head.append(byId('span', 'mono tl-time', formatTime(entry.ts)), byId('span', 'tl-verdict', lightLabel(entry.light)));
-    const jump = byId('button', 'tl-question', `${question.category} / ${entry.layer} · ${localized(question, 'title')}`);
+    const jump = byId('button', 'tl-question', `${localized(question, 'category')} / ${entry.layer} · ${localized(question, 'title')}`);
     jump.type = 'button';
     jump.addEventListener('click', () => openCell(question.id, entry.layer));
     main.append(head, jump);
@@ -693,6 +736,7 @@ function observeHeatmap() {
   observer.observe($('heatmap'));
 }
 
+$('question-pack').addEventListener('change', event => selectPack(event.target.value));
 $('category').addEventListener('change', () => renderOptions());
 $('question').addEventListener('change', event => selectQuestion(event.target.value));
 $('random-question').addEventListener('click', () => {
@@ -763,7 +807,7 @@ $('confirm-rating').addEventListener('click', () => {
     layer: layer.id,
     light,
     pointLights: [...d.lights],
-    rubricSnapshot: makeRubricSnapshot(builtinPack, builtinPack.questions.find(q => q.id === question.id)
+    rubricSnapshot: makeRubricSnapshot(activePack, activePack.questions.find(q => q.id === question.id)
       .layers.find(item => item.id === layer.id)),
     missedPoints: d.lights.map((value, index) => (value === 'red' ? index : -1)).filter(index => index >= 0),
     answer: d.submitted,
@@ -829,11 +873,11 @@ document.querySelectorAll('[data-lang]').forEach(button => button.addEventListen
   applyLanguage();
   window.dispatchEvent(new CustomEvent('language:changed'));
   if (questions.length) {
-    $('category').options[0].textContent = t('全部分类');
+    renderCategories();
+    renderPackOptions();
     for (const option of $('question').options) option.textContent = localized(questions.find(question => question.id === option.value), 'title');
     renderLayer();
     renderRecords();
-    $('load-message').textContent = t('已加载 {count} 道题', { count: questions.length });
     $('rating-status').textContent = draft().confirmed
       ? t('已记录：{light}。', { light: lightLabel(draft().confirmed) })
       : t('该层最近一次判定：{light}。', { light: lightLabel(lightOf(index(), questionId, currentLayer().id)) });
@@ -849,14 +893,15 @@ async function boot() {
   $('load-message').hidden = false;
   $('load-message').textContent = t('正在加载题库…');
   try {
-    questions = await loadQuestions();
-    if (!heatDensity) heatDensity = shouldUseCompact(questions.length) ? 'compact' : 'expanded';
-    $('category').replaceChildren(option('', t('全部分类')), ...[...new Set(questions.map(question => question.category))].map(category => option(category, category)));
-    renderOptions();
+    const { createPackRegistry } = await import('../work/pack-runtime.mjs');
+    const builtins = await createPackRegistry().registerBuiltins();
+    registeredPacks = new Map(builtins.map(record => [record.packId, record]));
+    const core = registeredPacks.get('unscripted-core');
+    if (!heatDensity) heatDensity = shouldUseCompact(core.validatedPack.questions.length) ? 'compact' : 'expanded';
     $('practice-body').hidden = false;
-    $('load-message').textContent = t('已加载 {count} 道题', { count: questions.length });
-    renderRecords();
+    selectPack(core.packId);
   } catch {
+    $('practice-body').hidden = true;
     $('load-message').textContent = t('题库加载失败，请确认通过 HTTP 打开且题库文件有效，再重试。');
     $('reload-questions').hidden = false;
   }

@@ -9,7 +9,8 @@ FILES = [
     'src/ai/demo-scenario.js', 'src/ai/demo-scenarios.json', 'src/ai/provider.js', 'src/ai/judge.js', 'data/packs/unscripted-core.v1.json',
     'src/fx/verdict-fx.js', 'assets/fonts/doto-latin-wght-normal.woff2',
     'src/main.js', 'src/questions.js', 'src/storage.js', 'src/export.js', 'src/demo.js', 'src/i18n.js',
-    'data/packs/unscripted-core.v1.0.0.json',
+    'data/packs/unscripted-core.v1.0.0.json', 'data/packs/unscripted-intro.v1.json',
+    'work/pack-runtime.mjs',
     'src/lights.js', 'src/history.js', 'src/history-rubric.js', 'src/dotfield.js',
 ]
 
@@ -22,6 +23,8 @@ def package(destination):
         raise FileExistsError('Output already exists; choose a new directory (nothing deleted)')
     for name in FILES:
         source = ROOT / name
+        if name == 'work/pack-runtime.mjs' and not source.is_file():
+            raise ValueError('Run npm run build:pack-runtime before packaging the site')
         if source.is_symlink() or not source.is_file():
             raise ValueError(f'Missing or symlinked resource: {name}')
     target.mkdir(parents=True)

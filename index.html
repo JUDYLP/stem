@@ -131,7 +131,7 @@
           <div class="section-head">
             <p class="kicker"><span data-i18n="练习">练习</span></p>
             <h2 id="practice-title"><span data-i18n="先回答，再对照。">先回答，再对照。</span></h2>
-            <p class="lede"><span data-i18n="3 道题 · 先写解释，再看参考要点 · 自己点灯判定">3 道题 · 先写解释，再看参考要点 · 自己点灯判定</span></p>
+            <p class="lede"><span data-i18n="先写解释，再看参考要点 · 自己点灯判定">先写解释，再看参考要点 · 自己点灯判定</span></p>
           </div>
           <div class="practice-panel">
             <p id="load-message" role="status"><span data-i18n="正在加载题库…">正在加载题库…</span></p>
@@ -140,6 +140,7 @@
             <div id="practice-body" hidden>
               <p id="storage-warning" class="warning" role="status" hidden></p>
               <div class="selectors">
+                <label class="field"><span data-i18n="题库">题库</span><select id="question-pack"></select></label>
                 <label class="field"><span><span data-i18n="分类">分类</span></span><select id="category"><option value="" data-i18n="全部分类">全部分类</option></select></label>
                 <label class="field question-selector"><span><span data-i18n="题目">题目</span></span><select id="question"></select></label>
                 <button id="random-question" class="button secondary" type="button"><span data-i18n="随机选题">随机选题</span></button>

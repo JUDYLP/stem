@@ -2,6 +2,9 @@
 <pre id="result">PENDING</pre>
 <iframe src="./index.html?lang=en"></iframe>
 <script type="module">
+import core from './data/packs/unscripted-core.v1.json' with {type:'json'};
+import intro from './data/packs/unscripted-intro.v1.json' with {type:'json'};
+import scenarios from './src/ai/demo-scenarios.json' with {type:'json'};
 const frame = document.querySelector('iframe');
 const result = document.querySelector('#result');
 const wait = () => new Promise(resolve => setTimeout(resolve, 25));
@@ -174,6 +177,127 @@ async function run() {
     oldRedisRow.textContent.includes('Old Redis answer'), 'Redis L3 lost historical criterion or answer');
   assert(timeline[0].textContent.includes('unscripted-core@1.0.1') &&
     timeline[0].querySelectorAll('.tl-missed-list li').length === 2,'Versioned Java history did not render');
+
+  assert(el('question-pack').value === core.packId && el('load-message').textContent.includes('1.0.1'),
+    'Default Core pack version missing');
+  assert([...el('question-pack').options].map(option=>option.textContent).join('|') ===
+    'Core Software Engineering|Python Starter Pack', 'Builtin labels missing');
+  const coreProgress = JSON.parse(w.localStorage.getItem('unscripted.progress.v1'));
+  select('question',oldJava.questionId);
+  select('judge-mode','live');
+  input('answer','My Core draft');
+  el('answer-form').requestSubmit();
+  input('ai-key','synthetic');
+  let finishCore, coreSignal;
+  w.fetch = (_,opts) => {
+    coreSignal = opts.signal;
+    return new Promise(resolve=>{finishCore=resolve;});
+  };
+  const pendingCore = el('ai-run').onclick();
+
+  const python = intro.questions[0];
+  select('question-pack',intro.packId);
+  assert(coreSignal.aborted, 'Pack switch did not abort Core request');
+  finishCore(new w.Response(null,{status:429}));
+  await pendingCore;
+  assert(el('answer').value === '' && el('timeline').children.length === 0,'Core data leaked into Intro');
+  assert(el('load-message').textContent.includes(intro.title.en) && el('load-message').textContent.includes('1.0.0'),
+    'Intro pack or version was not displayed');
+  assert(el('rubric-review').textContent.includes('awaiting human review'), 'Missing unreviewed status');
+  assert(el('question').options.length === 1 && el('question').value === python.id,'Python question missing');
+  select('category',python.category['zh-CN']);
+  el('random-question').click();
+  assert(el('question').value === python.id && el('category').options.length === 2,'Filters escaped Intro');
+  assert(w.localStorage.getItem('unscripted.history.v1') === rawHistory,'Switching packs wrote history');
+  assert(w.localStorage.getItem('unscripted.progress.v1') === rawProgress,'Switching packs wrote progress');
+
+  const enDraft = 'Python is practicing the current layer.';
+  w.document.querySelector('[data-lang="zh"]').click();
+  assert(el('question-title').textContent === python.title['zh-CN'] &&
+    el('layer-prompt').textContent === python.layers[0].prompt['zh-CN'],'Python Chinese copy mismatch');
+  w.document.querySelector('[data-lang="en"]').click();
+  assert(el('question-title').textContent === python.title.en,'Python English copy mismatch');
+  let demoCalls = 0;
+  w.fetch = () => {demoCalls++; throw Error('Simulated demo must stay offline');};
+  select('judge-mode','demo');
+  for (const [index, official] of python.layers.entries()) {
+    layer(index);
+    assert(el('layer-prompt').textContent === official.prompt.en,'Python layer prompt drift');
+    el('demo-judge').click();
+    const demo = el('judge-demo-result');
+    const confirm = demo.querySelector('button.button');
+    for (let tick=0; tick<200 && confirm.disabled; tick++) await wait();
+    const preset = scenarios.find(row=>row.packId===intro.packId && row.layerId===official.id);
+    assert(!confirm.disabled &&
+      demo.querySelector('p.answer-text').textContent===preset.answer &&
+      [...demo.querySelectorAll('.point-row')].map(row=>row.dataset.state).join()===preset.verdicts.map(v=>v.light).join(),
+      'Python Demo mismatch at '+official.id);
+    assert(el('judge-demo').querySelector('strong').textContent==='SIMULATED RESULT','Demo label missing');
+    confirm.click();
+  }
+  assert(demoCalls===0 && w.localStorage.getItem('unscripted.history.v1')===rawHistory &&
+    w.localStorage.getItem('unscripted.progress.v1')===rawProgress,'Python Demo altered stored records');
+
+  select('judge-mode','live');
+  for (const [index,official] of python.layers.entries()) {
+    layer(index);
+    input('answer',enDraft);
+    el('answer-form').requestSubmit();
+    let request;
+    w.fetch = async (_url,opts) => {
+      request = JSON.parse(opts.body).messages;
+      const verdicts = official.rubric.map(({rubricId},i)=>({
+        pointId:rubricId,light:i?'green':'red',reason:'Fixture result',quote:enDraft,
+      }));
+      return new w.Response(JSON.stringify({choices:[{finish_reason:'stop',message:{
+        content:JSON.stringify({verdicts,followUp:null}),
+      }}]}));
+    };
+    await el('ai-run').onclick();
+    const prompt = request[0].content;
+    const context = JSON.parse(prompt.slice(prompt.lastIndexOf('{"packId"')));
+    assert(context.packId===intro.packId && context.packVersion===intro.packVersion &&
+      context.questionId===python.id && context.layer===official.id &&
+      JSON.stringify(context.criteria.map(row=>row.pointId))===JSON.stringify(official.rubric.map(row=>row.rubricId)) &&
+      !prompt.includes('juc-volatile') && !prompt.includes('redis-expiration') && !prompt.includes('mysql-consistent') &&
+      JSON.parse(request[1].content).answer===enDraft,'Python Live AI sent incorrect context');
+    assert([...el('rubric').children].map(row=>row.dataset.state).join() === 'red,green,green',
+      'Mock Python verdict failed to reach the UI');
+  }
+
+  el('confirm-rating').click();
+  const updatedHistory = JSON.parse(w.localStorage.getItem('unscripted.history.v1'));
+  assert(JSON.stringify(updatedHistory.entries.slice(0,2))===JSON.stringify(v1.entries),'Core v1 history was altered');
+  const currentPython = updatedHistory.entries.at(-1);
+  assert(currentPython.questionId===python.id && currentPython.rubricSnapshot.packId===intro.packId &&
+    currentPython.rubricSnapshot.packVersion===intro.packVersion && currentPython.layer==='L3',
+    'Python history was not versioned');
+  const progressAfter = JSON.parse(w.localStorage.getItem('unscripted.progress.v1'));
+  assert(JSON.stringify(progressAfter.items[oldJava.questionId+'::L1']) ===
+    JSON.stringify(coreProgress.items[oldJava.questionId+'::L1']) &&
+    progressAfter.items[python.id+'::L3'].status==='review','v1 progress compatibility failed');
+  assert(el('timeline').children.length===1 && el('timeline').textContent.includes(intro.packId+'@1.0.0'),
+    'Python history did not render on its own');
+
+  let exported;
+  const createUrl = w.URL.createObjectURL;
+  const clickLink = w.HTMLAnchorElement.prototype.click;
+  try {
+    w.URL.createObjectURL = blob => {exported=blob; return 'blob:mock-crash-sheet';};
+    w.HTMLAnchorElement.prototype.click = () => {};
+    el('export-review').click();
+  } finally {
+    w.URL.createObjectURL = createUrl;
+    w.HTMLAnchorElement.prototype.click = clickLink;
+  }
+  const sheet = await exported.text();
+  assert(sheet.includes(intro.packId+'@1.0.0') && sheet.includes('rounding') &&
+    !sheet.includes(core.packId),'Python Crash Sheet contains incorrect criteria');
+  select('question-pack',core.packId);
+  assert(el('question').options.length===3 && el('answer').value==='My Core draft' &&
+    el('timeline').children.length===3 && !el('timeline').textContent.includes(intro.packId),
+    'Switch back to Core lost drafts or changed Core history');
+
 }
 try { await run(); result.textContent='AI2_BROWSER_PASS'; }
 catch(error) { result.textContent='FAIL: '+error.message; }

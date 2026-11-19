@@ -1,19 +1,29 @@
-export function buildEvaluationContext({pack, question, layer, language}) {
+export function buildPackEvaluationContext(pack, questionId, layerId, language) {
   const locale = language === 'en' ? 'en' : 'zh-CN';
-  const suffix = locale === 'en' ? '_en' : '';
-  const topic = pack.questions.find(item => item.id === question.id);
-  const official = topic?.layers.find(item => item.id === layer.id);
-  if (pack.packId !== 'unscripted-core' || !official)
-    throw Error('RUBRIC_MISMATCH');
-  const criteria = official.rubric.map(row => ({pointId: row.rubricId, criterion: row.criterion[locale]}));
-  const displayed = layer['rubric' + suffix];
-  if (topic.title[locale] !== question['title' + suffix] || official.label !== layer.label ||
-      official.prompt[locale] !== layer['prompt' + suffix] || criteria.length !== displayed.length ||
-      criteria.some((row, index) => row.criterion !== displayed[index])) throw Error('RUBRIC_MISMATCH');
+  const topic = pack.questions.find(item => item.id === questionId);
+  const official = topic?.layers.find(item => item.id === layerId);
+  if (!official) throw Error('RUBRIC_MISMATCH');
   return {packId: pack.packId, packVersion: pack.packVersion, questionId: topic.id,
     title: topic.title[locale], description: topic.description?.[locale] ?? official.prompt[locale],
     layer: official.id, label: official.label, prompt: official.prompt[locale],
-    language: locale, reviewStatus: topic.review.status, criteria};
+    language: locale, reviewStatus: topic.review.status,
+    criteria: official.rubric.map(row => ({pointId:row.rubricId, criterion:row.criterion[locale]}))};
+}
+
+export function buildEvaluationContext({pack, question, layer, language}) {
+  const context = buildPackEvaluationContext(pack, question.id, layer.id, language);
+  const suffix = language === 'en' ? '_en' : '';
+  const displayed = layer['rubric' + suffix];
+  const ids = layer.rubricIds;
+  if (ids !== undefined && (!Array.isArray(ids) || ids.length !== context.criteria.length))
+    throw Error('RUBRIC_MISMATCH');
+  if ((question.packId !== undefined && (question.packId !== context.packId || question.packVersion !== context.packVersion)) ||
+      context.title !== question['title' + suffix] || context.label !== layer.label ||
+      context.prompt !== layer['prompt' + suffix] || !Array.isArray(displayed) ||
+      context.criteria.length !== displayed.length ||
+      context.criteria.some((row, index) => row.criterion !== displayed[index] ||
+        (ids && row.pointId !== ids[index]))) throw Error('RUBRIC_MISMATCH');
+  return context;
 }
 
 export function redisContext(pack, question, layer, lang) {

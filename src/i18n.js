@@ -1,4 +1,10 @@
 export const messages = {
+  "题库": {"zh": "题库", "en": "Question Pack"},
+  "软件工程核心题库": {"zh": "软件工程核心题库", "en": "Core Software Engineering"},
+  "Python 入门题库": {"zh": "Python 入门题库", "en": "Python Starter Pack"},
+  "已加载 {pack} · v{version} · {count} 道题": {"zh": "已加载 {pack} · v{version} · {count} 道题", "en": "{pack} · v{version} · {count} loaded"},
+  "先写解释，再看参考要点 · 自己点灯判定": {"zh": "先写解释，再看参考要点 · 自己点灯判定", "en": "Explain first, then check the rubric and rate your answer"},
+
   "清空本页练习记录？": { "zh": "清空本页练习记录？", "en": "Clear practice records from this page?" },
   "本页练习记录已清空。": { "zh": "本页练习记录已清空。", "en": "Practice records from this page were cleared." },
   "已关闭：本页练习记录中的回答原文已删除。": { "zh": "已关闭：本页练习记录中的回答原文已删除。", "en": "Answer saving is off. Answers saved by this page were deleted." },
