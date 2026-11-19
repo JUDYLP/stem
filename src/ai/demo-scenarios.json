@@ -1,35 +1,29 @@
 [
   {
     "packId": "unscripted-core",
-    "packVersion": "1.0.0",
+    "packVersion": "1.0.1",
     "questionId": "juc-volatile-atomicity-v2",
     "layerId": "L1",
-    "answer": "A volatile write happens-before a subsequent read of the same field. Reading i is atomic. So two threads take turns incrementing it.",
+    "answer": "A volatile write happens-before a subsequent read of the same field. Reading i is atomic, but i++ still consists of a read, calculation, and write. Two threads can interleave those steps.",
     "verdicts": [
       {
         "pointId": "juc-volatile-atomicity-v2-l1-c01",
         "light": "green",
-        "reason": "Connects visibility to the ordering guarantee.",
+        "reason": "Connects volatile visibility to the happens-before guarantee.",
         "quote": "A volatile write happens-before a subsequent read of the same field."
       },
       {
         "pointId": "juc-volatile-atomicity-v2-l1-c02",
-        "light": "amber",
-        "reason": "Covers the read but leaves out the full read-modify-write sequence.",
-        "quote": "Reading i is atomic."
-      },
-      {
-        "pointId": "juc-volatile-atomicity-v2-l1-c03",
-        "light": "red",
-        "reason": "Visibility does not serialize increments.",
-        "quote": "So two threads take turns incrementing it."
+        "light": "green",
+        "reason": "Explains the compound read-modify-write sequence and why its steps can interleave.",
+        "quote": "i++ still consists of a read, calculation, and write. Two threads can interleave those steps."
       }
     ],
-    "followUp": "Where can a second thread intervene in i++?"
+    "followUp": "How could two threads interleave the read and write steps?"
   },
   {
     "packId": "unscripted-core",
-    "packVersion": "1.0.0",
+    "packVersion": "1.0.1",
     "questionId": "juc-volatile-atomicity-v2",
     "layerId": "L2",
     "answer": "Both read 5, both compute 6, both write 6. Seven happens if they take turns. Joining the threads prevents the race.",
@@ -57,7 +51,7 @@
   },
   {
     "packId": "unscripted-core",
-    "packVersion": "1.0.0",
+    "packVersion": "1.0.1",
     "questionId": "juc-volatile-atomicity-v2",
     "layerId": "L3",
     "answer": "Both see 1, then decrement to 0 and -1 and both ship. Each decrement is atomic. I would decrement first and ship if the result is nonnegative.",
@@ -91,10 +85,10 @@
   },
   {
     "packId": "unscripted-core",
-    "packVersion": "1.0.0",
+    "packVersion": "1.0.1",
     "questionId": "redis-expiration-v2",
     "layerId": "L1",
-    "answer": "EXPIRE sets the lifetime to 60 seconds. Some keys stay forever. Expiration will run my job exactly on time.",
+    "answer": "EXPIRE sets the lifetime to 60 seconds. Some keys stay forever. Redis does not guarantee that the key's memory is reclaimed at the exact expiration millisecond.",
     "verdicts": [
       {
         "pointId": "redis-expiration-v2-l1-c01",
@@ -110,16 +104,16 @@
       },
       {
         "pointId": "redis-expiration-v2-l1-c03",
-        "light": "red",
-        "reason": "Expiration provides no exact scheduling guarantee.",
-        "quote": "Expiration will run my job exactly on time."
+        "light": "green",
+        "reason": "Distinguishes logical expiration from exact physical memory reclamation.",
+        "quote": "Redis does not guarantee that the key's memory is reclaimed at the exact expiration millisecond."
       }
     ],
     "followUp": "What happens to a key created with plain SET?"
   },
   {
     "packId": "unscripted-core",
-    "packVersion": "1.0.0",
+    "packVersion": "1.0.1",
     "questionId": "redis-expiration-v2",
     "layerId": "L2",
     "answer": "Unread expired keys could keep occupying memory. Redis also checks keys periodically. That gives an exact callback deadline.",
@@ -147,41 +141,47 @@
   },
   {
     "packId": "unscripted-core",
-    "packVersion": "1.0.0",
+    "packVersion": "1.0.1",
     "questionId": "redis-expiration-v2",
     "layerId": "L3",
-    "answer": "SET stores 1 without a TTL; EXPIRE leaves 1 and sets 60 seconds. INCR changes it to 2. SET hits 9 keeps the previous deadline.",
+    "answer": "SET stores 1 without a TTL; EXPIRE leaves 1 and sets 60 seconds. INCR changes it to 2. Plain SET hits 9 clears the old TTL; use SET hits 9 KEEPTTL to retain the original deadline.",
     "verdicts": [
       {
         "pointId": "redis-expiration-v2-l3-c01",
         "light": "green",
-        "reason": "Correctly traces the first two operations.",
+        "reason": "Correctly traces the initial value and TTL setup.",
         "quote": "SET stores 1 without a TTL; EXPIRE leaves 1 and sets 60 seconds."
       },
       {
         "pointId": "redis-expiration-v2-l3-c02",
-        "light": "amber",
-        "reason": "Gives the new value without tracking the TTL.",
+        "light": "green",
+        "reason": "Correctly identifies the value after INCR.",
         "quote": "INCR changes it to 2."
       },
       {
         "pointId": "redis-expiration-v2-l3-c03",
-        "light": "red",
-        "reason": "Ordinary SET clears the previous TTL.",
-        "quote": "SET hits 9 keeps the previous deadline."
+        "light": "green",
+        "reason": "Correctly identifies that ordinary SET clears the old TTL.",
+        "quote": "Plain SET hits 9 clears the old TTL;"
       },
       {
         "pointId": "redis-expiration-v2-l3-c04",
-        "light": "red",
-        "reason": "No replacement command that preserves the TTL is supplied.",
-        "quote": "SET hits 9 keeps the previous deadline."
+        "light": "green",
+        "reason": "Provides KEEPTTL to preserve the original deadline.",
+        "quote": "use SET hits 9 KEEPTTL to retain the original deadline."
+      },
+      {
+        "pointId": "redis-expiration-v2-l3-c05",
+        "light": "amber",
+        "reason": "The answer gives the INCR value but does not state what happens to the existing TTL.",
+        "quote": "INCR changes it to 2."
       }
     ],
-    "followUp": "How would you preserve the original deadline?"
+    "followUp": "What does KEEPTTL preserve, and how is that different from setting a new EXPIRE 60?"
   },
   {
     "packId": "unscripted-core",
-    "packVersion": "1.0.0",
+    "packVersion": "1.0.1",
     "questionId": "mysql-consistent-read-v2",
     "layerId": "L1",
     "answer": "A plain consistent SELECT uses MVCC to read a point-in-time snapshot. Later commits are invisible. My own earlier writes are invisible too.",
@@ -209,7 +209,7 @@
   },
   {
     "packId": "unscripted-core",
-    "packVersion": "1.0.0",
+    "packVersion": "1.0.1",
     "questionId": "mysql-consistent-read-v2",
     "layerId": "L2",
     "answer": "RR reads 100 from the first consistent read’s snapshot. RC reads 80. BEGIN already took the snapshot in both modes.",
@@ -237,7 +237,7 @@
   },
   {
     "packId": "unscripted-core",
-    "packVersion": "1.0.0",
+    "packVersion": "1.0.1",
     "questionId": "mysql-consistent-read-v2",
     "layerId": "L3",
     "answer": "UPDATE uses the current 80 and subtracts 10, yielding 70. Writes behave differently. My SELECT sees 70 because every row got a fresh snapshot.",
@@ -262,5 +262,89 @@
       }
     ],
     "followUp": "Would an untouched row also show another transaction’s newer commit?"
+  },
+  {
+    "packId": "unscripted-intro",
+    "packVersion": "1.0.0",
+    "questionId": "float-equality-v1",
+    "layerId": "L1",
+    "answer": "Computers store numbers in binary, so 0.1 can't be stored exactly. Python is just bad at math; other languages like JavaScript get 0.3.",
+    "verdicts": [
+      {
+        "pointId": "float-equality-v1-l1-c01",
+        "light": "amber",
+        "reason": "Mentions binary storage but not the typical binary64 representation.",
+        "quote": "Computers store numbers in binary"
+      },
+      {
+        "pointId": "float-equality-v1-l1-c02",
+        "light": "green",
+        "reason": "Correctly says 0.1 has no exact finite binary representation.",
+        "quote": "0.1 can't be stored exactly"
+      },
+      {
+        "pointId": "float-equality-v1-l1-c03",
+        "light": "red",
+        "reason": "Incorrectly claims this is Python-specific and that JavaScript produces exact 0.3.",
+        "quote": "Python is just bad at math; other languages like JavaScript get 0.3."
+      }
+    ],
+    "followUp": "What does JavaScript produce for 0.1 + 0.2?"
+  },
+  {
+    "packId": "unscripted-intro",
+    "packVersion": "1.0.0",
+    "questionId": "float-equality-v1",
+    "layerId": "L2",
+    "answer": "Each addition rounds, so total ends up slightly below 1.0 and == fails. Fix it with round(total) == 1.",
+    "verdicts": [
+      {
+        "pointId": "float-equality-v1-l2-c01",
+        "light": "green",
+        "reason": "Explains the repeated rounding in this loop and the failed equality check.",
+        "quote": "Each addition rounds, so total ends up slightly below 1.0 and == fails."
+      },
+      {
+        "pointId": "float-equality-v1-l2-c02",
+        "light": "amber",
+        "reason": "round(total) == 1 is too coarse for a tolerance comparison.",
+        "quote": "Fix it with round(total) == 1."
+      },
+      {
+        "pointId": "float-equality-v1-l2-c03",
+        "light": "amber",
+        "reason": "Does not propose an exact representation such as integer units, Decimal from a string, or Fraction.",
+        "quote": ""
+      }
+    ],
+    "followUp": "Would round(total) == 1 also accept values such as 0.6?"
+  },
+  {
+    "packId": "unscripted-intro",
+    "packVersion": "1.0.0",
+    "questionId": "float-equality-v1",
+    "layerId": "L3",
+    "answer": "The f-string shows $0.30, so the customer sees the right price. For money I'd use Decimal(0.1) to be safe.",
+    "verdicts": [
+      {
+        "pointId": "float-equality-v1-l3-c01",
+        "light": "amber",
+        "reason": "The answer focuses on the formatted display but does not explain that the stored float remains approximate.",
+        "quote": "The f-string shows $0.30, so the customer sees the right price."
+      },
+      {
+        "pointId": "float-equality-v1-l3-c02",
+        "light": "amber",
+        "reason": "Decimal is a suitable direction, but the answer does not use a string constructor or an integer-minor-unit representation.",
+        "quote": "For money I'd use Decimal(0.1)"
+      },
+      {
+        "pointId": "float-equality-v1-l3-c03",
+        "light": "red",
+        "reason": "Explicitly constructs Decimal from a float, preserving the float's binary approximation.",
+        "quote": "Decimal(0.1)"
+      }
+    ],
+    "followUp": "Why does Decimal('0.10') differ from Decimal(0.1)?"
   }
 ]
