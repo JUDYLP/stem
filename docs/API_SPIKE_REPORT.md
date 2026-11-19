@@ -97,3 +97,27 @@ T06当前BLOCKED，T07依赖T06也未满足。后续若允许T06，应固定已�
 唯一当前关键外部阻塞：有效Key/额度与一次受控计费请求的明确确认。用户已说明稍后配置，本轮就此停止，不执行T06/T07。
 
 自测：为什么401能读到反而说明这条响应的CORS通过？为什么json_object可解析不等于符合业务schema？为什么浏览器超时不保证服务商停止计费？
+
+## 2026-11-19｜DeepSeek 比赛判题 Spike
+
+**LIVE_API_NOT_TESTED**。基线 2a615f1，分支 competition-ai-judging。当前进程没有注入 DEEPSEEK_API_KEY。以下是官方服务的真实网络与鉴权错误路径测试；未取得模型生成结果。
+
+接口为 POST https://api.deepseek.com/chat/completions 。官方列出模型 deepseek-flash 及 JSON 输出能力。[模型表](https://api-docs.deepseek.com/quick_start/pricing/) · [JSON Output](https://api-docs.deepseek.com/guides/json_mode/)
+
+探测使用合成消息 “Return JSON.”、response_format.type=json_object、stream=false、max_tokens=256、20 秒超时和无效 Bearer 占位值。Chrome 使用 credentials:omit。临时空白探测页来自 http://localhost:62268；没有打开训练页、读取学习记录或发送学生答案。
+
+| 项目 | 实测 |
+|---|---|
+| curl OPTIONS | 200，允许当前 localhost Origin、POST 和 authorization,content-type |
+| curl POST | HTTP 401，error.type=authentication_error，error.code=invalid_request_error |
+| Chrome 自动 OPTIONS | DevTools 请求 4，HTTP 200。Access-Control-Allow-Origin 为 http://localhost:62268，Allow-Headers 为 authorization,content-type，Allow-Methods 为 POST |
+| Chrome 实际 POST | DevTools 请求 3，HTTP 401。页面 fetch 取得 type=cors 的 Response，能读取 JSON authentication_error。此错误路径通过了浏览器跨域检查 |
+| 有效 Key、HTTP 200、choices[0].message.content、JSON 解析、finish_reason=stop | BLOCKED，缺有效凭证。鉴权失败发生在成功生成之前 |
+| 真实空 content、截断、429、超时 | NOT RUN。设置超时时限不等于观察到超时 |
+| Redis L1 逐点判题、两种灯色、原文证据、确认后热力图、线上来源 CORS | NOT RUN。无真实判定样例、截图或录像 |
+
+下一次实测先在本地安全注入有效 Key 并确认允许一次付费测试，禁止将其粘贴至聊天或命令文本。先以 curl 核对成功响应结构，再从 localhost 用同一合成 Redis L1 答案核验认证成功路径。保留脱敏 verdicts、finish_reason 和模型名；真实训练页面的成功演示需另行截图。localhost 鉴权错误路径不足以证明 Pages 来源或成功响应可直接访问。
+
+此阶段保留现有离线自评。若成功响应或生产来源实际被 CORS 拦截，可另行审查受保护的同源 Worker，仅转发固定上游并限制来源、认证、请求大小、时限、速率和预算，凭证与答案不写日志。本次没有部署代理。
+
+本地回归：npm ci 成功；npm test 为 151 通过、0 失败、0 跳过；npm run check:syntax 为 32 个文件通过；python tools/package_site.py work/deepseek-spike-package 在新目录打包 13 个静态资源成功。临时探测服务器已停止。提交范围仅 docs/API_SPIKE_REPORT.md，历史 Ant-Ling 实验保留。
