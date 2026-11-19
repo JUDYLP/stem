@@ -107,3 +107,5 @@ Stage 2B准备条件：人工审查本轮差异；确认组合内置Pack与受�
 本轮基线123项（原121项保留），新增tests/pack-browser.test.mjs的15项，最终138/138通过；25文件语法通过。实际执行npm ci、npm test、npm run check:syntax、npm run build:pack-validator、指定Python打包。构建metafile无外部import/无Ajv编译器；Schema SHA256与仓库一致；共享语义模块直接进入产物。Node禁止动态代码生成测试通过，真实Chrome157在不含unsafe-eval的CSP下8项冒烟通过，控制台无消息。远端CI/部署仍NOT RUN；2B未实现。更多构建证据见STAGE_2A_REPORT.md。
 
 Stage 2B 实测 151/151、32 文件语法通过，Chrome 与 Node 摘要一致。并发、失败原子性、存储隔离及 RFC 向量证据见 STAGE_2B_REPORT.md。远端 CI 为 NOT RUN。
+
+Stage 2C 的18项合成存储验收、读回与崩溃故障注入见 tests/storage-v2.test.mjs。正式页面接线与真实用户迁移未执行。
