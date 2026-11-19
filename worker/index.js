@@ -1,6 +1,6 @@
 const DEFAULT_MODEL = '@cf/qwen/qwen3.8-27b';
 const MAX_BODY_BYTES = 32 * 1024;
-const MAX_TOKENS = 1600;
+const MAX_COMPLETION_TOKENS = 700;
 const RATE_LIMIT = 6;
 const MEMORY_KEY_LIMIT = 2048;
 const memoryCounts = new Map();
@@ -37,12 +37,15 @@ async function readPayload(request) {
     reader.releaseLock();
   }
   const payload = JSON.parse(new TextDecoder('utf-8', {fatal:true}).decode(bytes.subarray(0,size)));
-  const {messages, max_tokens = MAX_TOKENS} = payload ?? {};
+  const {messages, max_tokens = MAX_COMPLETION_TOKENS, max_completion_tokens = max_tokens} = payload ?? {};
   if (!Array.isArray(messages) || messages.length < 1 || messages.length > 8 ||
       !messages.every(message => (message?.role === 'system' || message?.role === 'user') &&
         typeof message.content === 'string') || !messages.some(message => message.role === 'user') ||
-      !Number.isInteger(max_tokens) || max_tokens < 1) throw Error('BAD_REQUEST');
-  return {messages:messages.map(({role,content}) => ({role,content})), max_tokens:Math.min(max_tokens,MAX_TOKENS)};
+      !Number.isInteger(max_completion_tokens) || max_completion_tokens < 1) throw Error('BAD_REQUEST');
+  return {
+    messages:messages.map(({role,content}) => ({role,content})),
+    max_completion_tokens:Math.min(max_completion_tokens,MAX_COMPLETION_TOKENS),
+  };
 }
 
 async function withinLimit(env, ip) {
@@ -83,11 +86,64 @@ function isQuotaError(error) {
       .test(String(error?.message ?? error));
 }
 
+function extractJsonObject(text) {
+  let start = -1;
+  let depth = 0;
+  let quoted = false;
+  let escaped = false;
+  const objectStart = /\{\s*(?=["}])/y;
+  const openThought = /<think\b[^>]*>/iy;
+  const closeThought = /<\/think\s*>/ig;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (start === -1) {
+      if (char === '<') {
+        openThought.lastIndex = i;
+        if (openThought.test(text)) {
+          closeThought.lastIndex = openThought.lastIndex;
+          if (!closeThought.test(text)) break;
+          i = closeThought.lastIndex - 1;
+          continue;
+        }
+      }
+      if (char === '{') {
+        objectStart.lastIndex = i;
+        if (!objectStart.test(text)) continue;
+        start = i;
+        depth = 1;
+      }
+    } else if (quoted) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === '"') quoted = false;
+    } else if (char === '"') {
+      quoted = true;
+    } else if (char === '{') {
+      depth++;
+    } else if (char === '}') {
+      depth--;
+      if (depth !== 0) continue;
+      try {
+        return JSON.parse(text.slice(start,i + 1));
+      } catch {
+        start = -1;
+      }
+    }
+  }
+  throw Error('INVALID_UPSTREAM_JSON');
+}
+
 function jsonContent(result) {
-  const content = result?.choices?.[0]?.message?.content ?? result?.response;
-  const value = typeof content === 'string'
-    ? JSON.parse(content.replace(/<think\b[^>]*>[\s\S]*?<\/think\s*>/gi, '').trim())
-    : content;
+  const content = Array.isArray(result?.choices) ? result.choices[0]?.message?.content : result?.response;
+  let value = content;
+  if (typeof content === 'string') {
+    try {
+      value = JSON.parse(content);
+    } catch {
+      value = extractJsonObject(content);
+    }
+  }
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error('INVALID_UPSTREAM_JSON');
   return JSON.stringify(value);
 }
@@ -115,6 +171,7 @@ async function handle(request, env, origin) {
   }
   const inference = {...input, response_format:{type:'json_object'}};
   if (model === '@cf/qwen/qwen3.8-27b') inference.reasoning_effort = 'low';
+  if (model === '@cf/google/gemma-4-26b-a4b-it') inference.chat_template_kwargs = {enable_thinking:false};
   let result;
   try {
     result = await runWithDeadline(env, model, inference);

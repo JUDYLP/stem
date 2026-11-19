@@ -68,7 +68,7 @@ export async function runHostedRegression(url, {request=fetch, pause=delay}={}) 
         method:'POST',redirect:'error',signal:AbortSignal.timeout(HOSTED_TIMEOUT_MS),
         headers:{'Origin':'http://localhost:5174','Content-Type':'application/json'},
         body:JSON.stringify({messages:buildMessages(context,answer),
-          response_format:{type:'json_object'},stream:false,max_tokens:1600}),
+          response_format:{type:'json_object'},stream:false,max_completion_tokens:700}),
       });
       status = 'HTTP '+res.status;
       if (!res.ok) {

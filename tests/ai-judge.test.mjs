@@ -15,6 +15,11 @@ test('Redis adapter rejects drift between official rubric and training copy',()=
   assert.throws(()=>redisContext(pack,question,{...question.layers[0],rubric_en:[]},'en'),/MISMATCH/);
   assert.equal(buildMessages(context,answer)[1].role,'user');
 });
+test('model prompt sets reason length and requires a standalone JSON object',()=>{
+  const [system] = buildMessages(context,answer);
+  assert.match(system.content,/30 English words or 60 Chinese characters/);
+  assert.match(system.content,/JSON object only, without Markdown or surrounding text/);
+});
 test('verdicts join by stable ID, missing points amber, false evidence downgraded',()=>{
   const result=check([row]);assert.equal(result.verdicts[0].light,'green');assert.equal(result.verdicts[1].light,'amber');
   assert.equal(check([{...row,quote:'invented'}]).verdicts[0].light,'amber');
