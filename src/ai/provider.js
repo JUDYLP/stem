@@ -1,11 +1,11 @@
-export function createAIProvider({baseURL='https://api.deepseek.com',model='deepseek-flash',apiKey='',proxyURL='',offline=false,onModel}={}) {
+export function createAIProvider({baseURL='https://api.deepseek.com',model='deepseek-flash',apiKey='',proxyURL='',offline=false,timeoutMs=20000,onModel}={}) {
   return async function complete(messages, signal) {
     if (offline || (!proxyURL && !apiKey.trim())) throw Error('NO_KEY');
     const url = new URL(proxyURL || baseURL);
     if (url.username || url.password || url.search || url.hash ||
         (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost','127.0.0.1'].includes(url.hostname)))) throw Error('ENDPOINT');
     if (!proxyURL) url.pathname = url.pathname.replace(/\/$/,'') + '/chat/completions';
-    const timeout = AbortSignal.timeout(20000);
+    const timeout = AbortSignal.timeout(timeoutMs);
     try {
       const response = await fetch(url, {
         method:'POST', redirect:'error', credentials:'omit', referrerPolicy:'no-referrer',

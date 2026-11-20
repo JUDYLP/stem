@@ -94,6 +94,7 @@ test('rejects malformed JSON, non-JSON, illegal roles, messages and token bounds
     req({data:{messages:Array(9).fill(payload.messages[1])}}),
     req({data:{messages:[payload.messages[0]]}}),
     req({data:{...payload,max_tokens:0}}),
+    req({data:{...payload,max_completion_tokens:0}}),
   ];
   for (const request of requests) assert.equal((await worker.fetch(request,env)).status,400);
   assert.deepEqual(calls,[]);
@@ -108,7 +109,7 @@ test('uses server model and JSON mode, caps tokens and appends /no_think to last
   assert.equal(res.status,200);
   assertCors(res,site);
   assert.deepEqual(calls,[[model,{
-    max_tokens:1600,response_format:{type:'json_object'},reasoning_effort:'low',
+    max_completion_tokens:700,response_format:{type:'json_object'},reasoning_effort:'low',
     messages:[payload.messages[0],{role:'user',content:'Answer.\n/no_think'},{role:'system',content:'Other.'}],
   }]]);
   assert.deepEqual(keys,[ip]);
@@ -117,17 +118,56 @@ test('uses server model and JSON mode, caps tokens and appends /no_think to last
   env.MODEL = '@cf/qwen/other-model';
   await worker.fetch(req({data:{...payload,max_tokens:123}}),env);
   assert.equal(calls[1][0],env.MODEL);
-  assert.equal(calls[1][1].max_tokens,123);
+  assert.equal(calls[1][1].max_completion_tokens,123);
   assert.equal(calls[1][1].reasoning_effort,undefined);
 });
 
-test('Gemma receives unchanged messages with no Qwen-only options', async () => {
+test('Gemma disables thinking and honors the new token field over the legacy alias', async () => {
   const model = '@cf/google/gemma-4-26b-a4b-it';
   const {env,calls} = fixture({MODEL:model});
-  const res = await worker.fetch(req(),env);
+  const res = await worker.fetch(req({data:{...payload,max_tokens:900,max_completion_tokens:200}}),env);
   assert.equal(res.status,200);
-  assert.deepEqual(calls,[[model,{messages:payload.messages,max_tokens:1600,response_format:{type:'json_object'}}]]);
-  assert.equal((await res.json()).model,model);
+  assert.deepEqual(calls,[[model,{messages:payload.messages,max_completion_tokens:200,
+    response_format:{type:'json_object'},chat_template_kwargs:{enable_thinking:false}}]]);
+  const completion = await res.json();
+  assert.equal(completion.model,model);
+  assert.equal(completion.choices[0].message.content,'{"verdicts":[],"followUp":null}',
+    'Gemma JSON without think tags should pass through');
+});
+
+test('GPT-OSS uses low-effort messages input and returns only the final Chat Completions content', async () => {
+  const model = '@cf/openai/gpt-oss-120b';
+  const usage = {prompt_tokens:30,completion_tokens:60};
+  const json = {verdicts:[{pointId:'c02',light:'amber',reason:'Partial answer.',quote:'Answer.'}],followUp:null};
+  const {env,calls} = fixture({MODEL:model});
+  env.AI.run = async (...args) => {
+    calls.push(args);
+    return {usage,choices:[{finish_reason:'stop',message:{role:'assistant',
+      content:JSON.stringify(json),reasoning_content:'{"private":true}'}}]};
+  };
+  const res = await worker.fetch(req({data:{...payload,max_completion_tokens:9900}}),env);
+  assert.equal(res.status,200);
+  assert.deepEqual(calls,[[model,{messages:payload.messages,max_tokens:1200,
+    response_format:{type:'json_object'},reasoning_effort:'low'}]]);
+  assert.deepEqual(await res.json(),{model,usage,choices:[{
+    message:{role:'assistant',content:JSON.stringify(json)},finish_reason:'stop',
+  }]});
+});
+
+test('GPT-OSS uses the full budget even when legacy max_tokens is lower', async () => {
+  const {env,calls} = fixture({MODEL:'@cf/openai/gpt-oss-120b'});
+  const res = await worker.fetch(req({data:{...payload,max_tokens:128}}),env);
+  assert.equal(res.status,200);
+  assert.equal(calls[0][1].max_tokens,1200);
+});
+
+test('GPT-OSS reasoning without final content returns 502', async () => {
+  const {env} = fixture({MODEL:'@cf/openai/gpt-oss-120b',AI:{run:async()=>({
+    choices:[{message:{content:null,reasoning:'{"draft":true}',reasoning_content:'{"ignored":true}'}}],
+  })}});
+  const res = await worker.fetch(req(),env);
+  assert.equal(res.status,502);
+  assert.deepEqual(await res.json(),{error:'INVALID_UPSTREAM_JSON'});
 });
 
 test('preserves upstream token usage in successful responses', async () => {
@@ -158,6 +198,32 @@ for (const [name,result] of [
     }]});
   });
 }
+
+test('extracts the first fenced JSON object in final content without changing quoted evidence', async() => {
+  const json = {verdicts:[{quote:'A literal } then "quotes", \\ and <think>markup</think>'}],followUp:null};
+  const content = '<think>{"ignored":true}</think> Intro { aside: \n'
+    + '```json\n' + JSON.stringify(json) + '\n``` Trailing text. {"second":true}';
+  const {env} = fixture({AI:{run:async()=>({choices:[{message:{
+    content, reasoning_content:'{"internal":true}',
+  }}]})}});
+  const res = await worker.fetch(req(),env);
+  assert.equal(res.status,200);
+  const msg = (await res.json()).choices[0].message;
+  assert.deepEqual(msg,{role:'assistant',content:JSON.stringify(json)});
+});
+
+test('a truncated outer object or reasoning-only response stays 502', async() => {
+  for (const result of [
+    {response:'```json\n{"verdicts":[{"pointId":"c1"}'},
+    {response:'<think>{"private":true}'},
+    {choices:[{message:{content:null,reasoning_content:'{"ok":true}'}}],response:'{"ok":true}'},
+  ]) {
+    const {env} = fixture({AI:{run:async()=>result}});
+    const res = await worker.fetch(req(),env);
+    assert.equal(res.status,502);
+    assert.deepEqual(await res.json(),{error:'INVALID_UPSTREAM_JSON'});
+  }
+});
 
 test('non-JSON upstream output returns bare 502 code', async() => {
   const {env} = fixture({AI:{run:async()=>({response:'<think>secret</think>not json'})}});
@@ -207,16 +273,20 @@ test('opt-in isolate memory rate limit allows six posts per IP then rejects', as
   assert.equal(calls.length,7);
 });
 
-test('slow inference gets a 503 after the 18-second deadline', async t => {
-  t.mock.timers.enable({apis:['setTimeout']});
-  let started;
-  const began = new Promise(resolve => {started = resolve;});
-  const {env} = fixture({AI:{run:()=>{started();return new Promise(()=>{});}}});
-  const pending = worker.fetch(req(),env);
-  await began;
-  t.mock.timers.tick(18000);
-  const res = await pending;
-  assert.equal(res.status,503);
-  assertCors(res,site);
-  assert.deepEqual(await res.json(),{error:'UPSTREAM_TIMEOUT'});
-});
+for (const [setting,ms] of [[undefined,40000],['4500',4500],['invalid',40000]]) {
+  test('slow inference gets a 503 at the deadline for DEADLINE_MS='+setting, async t => {
+    t.mock.timers.enable({apis:['setTimeout']});
+    const timeout = t.mock.method(globalThis,'setTimeout',globalThis.setTimeout);
+    let started;
+    const began = new Promise(resolve => {started = resolve;});
+    const {env} = fixture({DEADLINE_MS:setting,AI:{run:()=>{started();return new Promise(()=>{});}}});
+    const pending = worker.fetch(req(),env);
+    await began;
+    assert.equal(timeout.mock.calls[0].arguments[1],ms);
+    t.mock.timers.tick(ms);
+    const res = await pending;
+    assert.equal(res.status,503);
+    assertCors(res,site);
+    assert.deepEqual(await res.json(),{error:'UPSTREAM_TIMEOUT'});
+  });
+}

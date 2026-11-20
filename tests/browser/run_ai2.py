@@ -1,6 +1,7 @@
 """Run the integration fixture against an isolated copy of a packaged site."""
 import functools
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -16,9 +17,10 @@ with tempfile.TemporaryDirectory() as temporary:
     site = root / 'site'
     shutil.copytree(sys.argv[1], site)
     if '--hosted' in sys.argv[2:]:
-        (site / 'src/ai/hosted.js').write_text(
-            "export const HOSTED_PROXY_URL = 'https://hosted-demo.invalid/';\n"
-            "export const HOSTED_MODEL_LABEL = 'Cloudflare test model';\n", encoding='utf-8')
+        config = site / 'src/ai/hosted.js'
+        source = re.sub(r"HOSTED_PROXY_URL = '[^']*'", "HOSTED_PROXY_URL = 'https://hosted-demo.invalid/'",
+                        config.read_text(encoding='utf-8'))
+        config.write_text(source, encoding='utf-8')
     shutil.copyfile(Path(__file__).with_name('ai2.html'), site / 'ai2.html')
     handler = functools.partial(SimpleHTTPRequestHandler, directory=site)
     with ThreadingHTTPServer(('127.0.0.1', 0), handler) as server:
@@ -31,7 +33,6 @@ with tempfile.TemporaryDirectory() as temporary:
         finally:
             server.shutdown()
             thread.join()
-    import re
     status = re.search(rb'<pre id="result">([^<]*)</pre>', result.stdout)
     if result.returncode or not status or status[1] != b'AI2_BROWSER_PASS':
         sys.exit(status[1].decode() if status else 'Chrome did not return a result')

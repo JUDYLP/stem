@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {HOSTED_PROXY_URL, HOSTED_TIMEOUT_MS} from '../src/ai/hosted.js';
 import {createAIProvider} from '../src/ai/provider.js';
 import {judgeAnswer,validateVerdicts,redisContext,buildMessages,requestGate} from '../src/ai/judge.js';
 const load = path=>JSON.parse(readFileSync(new URL(path,import.meta.url)));
@@ -13,6 +14,11 @@ const check=verdicts=>validateVerdicts({verdicts,followUp:null},criteria,answer)
 test('Redis adapter rejects drift between official rubric and training copy',()=>{
   assert.throws(()=>redisContext(pack,question,{...question.layers[0],rubric_en:[]},'en'),/MISMATCH/);
   assert.equal(buildMessages(context,answer)[1].role,'user');
+});
+test('model prompt sets reason length and requires a standalone JSON object',()=>{
+  const [system] = buildMessages(context,answer);
+  assert.match(system.content,/30 English words or 60 Chinese characters/);
+  assert.match(system.content,/JSON object only, without Markdown or surrounding text/);
 });
 test('verdicts join by stable ID, missing points amber, false evidence downgraded',()=>{
   const result=check([row]);assert.equal(result.verdicts[0].light,'green');assert.equal(result.verdicts[1].light,'amber');
@@ -42,6 +48,15 @@ test('missing key stays offline; timeout reported explicitly',async t=>{
   await assert.rejects(createAIProvider()([]),/NO_KEY/);
   t.mock.method(globalThis,'fetch',async()=>{throw new DOMException('timed out','TimeoutError')});
   await assert.rejects(createAIProvider(settings)([]),/TIMEOUT/);
+});
+
+test('hosted requests use the 45-second timeout, with 20 seconds for standard connections',async t=>{
+  const timing=t.mock.method(AbortSignal,'timeout',()=>new AbortController().signal);
+  t.mock.method(globalThis,'fetch',async()=>new Response(
+    '{"choices":[{"finish_reason":"stop","message":{"content":"{}"}}]}'));
+  await createAIProvider({proxyURL:HOSTED_PROXY_URL,timeoutMs:HOSTED_TIMEOUT_MS})([]);
+  await createAIProvider(settings)([]);
+  assert.deepEqual(timing.mock.calls.map(call=>call.arguments[0]),[45000,20000]);
 });
 
 test('judge only emits suggestions; a superseded completion cannot reach the view',async t=>{

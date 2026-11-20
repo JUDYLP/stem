@@ -86,13 +86,13 @@ npm run check:syntax
 
 ## 后续
 
-题目待人工审校。托管演示待部署并完成真实模型回归，部署步骤见 [Worker 指南](worker/README.md)。
+题目待人工审校。托管演示的 GPT-OSS 120B 真实模型回归待执行，部署步骤见 [Worker 指南](worker/README.md)。
 
 ## AI 辅助开发披露
 
 Codex 在用户指导下辅助开发和测试。产品提供三种与判题有关的体验：
 
-- **托管演示**默认使用 Cloudflare Workers AI 上的开放权重模型 **Qwen 3.8 27B**（`@cf/qwen/qwen3.8-27b`）。部署并配置 URL 后可免 Key 使用，页面根据响应显示实际模型。仓库中的 URL 暂为空。
+- **托管演示**的部署配置使用 Cloudflare Workers AI 上的开放权重模型 **GPT-OSS 120B**（`@cf/openai/gpt-oss-120b`）进行对比测试。评委可免 Key 使用，页面根据 Worker 响应显示实际模型。
 - **自带 Key**支持 DeepSeek，另可选择自定义兼容代理。DeepSeek Key 仅用于直接模式。
 - **评委演示**展示预设模拟，页面标注 Simulated。
 
