@@ -102,4 +102,15 @@ Pack format: [schema spec](docs/architecture/QUESTION_PACK_SCHEMA_V1.md). A stor
 
 ## AI-assisted development
 
-Codex and other AI coding agents helped with implementation, debugging, and tests under the author's direction. The author chose the product direction, reviewed the changes, and is responsible for the content.
+AI coding tools wrote essentially all of the code, tests, and most of the documentation:
+
+- **Codex** (OpenAI): planning, most of the implementation, question-pack validation, AI judging, the Cloudflare Worker, tests, and docs.
+- **OpenCode** running **DeepSeek** models: frontend visuals and UI work.
+
+The author came up with the idea, wrote the requirements for each stage, split the work between the tools, reviewed and merged the pull requests, and chose the hosted model by comparing regression results against a rule they set (at most one false green, acceptable latency).
+
+## Credits
+
+- [Cloudflare Workers](https://workers.cloudflare.com/) and Workers AI, running OpenAI's open-weight GPT-OSS 120B, for the hosted demo.
+- [DeepSeek API](https://api-docs.deepseek.com/) for bring-your-own-key judging.
+- Dev and build only, not shipped as runtime code: [Ajv](https://ajv.js.org/) (MIT), [jsonc-parser](https://github.com/microsoft/node-jsonc-parser) (MIT), [canonicalize](https://github.com/erdtman/canonicalize) (Apache-2.0), [esbuild](https://esbuild.github.io/) (MIT).

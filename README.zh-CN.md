@@ -99,7 +99,11 @@ npm run check:syntax
 
 ## AI 辅助开发披露
 
-Codex 在用户指导下辅助开发和测试。产品提供三种与判题有关的体验：
+代码、测试和大部分文档基本都由 AI 编程工具完成：**Codex**（OpenAI）负责规划、大部分实现、题库校验、AI 判题、Cloudflare Worker、测试和文档；**OpenCode**（使用 **DeepSeek** 模型）负责前端视觉与界面。作者负责提出想法、写各阶段需求、分配任务、审查并合并 PR，并按自己定的标准（最多 1 个误判为绿、延迟可接受）根据回归结果选定托管模型。
+
+第三方服务与依赖：Cloudflare Workers 与 Workers AI（GPT-OSS 120B）、DeepSeek API；仅用于开发和构建的 Ajv（MIT）、jsonc-parser（MIT）、canonicalize（Apache-2.0）、esbuild（MIT）。
+
+产品提供三种与判题有关的体验：
 
 - **托管演示**使用 Cloudflare Workers AI 上的开放权重模型 **GPT-OSS 120B**（`@cf/openai/gpt-oss-120b`，低推理强度）。评委可免 Key 使用，页面根据 Worker 响应显示实际模型。同时对比过 Qwen3.8 27B（超时）和 Gemma 4 26B（关闭思考后过宽，7 个点误判为绿），最终选用 GPT-OSS。
 - **自带 Key**支持 DeepSeek，另可选择自定义兼容代理。DeepSeek Key 仅用于直接模式。
