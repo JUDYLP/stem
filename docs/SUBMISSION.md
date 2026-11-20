@@ -31,7 +31,7 @@ HTML, CSS, native JavaScript modules, versioned JSON question packs validated wi
 
 ### AI use and limitations
 
-AI coding tools wrote essentially all of the code and tests: Codex (planning, most of the implementation, AI judging, the Worker, tests) and OpenCode running DeepSeek models (frontend visuals and UI). I came up with the idea, wrote the requirements for each stage, split the work between the tools, reviewed and merged the pull requests, and chose the hosted model by comparing regression results against a rule I set. The hosted demo uses the open-weight GPT-OSS 120B model on Cloudflare Workers AI. We also tried Qwen3.8 27B (too slow, timed out) and Gemma 4 26B (fast but too lenient with reasoning off). Live AI also supports a learner-provided DeepSeek key. Judge Demo uses labeled preset responses. The learner confirms the rating. We have not measured learning gains or validated the tool as a measure of mastery.
+AI coding tools wrote essentially all of the code and tests: Codex (planning, most of the implementation, AI judging, the Worker, tests) and OpenCode running DeepSeek models (frontend visuals and UI). I came up with the idea, wrote the requirements for each stage, split the work between the tools, reviewed and merged the pull requests, and chose the hosted model by comparing regression results against a rule I set. The hosted demo uses the open-weight GPT-OSS 120B model on Cloudflare Workers AI. I also tried Qwen3.8 27B (too slow, timed out) and Gemma 4 26B (fast but too lenient with reasoning off). Live AI also supports a learner-provided DeepSeek key. Judge Demo uses labeled preset responses. The learner confirms the rating. I have not measured learning gains or validated the tool as a measure of mastery.
 
 ### What I learned
 
@@ -53,7 +53,7 @@ I shipped a lot of code I cannot fully explain, which is exactly the problem Uns
 
 ### What's next
 
-Finish participant review of the questions, collect a few real usability observations, add more question packs, and generate a draft pack from material the learner pastes in.
+Finish my own review of the questions, collect a few real usability observations, add more question packs, and generate a draft pack from material the learner pastes in.
 
 ## Video plan (about 3 minutes; limit 6 minutes)
 
