@@ -2,7 +2,7 @@
 
 **AI can write your code. Can you explain it?**
 
-静态前端解释训练器。公开预览：https://judylp.github.io/stem/ 。离线练习与模拟演示无需登录或 API Key。
+静态前端解释训练器，可接入真实 AI 判题。公开预览：https://judylp.github.io/stem/ 。离线练习、模拟演示和托管 AI 判题都无需登录或 API Key。
 英文入口：https://judylp.github.io/stem/?lang=en
 
 ## 产品是什么
@@ -13,6 +13,7 @@
 
 ## 已实现
 
+- AI 判题：提交回答后，模型逐条给出参考要点的灯色、理由和回答原文引用，并可提出一个追问。引用必须是回答的原文片段，前端会核对，不符的判定不会亮绿。结果只是建议，学习者确认后才写入记录。三种连接方式：托管演示（Cloudflare Workers AI，免 Key）、自带 DeepSeek Key 或自定义兼容代理、评委演示（预设模拟，标注 Simulated）。托管不可用或额度用完时，页面会提示改用评委演示。
 - 黑色信号灯视觉系统：`#000` 背景、`#0E0E10` 面板、三色灯（绿 `#22C55E` / 琥珀 `#F5A524` / 红 `#FF453A`）与多层光晕；正文 `#EDEDED`，次要文字 `#A1A1AA`。
 - 动态点阵背景：固定全屏 canvas，桌面 28px / 390px 32px 点阵，基础白点不透明度 0.12–0.20，双正弦慢波呼吸；只有首屏示例面板的三盏灯向背景染色（160px 内），点亮时扩散 320px 点阵波纹；导航 logo 与面板内的灯不染背景点，避免彩点残留。答题框聚焦时动效降到 30%；dpr≤2、30fps、页面隐藏暂停，`prefers-reduced-motion` 只画一帧静态点阵。
 - 灯的表现力：示例灯 32px、参考要点灯 24px（44px 点击区）、热力格图标 22px、层级灯与本层灯色 18px；亮芯为白到灯色的径向渐变，带灯罩内高光与左上方反光点、4/14/36px 三层光晕；未亮灯是深色玻璃。要点行与热力格有同色低亮度内发光；面板内有灯点亮时，1px 边框沿灯的方向短暂染成同色后淡出；键盘焦点显示 2px 白色环。
@@ -52,7 +53,7 @@ npm test
 npm run check:syntax
 ```
 
-121 项自动测试（原38项+Pack83项）：题库 schema 与双语对齐、本地记录降级、灯色汇总规则、history 200 条裁剪、关闭开关不写原文、旧 progress 兼容、导出过滤与转义、英文导出。浏览器实际结果与未测项见 docs/QA_REPORT.md。
+261 项自动测试：题库 Pack 的 schema 与语义校验、双语对齐、AI 判定解析与引用核对、托管 Worker（来源白名单、限流、超时、JSON 恢复）、本地记录降级、灯色汇总规则、history 200 条裁剪、关闭开关不写原文、旧 progress 兼容、导出过滤与转义、英文导出。浏览器实际结果与未测项见 docs/QA_REPORT.md。
 
 ## 数据与隐私
 
@@ -71,7 +72,12 @@ npm run check:syntax
 ## 文件
 
 - `index.html` / `styles.css`：页面结构、信号灯 token 与动效。
-- `data/questions.json`：三层题库（中英）。
+- `data/packs/`：内置题库 Pack（Core 三题、Python Starter 一题，中英双语，带版本）。
+- `src/packs/`：Pack 校验（Ajv Schema + 语义检查）、注册与内容摘要。
+- `src/ai/`：AI 连接（托管 / DeepSeek / 自定义代理）、判定提示词与结果校验、评委演示脚本。
+- `src/fx/`：判定动效。
+- `worker/`：托管演示用的 Cloudflare Worker 代理。
+- `tools/`：Pack 运行时构建、语法检查、托管回归脚本。
 - `src/lights.js`：灯色规则、灯组件、外部建议接口。
 - `src/dotfield.js`：点阵纯计算（衰减/呼吸/间距）与 canvas 渲染。
 - `src/history.js`：判定历史、200 条上限、回答开关。
@@ -86,26 +92,18 @@ npm run check:syntax
 
 ## 后续
 
-题目待人工审校。托管演示的 GPT-OSS 120B 真实模型回归待执行，部署步骤见 [Worker 指南](worker/README.md)。
+题目待人工审校。托管演示已部署，部署步骤见 [Worker 指南](worker/README.md)。下一步是在公开页面上做浏览器实测，并收集真实用户的使用反馈。
 
 ## AI 辅助开发披露
 
 Codex 在用户指导下辅助开发和测试。产品提供三种与判题有关的体验：
 
-- **托管演示**的部署配置使用 Cloudflare Workers AI 上的开放权重模型 **GPT-OSS 120B**（`@cf/openai/gpt-oss-120b`）进行对比测试。评委可免 Key 使用，页面根据 Worker 响应显示实际模型。
+- **托管演示**使用 Cloudflare Workers AI 上的开放权重模型 **GPT-OSS 120B**（`@cf/openai/gpt-oss-120b`，低推理强度）。评委可免 Key 使用，页面根据 Worker 响应显示实际模型。同时对比过 Qwen3.8 27B（超时）和 Gemma 4 26B（关闭思考后过宽，7 个点误判为绿），最终选用 GPT-OSS。
 - **自带 Key**支持 DeepSeek，另可选择自定义兼容代理。DeepSeek Key 仅用于直接模式。
 - **评委演示**展示预设模拟，页面标注 Simulated。
 
-真实模型输出为建议，由学习者确认正式判定。部署后的托管实测见 [托管回归报告](docs/HOSTED_REGRESSION.md)。
+真实模型输出为建议，由学习者确认正式判定。2026-11-20 对 4 道题共 12 层、38 个要点跑托管回归：12 个请求全部成功，每次约 9 到 21 秒，与预设灯色一致 68.4%，有 1 个预设为琥珀的要点被判为绿。预设只是对照样例，不是准确率基准。详见 [托管回归报告](docs/HOSTED_REGRESSION.md)。
 
-## Stage 2A：独立题库校验（未接入页面）
+## 题库架构
 
-`src/packs/validate.js`提供validateQuestionPackText(text)、validateQuestionPackBytes(Uint8Array)、comparePackVersions(a,b)。前三段流程为安全JSON解析→Ajv2020结构→语义检查；成功返回valid/errors/pack，失败仅valid/errors，错误带code/path/message且最多50条。不注册、不修复、无DOM/存储/网络副作用。技术内容正确性仍需人工审核。
-
-开发依赖和lockfile仅用于Node校验/测试；不在现有Pages白名单中，不要求服务器或AI Key。CI新增安装→测试→语法检查，失败阻止原有打包部署。当前只完成本地验证；按要求不提交、不推送、不触发新部署。
-
-详见[Stage 2A交付报告](docs/architecture/STAGE_2A_REPORT.md)与[Schema规范](docs/architecture/QUESTION_PACK_SCHEMA_V1.md)。2B注册/预览、2C迁移、2D训练接线均未实现。
-
-## 浏览器校验器构建（Stage 2A.1，未接入训练）
-
-安装开发依赖后运行`npm run build:pack-validator`，生成`work/pack-validator/pack-validator.mjs`。Ajv standalone在构建期生成Schema校验代码，esbuild打包共享解析/语义规则，不依赖CDN或浏览器动态编译。work目录不提交也不由当前Pages发布。最新本地测试138/138通过；构建与Chrome冒烟结果见Stage 2A报告末节。
+题库是带版本的 JSON Pack（见 [Schema 规范](docs/architecture/QUESTION_PACK_SCHEMA_V1.md)）。校验分三步：安全 JSON 解析、Ajv 2020 结构校验、语义检查，并为内容计算 JCS 摘要。Pages 发布时构建浏览器端 Pack Runtime，页面不依赖 CDN，也不在浏览器里动态编译。Stage 2C 的学习记录迁移模块已实现并有测试，但尚未接入页面，页面仍使用 `unscripted.progress.v1` 和 `unscripted.history.v1`。各阶段报告见 `docs/architecture/`。
