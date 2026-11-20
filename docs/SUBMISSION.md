@@ -5,7 +5,7 @@
 - Track: Education.
 - Source repository: https://github.com/JUDYLP/stem (public).
 - Live website: https://judylp.github.io/stem/ (English: https://judylp.github.io/stem/?lang=en). Final UI check pending.
-- Video: not recorded or uploaded.
+- Video: recorded (2:30, English voiceover and burned-in English subtitles); not uploaded yet. It shows the published site with real hosted AI judgments, not simulated ones.
 - Live AI: a keyless hosted mode (Cloudflare Worker + Workers AI, GPT-OSS 120B) is deployed and configured for the site; a browser check on the published site is pending. Learners can also use their own DeepSeek key or a compatible proxy.
 - Hosted regression (2026-11-20, 12 levels, 38 reference points): 12/12 requests succeeded in about 9–21 s; 68.4% agreement with preset lights; 1 point preset amber was judged green. Presets are comparison fixtures, not an accuracy benchmark.
 - Question content: source-checked draft, pending participant review.
@@ -66,11 +66,18 @@ Finish my own review of the questions, collect a few real usability observations
 
 Record the actual running app; disclose the AI-generated voiceover; ≤6 minutes on YouTube/Vimeo, public or unlisted. Confirm the link works without login. Do not show secrets.
 
+## Video disclosure
+
+- The voiceover is AI-generated: I wrote the script, and it was read by Microsoft Edge text-to-speech (voice: en-US-AvaMultilingualNeural, via the open-source edge-tts tool). It is not my own voice.
+- The screen recording, cuts and subtitles were produced by an AI agent (Hark) running Playwright and ffmpeg on my instructions. I chose the shots and approved the script.
+- Every AI verdict on screen is a real response from the hosted GPT-OSS 120B model on the published site. Waiting time was trimmed and some sections are slightly sped up (up to about 1.2×); no result was edited or faked.
+
 ## Remaining checklist
 
 - [x] Repository public; README and sources accessible.
 - [x] HTTPS site live.
-- [ ] Final UI check and a hosted AI judgment on the published site.
+- [x] Hosted AI judgment on the published site (recorded in the video, 2026-11-20).
+- [ ] Final UI check.
 - [ ] Three questions reviewed by participant.
 - [ ] Downloaded Markdown opens correctly on participant device.
 - [ ] Real video uploaded; link verified.
