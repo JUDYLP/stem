@@ -33,7 +33,7 @@ The Worker uses Cloudflare's Workers AI binding. Site visitors do not need a key
 
 ## 选模型 · Compare models
 
-1. Set `MODEL = "@cf/qwen/qwen3.8-27b"` in `worker/wrangler.toml` and deploy from `worker/`. The provided deployment config selects Gemma. The Worker falls back to Qwen when `MODEL` is unset.
+1. Set `MODEL = "@cf/qwen/qwen3.8-27b"` in `worker/wrangler.toml` and deploy from `worker/`. The deployment config selects GPT-OSS 120B for the current benchmark. The Worker falls back to Qwen when `MODEL` is unset.
 2. From the repository root, run the Qwen regression with the Worker URL from the deployment steps.
 
    ```powershell
@@ -53,7 +53,7 @@ Neurons per judgment = (mean prompt tokens × input rate + mean completion token
 estimated judgments = floor(available Neurons / Neurons per judgment)
 ```
 
-Qwen receives `/no_think` and low reasoning effort. Gemma receives `chat_template_kwargs: {enable_thinking: false}` on the Workers AI binding. [Qwen model documentation](https://developers.cloudflare.com/workers-ai/models/qwen3.8-27b/) · [Gemma model documentation](https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/)
+GPT-OSS 120B uses the supported Chat Completions `messages` format with `reasoning_effort: 'low'` and the binding's `max_tokens` field. The Worker forwards final answer text and usage. To return to Gemma, set `MODEL = "@cf/google/gemma-4-26b-a4b-it"` and redeploy. Gemma uses `chat_template_kwargs: {enable_thinking: false}`. Qwen receives `/no_think` and low reasoning effort. [GPT-OSS model documentation](https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/) [Qwen model documentation](https://developers.cloudflare.com/workers-ai/models/qwen3.8-27b/) · [Gemma model documentation](https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/)
 
 ## Limits and privacy
 
@@ -65,4 +65,4 @@ Qwen receives `/no_think` and low reasoning effort. Gemma receives `chat_templat
 
 ## Verification
 
-Unit tests use mock AI and limiter bindings. Real Workers AI response shapes, whether the Qwen `/no_think` suffix changes inference, actual quota error shapes, account rate limit support, production-origin CORS and latency require verification on the deployed Worker. The Worker reads final content, skips complete `<think>…</think>` blocks outside JSON, and extracts the first complete JSON object from fenced or annotated content. Live verification of the Gemma setting and the target of fewer than 400 completion tokens is pending.
+Unit tests use mock AI and limiter bindings. Real Workers AI response shapes, whether the Qwen `/no_think` suffix changes inference, actual quota error shapes, account rate limit support, production-origin CORS and latency require verification on the deployed Worker. The Worker reads final content, skips complete `<think>…</think>` blocks outside JSON, and extracts the first complete JSON object from fenced or annotated content. GPT-OSS final-content extraction and its request parameters are covered by mocks. The live GPT-OSS comparison is pending.

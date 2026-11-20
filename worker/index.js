@@ -1,4 +1,5 @@
 const DEFAULT_MODEL = '@cf/qwen/qwen3.8-27b';
+const GPT_OSS_MODEL = '@cf/openai/gpt-oss-120b';
 const MAX_BODY_BYTES = 32 * 1024;
 const MAX_COMPLETION_TOKENS = 700;
 const RATE_LIMIT = 6;
@@ -169,8 +170,11 @@ async function handle(request, env, origin) {
     const last = input.messages.findLast(message => message.role === 'user');
     last.content += '\n/no_think';
   }
-  const inference = {...input, response_format:{type:'json_object'}};
-  if (model === '@cf/qwen/qwen3.8-27b') inference.reasoning_effort = 'low';
+  // GPT-OSS's Workers AI binding documents max_tokens for messages input.
+  const tokenField = model === GPT_OSS_MODEL ? 'max_tokens' : 'max_completion_tokens';
+  const inference = {messages:input.messages, [tokenField]:input.max_completion_tokens,
+    response_format:{type:'json_object'}};
+  if (model === GPT_OSS_MODEL || model === '@cf/qwen/qwen3.8-27b') inference.reasoning_effort = 'low';
   if (model === '@cf/google/gemma-4-26b-a4b-it') inference.chat_template_kwargs = {enable_thinking:false};
   let result;
   try {

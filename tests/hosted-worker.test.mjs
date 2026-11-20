@@ -135,6 +135,34 @@ test('Gemma disables thinking and honors the new token field over the legacy ali
     'Gemma JSON without think tags should pass through');
 });
 
+test('GPT-OSS uses low-effort messages input and returns only the final Chat Completions content', async () => {
+  const model = '@cf/openai/gpt-oss-120b';
+  const usage = {prompt_tokens:30,completion_tokens:60};
+  const json = {verdicts:[{pointId:'c02',light:'amber',reason:'Partial answer.',quote:'Answer.'}],followUp:null};
+  const {env,calls} = fixture({MODEL:model});
+  env.AI.run = async (...args) => {
+    calls.push(args);
+    return {usage,choices:[{finish_reason:'stop',message:{role:'assistant',
+      content:JSON.stringify(json),reasoning_content:'{"private":true}'}}]};
+  };
+  const res = await worker.fetch(req({data:{...payload,max_completion_tokens:990}}),env);
+  assert.equal(res.status,200);
+  assert.deepEqual(calls,[[model,{messages:payload.messages,max_tokens:700,
+    response_format:{type:'json_object'},reasoning_effort:'low'}]]);
+  assert.deepEqual(await res.json(),{model,usage,choices:[{
+    message:{role:'assistant',content:JSON.stringify(json)},finish_reason:'stop',
+  }]});
+});
+
+test('GPT-OSS reasoning without final content returns 502', async () => {
+  const {env} = fixture({MODEL:'@cf/openai/gpt-oss-120b',AI:{run:async()=>({
+    choices:[{message:{content:null,reasoning:'{"draft":true}',reasoning_content:'{"ignored":true}'}}],
+  })}});
+  const res = await worker.fetch(req(),env);
+  assert.equal(res.status,502);
+  assert.deepEqual(await res.json(),{error:'INVALID_UPSTREAM_JSON'});
+});
+
 test('preserves upstream token usage in successful responses', async () => {
   const usage = {prompt_tokens:41,completion_tokens:23,total_tokens:64,
     completion_tokens_details:{reasoning_tokens:4}};

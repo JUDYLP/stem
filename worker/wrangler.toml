@@ -8,7 +8,8 @@ binding = "AI"
 
 [vars]
 ALLOWED_ORIGINS = "https://judylp.github.io,http://127.0.0.1:5174,http://localhost:5174"
-MODEL = "@cf/google/gemma-4-26b-a4b-it"
+# Gemma comparison baseline: @cf/google/gemma-4-26b-a4b-it
+MODEL = "@cf/openai/gpt-oss-120b"
 DEADLINE_MS = "30000"
 ENABLED = "true"
 ALLOW_MEMORY_RATE_LIMIT = "false"
