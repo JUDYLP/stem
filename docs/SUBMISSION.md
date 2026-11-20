@@ -5,7 +5,7 @@
 - Track: Education.
 - Source repository: https://github.com/JUDYLP/stem (public).
 - Live website: https://judylp.github.io/stem/ (English: https://judylp.github.io/stem/?lang=en). Final UI check pending.
-- Video: recorded (2:30, English voiceover and burned-in English subtitles); not uploaded yet. It shows the published site with real hosted AI judgments, not simulated ones.
+- Video: https://youtu.be/mZTNTnT0S9M (2:30, unlisted; English voiceover and burned-in English subtitles). It shows the published site with real hosted AI judgments, not simulated ones.
 - Live AI: a keyless hosted mode (Cloudflare Worker + Workers AI, GPT-OSS 120B) is deployed and configured for the site; a browser check on the published site is pending. Learners can also use their own DeepSeek key or a compatible proxy.
 - Hosted regression (2026-11-20, 12 levels, 38 reference points): 12/12 requests succeeded in about 9–21 s; 68.4% agreement with preset lights; 1 point preset amber was judged green. Presets are comparison fixtures, not an accuracy benchmark.
 - Question content: source-checked draft, pending participant review.
@@ -80,7 +80,7 @@ Record the actual running app; disclose the AI-generated voiceover; ≤6 minutes
 - [ ] Final UI check.
 - [ ] Three questions reviewed by participant.
 - [ ] Downloaded Markdown opens correctly on participant device.
-- [ ] Real video uploaded; link verified.
+- [x] Real video uploaded; link verified without login (2026-11-20).
 - [ ] Participant-written learning/contribution statements.
 - [ ] Devpost Education submission completed and confirmation saved.
 - [ ] Join official Discord; verify Demo Day live time and prerecorded deadline.
