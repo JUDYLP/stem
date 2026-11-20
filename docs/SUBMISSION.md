@@ -35,7 +35,21 @@ AI coding tools wrote essentially all of the code and tests: Codex (planning, mo
 
 ### What I learned
 
-[Participant: replace with one or two things you can now independently explain, plus an actual debugging example. Do not submit this placeholder or invent a learning experience.]
+Honestly, I learned less about writing code than about building software with AI. AI tools wrote almost all of the code. What I learned was how to run the project:
+
+- Coordinating several AI tools: Codex for backend and AI integration, OpenCode with DeepSeek for the frontend, each with clear file ownership so they did not overwrite each other.
+- A real development process: planning, designing the frontend and backend separately, and working in stages, with each stage on its own git branch and pull request that I checked before merging.
+- Reviewing AI output instead of trusting it: I set acceptance criteria, then checked test results and regression reports before saying yes.
+- Deploying a free backend on Cloudflare Workers and its workers.dev domain, with an origin allowlist and rate limit so judges can use it without a key.
+- Choosing a model with data, not speed: the fastest model I tried marked 7 half-explained points as fully correct. I set a rule (at most one false green) and picked GPT-OSS 120B, which met it.
+
+My biggest takeaway: much of the hands-on work I would have done myself before AI can now be handed over completely. Setting up and deploying the Cloudflare Worker took me no coding at all; the AI did it, the result was the same, and it was much faster.
+
+### What I would do differently
+
+Can AI tools lift you up? Of course, the same way an elevator lifts anyone who steps in. But riding an elevator does not make your legs any stronger. AI got this project to the top floor; Unscripted is meant to be the stairs.
+
+I shipped a lot of code I cannot fully explain, which is exactly the problem Unscripted is about. Next time I would write at least one core module myself and use Unscripted's own questions on my project before each merge.
 
 ### What's next
 
