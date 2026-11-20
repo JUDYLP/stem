@@ -3,10 +3,11 @@
 ## Current facts
 
 - Track: Education.
-- Source repository: https://github.com/JUDYLP/stem (currently private; must become public for submission).
-- Live website: not yet verified; Pages setup is pending.
+- Source repository: https://github.com/JUDYLP/stem (public).
+- Live website: https://judylp.github.io/stem/ (English: https://judylp.github.io/stem/?lang=en). Final UI check pending.
 - Video: not recorded or uploaded.
-- Live AI: learners can use their own DeepSeek key. The hosted Worker URL is configured for the site; production publication and GPT-OSS comparison are pending.
+- Live AI: a keyless hosted mode (Cloudflare Worker + Workers AI, GPT-OSS 120B) is deployed and configured for the site; a browser check on the published site is pending. Learners can also use their own DeepSeek key or a compatible proxy.
+- Hosted regression (2026-11-20, 12 levels, 38 reference points): 12/12 requests succeeded in about 9–21 s; 68.4% agreement with preset lights; 1 point preset amber was judged green. Presets are comparison fixtures, not an accuracy benchmark.
 - Question content: source-checked draft, pending participant review.
 - User study / learning outcome evidence: none collected yet.
 
@@ -18,41 +19,58 @@ AI-assisted coding can produce working code before a learner can explain its mec
 
 ### What it does
 
-The current prototype contains three technical questions with three layers each. Each reference point is a signal light: learners write an explanation before seeing the checklist, then set a green, amber, or red light per point and confirm the level. Only an all-green level is a Pass; amber and red stay in review. The browser keeps the latest rating per question and level, plus a 200-entry history that drives a heat matrix and a timeline with light changes. Answers are kept only if the learner turns on an opt-in switch, and the Markdown crash sheet now includes the light and missed points.
+The prototype ships two question packs: Core Software Engineering (Java concurrency, Redis expiration, MySQL consistent reads) and a Python Starter pack (floating-point equality), four questions with three layers each: Explain, Reason, Stress-test. Each reference point is a signal light: learners write an explanation before seeing the checklist, then set a green, amber, or red light per point and confirm the level. Only an all-green level is a Pass; amber and red stay in review. The browser keeps the latest rating per question and level, plus a 200-entry history that drives a heat matrix and a timeline with light changes. Answers are kept only if the learner turns on an opt-in switch, and the Markdown crash sheet includes the light and missed points.
+
+With AI judging on, a model proposes a light, a short reason and a verbatim quote from the learner's answer for each reference point, plus one targeted follow-up question. The page checks that each quote really appears in the answer; a green without a valid quote is downgraded to amber. Verdicts are suggestions: nothing is recorded until the learner confirms.
 
 A bilingual signal-light demo on the landing page illustrates the flow using fixed, explicitly simulated feedback. It does not call an AI model and does not modify practice records.
 
 ### How it is built
 
-HTML, CSS, native JavaScript modules, a JSON question bank, and browser localStorage. Offline practice and the simulated Judge Demo require no account or API key. The optional hosted judging mode uses a Cloudflare Worker. Lights are CSS plus inline SVG, and motion respects the reduced-motion preference. Node's built-in test runner checks the data contract, light aggregation, history trimming, answer-switch privacy, persistence fallback, and review export. Python's standard library serves local files during development.
+HTML, CSS, native JavaScript modules, versioned JSON question packs validated with JSON Schema (Ajv) plus semantic checks, and browser localStorage. Offline practice and the simulated Judge Demo require no account or API key. The optional hosted judging mode uses a Cloudflare Worker that forces the model server-side, allows only the site's origin, rate-limits each IP to 6 requests per minute and stores no answers. Lights are CSS plus inline SVG, and motion respects the reduced-motion preference. Node's built-in test runner (261 tests) checks the pack contract, AI verdict parsing and quote checks, the Worker's origin, rate-limit and timeout handling, light aggregation, history trimming, answer-switch privacy, persistence fallback, and review export. Python's standard library serves local files during development.
 
 ### AI use and limitations
 
-Codex assisted with planning, implementation, debugging and tests. The participant must review the content and explain their own contribution before submission. The hosted demo is configured for the open-weight GPT-OSS 120B model on Cloudflare Workers AI for the current comparison. Live AI also supports a learner-provided DeepSeek key. Judge Demo uses labeled preset responses. The learner confirms the rating. We have not measured learning gains or validated the tool as a measure of mastery.
+AI coding tools wrote essentially all of the code and tests: Codex (planning, most of the implementation, AI judging, the Worker, tests) and OpenCode running DeepSeek models (frontend visuals and UI). I came up with the idea, wrote the requirements for each stage, split the work between the tools, reviewed and merged the pull requests, and chose the hosted model by comparing regression results against a rule I set. The hosted demo uses the open-weight GPT-OSS 120B model on Cloudflare Workers AI. I also tried Qwen3.8 27B (too slow, timed out) and Gemma 4 26B (fast but too lenient with reasoning off). Live AI also supports a learner-provided DeepSeek key. Judge Demo uses labeled preset responses. The learner confirms the rating. I have not measured learning gains or validated the tool as a measure of mastery.
 
 ### What I learned
 
-[Participant: replace with one or two things you can now independently explain, plus an actual debugging example. Do not submit this placeholder or invent a learning experience.]
+Honestly, I learned less about writing code than about building software with AI. AI tools wrote almost all of the code. What I learned was how to run the project:
+
+- Coordinating several AI tools: Codex for backend and AI integration, OpenCode with DeepSeek for the frontend, each with clear file ownership so they did not overwrite each other.
+- A real development process: planning, designing the frontend and backend separately, and working in stages, with each stage on its own git branch and pull request that I checked before merging.
+- Reviewing AI output instead of trusting it: I set acceptance criteria, then checked test results and regression reports before saying yes.
+- Deploying a free backend on Cloudflare Workers and its workers.dev domain, with an origin allowlist and rate limit so judges can use it without a key.
+- Choosing a model with data, not speed: the fastest model I tried marked 7 half-explained points as fully correct. I set a rule (at most one false green) and picked GPT-OSS 120B, which met it.
+
+My biggest takeaway: much of the hands-on work I would have done myself before AI can now be handed over completely. Setting up and deploying the Cloudflare Worker took me no coding at all; the AI did it, the result was the same, and it was much faster.
+
+### What I would do differently
+
+Can AI tools lift you up? Of course, the same way an elevator lifts anyone who steps in. But riding an elevator does not make your legs any stronger. AI got this project to the top floor; Unscripted is meant to be the stairs.
+
+I shipped a lot of code I cannot fully explain, which is exactly the problem Unscripted is about. Next time I would write at least one core module myself and use Unscripted's own questions on my project before each merge.
 
 ### What's next
 
-Finish participant review of the questions, validate public deployment, collect a few real usability observations, and validate the hosted proxy on the public origin and report the model comparison.
+Finish my own review of the questions, collect a few real usability observations, add more question packs, and generate a draft pack from material the learner pastes in.
 
-## 90–180 second video plan
+## Video plan (about 3 minutes; limit 6 minutes)
 
 1. Show the tagline and explain the target learner's difficulty.
 2. Pick one question and show the three layers.
 3. Type an explanation, reveal reference points, and retry.
 4. Set red and green lights, confirm a review level, show the heat matrix and timeline, then export the Crash Sheet and demonstrate that an all-green Pass removes it.
-5. If showing the English demo, keep Simulated visible and say no live AI call is made.
+5. Run a hosted AI judgment: show the per-point lights, quotes and follow-up, then confirm. If showing Judge Demo instead, keep Simulated visible and say no live AI call is made.
 6. Explain one real technical lesson and current limits.
 
-Record the actual running app; ≤6 minutes on YouTube/Vimeo, public or unlisted. Confirm the link works without login. Do not show secrets.
+Record the actual running app; disclose the AI-generated voiceover; ≤6 minutes on YouTube/Vimeo, public or unlisted. Confirm the link works without login. Do not show secrets.
 
 ## Remaining checklist
 
-- [ ] Repository public; README and sources accessible.
-- [ ] Verified HTTPS site and final UI checks.
+- [x] Repository public; README and sources accessible.
+- [x] HTTPS site live.
+- [ ] Final UI check and a hosted AI judgment on the published site.
 - [ ] Three questions reviewed by participant.
 - [ ] Downloaded Markdown opens correctly on participant device.
 - [ ] Real video uploaded; link verified.
