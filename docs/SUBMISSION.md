@@ -31,7 +31,7 @@ HTML, CSS, native JavaScript modules, versioned JSON question packs validated wi
 
 ### AI use and limitations
 
-Codex assisted with planning, implementation, debugging and tests. The participant must review the content and explain their own contribution before submission. The hosted demo uses the open-weight GPT-OSS 120B model on Cloudflare Workers AI. We also tried Qwen3.8 27B (too slow, timed out) and Gemma 4 26B (fast but too lenient with reasoning off). Live AI also supports a learner-provided DeepSeek key. Judge Demo uses labeled preset responses. The learner confirms the rating. We have not measured learning gains or validated the tool as a measure of mastery.
+Codex and other AI coding agents assisted with planning, implementation, debugging and tests under the author's direction. [Participant: add one sentence on what you decided and reviewed yourself.] The hosted demo uses the open-weight GPT-OSS 120B model on Cloudflare Workers AI. We also tried Qwen3.8 27B (too slow, timed out) and Gemma 4 26B (fast but too lenient with reasoning off). Live AI also supports a learner-provided DeepSeek key. Judge Demo uses labeled preset responses. The learner confirms the rating. We have not measured learning gains or validated the tool as a measure of mastery.
 
 ### What I learned
 
