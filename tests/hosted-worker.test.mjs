@@ -145,13 +145,20 @@ test('GPT-OSS uses low-effort messages input and returns only the final Chat Com
     return {usage,choices:[{finish_reason:'stop',message:{role:'assistant',
       content:JSON.stringify(json),reasoning_content:'{"private":true}'}}]};
   };
-  const res = await worker.fetch(req({data:{...payload,max_completion_tokens:990}}),env);
+  const res = await worker.fetch(req({data:{...payload,max_completion_tokens:9900}}),env);
   assert.equal(res.status,200);
-  assert.deepEqual(calls,[[model,{messages:payload.messages,max_tokens:700,
+  assert.deepEqual(calls,[[model,{messages:payload.messages,max_tokens:1200,
     response_format:{type:'json_object'},reasoning_effort:'low'}]]);
   assert.deepEqual(await res.json(),{model,usage,choices:[{
     message:{role:'assistant',content:JSON.stringify(json)},finish_reason:'stop',
   }]});
+});
+
+test('GPT-OSS uses the full budget even when legacy max_tokens is lower', async () => {
+  const {env,calls} = fixture({MODEL:'@cf/openai/gpt-oss-120b'});
+  const res = await worker.fetch(req({data:{...payload,max_tokens:128}}),env);
+  assert.equal(res.status,200);
+  assert.equal(calls[0][1].max_tokens,1200);
 });
 
 test('GPT-OSS reasoning without final content returns 502', async () => {
@@ -266,7 +273,7 @@ test('opt-in isolate memory rate limit allows six posts per IP then rejects', as
   assert.equal(calls.length,7);
 });
 
-for (const [setting,ms] of [[undefined,30000],['4500',4500],['invalid',30000]]) {
+for (const [setting,ms] of [[undefined,40000],['4500',4500],['invalid',40000]]) {
   test('slow inference gets a 503 at the deadline for DEADLINE_MS='+setting, async t => {
     t.mock.timers.enable({apis:['setTimeout']});
     const timeout = t.mock.method(globalThis,'setTimeout',globalThis.setTimeout);

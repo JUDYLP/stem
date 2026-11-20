@@ -84,7 +84,7 @@ async function run() {
       ]}));
     };
     const hostedRun = el('ai-run').onclick();
-    assert(status().includes('10–30 seconds'),'Hosted request did not explain the wait');
+    assert(status().includes('10–40 seconds'),'Hosted request did not explain the wait');
     await hostedRun;
     assert(status().includes('AI suggestion') && snapshot() === before,
       'Hosted completion did not reach the normal suggestion flow');

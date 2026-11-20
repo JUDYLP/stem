@@ -2,6 +2,7 @@ const DEFAULT_MODEL = '@cf/qwen/qwen3.8-27b';
 const GPT_OSS_MODEL = '@cf/openai/gpt-oss-120b';
 const MAX_BODY_BYTES = 32 * 1024;
 const MAX_COMPLETION_TOKENS = 700;
+const GPT_OSS_COMPLETION_TOKENS = 1200;
 const RATE_LIMIT = 6;
 const MEMORY_KEY_LIMIT = 2048;
 const memoryCounts = new Map();
@@ -68,7 +69,7 @@ async function withinLimit(env, ip) {
 async function runWithDeadline(env, model, input) {
   const configured = Number(env.DEADLINE_MS);
   const deadline = Number.isInteger(configured) && configured > 0 && configured <= 2147483647
-    ? configured : 30000;
+    ? configured : 40000;
   let timeout;
   try {
     const expired = new Promise((_, reject) => {
@@ -171,9 +172,10 @@ async function handle(request, env, origin) {
     last.content += '\n/no_think';
   }
   // GPT-OSS's Workers AI binding documents max_tokens for messages input.
-  const tokenField = model === GPT_OSS_MODEL ? 'max_tokens' : 'max_completion_tokens';
-  const inference = {messages:input.messages, [tokenField]:input.max_completion_tokens,
-    response_format:{type:'json_object'}};
+  const tokenBudget = model === GPT_OSS_MODEL
+    ? {max_tokens:GPT_OSS_COMPLETION_TOKENS}
+    : {max_completion_tokens:input.max_completion_tokens};
+  const inference = {messages:input.messages, ...tokenBudget, response_format:{type:'json_object'}};
   if (model === GPT_OSS_MODEL || model === '@cf/qwen/qwen3.8-27b') inference.reasoning_effort = 'low';
   if (model === '@cf/google/gemma-4-26b-a4b-it') inference.chat_template_kwargs = {enable_thinking:false};
   let result;

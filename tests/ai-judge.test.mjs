@@ -50,13 +50,13 @@ test('missing key stays offline; timeout reported explicitly',async t=>{
   await assert.rejects(createAIProvider(settings)([]),/TIMEOUT/);
 });
 
-test('hosted requests use the 35-second timeout, with 20 seconds for standard connections',async t=>{
+test('hosted requests use the 45-second timeout, with 20 seconds for standard connections',async t=>{
   const timing=t.mock.method(AbortSignal,'timeout',()=>new AbortController().signal);
   t.mock.method(globalThis,'fetch',async()=>new Response(
     '{"choices":[{"finish_reason":"stop","message":{"content":"{}"}}]}'));
   await createAIProvider({proxyURL:HOSTED_PROXY_URL,timeoutMs:HOSTED_TIMEOUT_MS})([]);
   await createAIProvider(settings)([]);
-  assert.deepEqual(timing.mock.calls.map(call=>call.arguments[0]),[35000,20000]);
+  assert.deepEqual(timing.mock.calls.map(call=>call.arguments[0]),[45000,20000]);
 });
 
 test('judge only emits suggestions; a superseded completion cannot reach the view',async t=>{

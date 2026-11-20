@@ -280,7 +280,7 @@ $('ai-run').onclick = async () => {
   const answer = d.submitted;
   const connection = aiConnection.value;
   $('ai-run').disabled = true;
-  $('ai-status').textContent = t(connection === 'hosted' ? '正在请求判定，可能需要十几秒…' : '正在请求判定…');
+  $('ai-status').textContent = t(connection === 'hosted' ? '正在请求判定，可能需要 10–40 秒…' : '正在请求判定…');
   const answerEl = $('before-answer');
   answerEl.closest('details').open = true;
   const stop = scanAnswer(answerEl, signal);
