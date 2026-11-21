@@ -7,6 +7,7 @@ English | [中文](README.zh-CN.md)
 Unscripted is a browser-based trainer for explaining code you did not write yourself. You explain a concept in your own words, compare your answer with reference points, and an AI judge (optional) suggests which points you covered. You stay in charge: nothing is recorded until you confirm.
 
 - Live site: https://judylp.github.io/stem/?lang=en
+- Demo video (2:30): https://youtu.be/mZTNTnT0S9M
 - No account or API key needed for offline practice, the simulated Judge Demo, or hosted AI judging.
 
 ## How it works
@@ -114,3 +115,8 @@ The author came up with the idea, wrote the requirements for each stage, split t
 - [Cloudflare Workers](https://workers.cloudflare.com/) and Workers AI, running OpenAI's open-weight GPT-OSS 120B, for the hosted demo.
 - [DeepSeek API](https://api-docs.deepseek.com/) for bring-your-own-key judging.
 - Dev and build only, not shipped as runtime code: [Ajv](https://ajv.js.org/) (MIT), [jsonc-parser](https://github.com/microsoft/node-jsonc-parser) (MIT), [canonicalize](https://github.com/erdtman/canonicalize) (Apache-2.0), [esbuild](https://esbuild.github.io/) (MIT).
+- [Doto](https://fonts.google.com/specimen/Doto) typeface, bundled under the SIL Open Font License 1.1.
+
+## License
+
+Code and docs are released under the [MIT License](LICENSE). The bundled Doto font keeps its own SIL Open Font License 1.1.
