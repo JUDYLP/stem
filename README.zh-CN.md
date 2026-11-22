@@ -6,6 +6,7 @@
 
 静态前端解释训练器，可接入真实 AI 判题。公开预览：https://judylp.github.io/stem/ 。离线练习、模拟演示和托管 AI 判题都无需登录或 API Key。
 英文入口：https://judylp.github.io/stem/?lang=en
+演示视频（2:30，英文）：https://youtu.be/mZTNTnT0S9M
 
 ## 产品是什么
 
@@ -114,3 +115,7 @@ npm run check:syntax
 ## 题库架构
 
 题库是带版本的 JSON Pack（见 [Schema 规范](docs/architecture/QUESTION_PACK_SCHEMA_V1.md)）。校验分三步：安全 JSON 解析、Ajv 2020 结构校验、语义检查，并为内容计算 JCS 摘要。Pages 发布时构建浏览器端 Pack Runtime，页面不依赖 CDN，也不在浏览器里动态编译。Stage 2C 的学习记录迁移模块已实现并有测试，但尚未接入页面，页面仍使用 `unscripted.progress.v1` 和 `unscripted.history.v1`。各阶段报告见 `docs/architecture/`。
+
+## 许可证
+
+代码与文档以 [MIT 许可证](LICENSE) 发布。内置的 Doto 字体沿用其 SIL Open Font License 1.1。
