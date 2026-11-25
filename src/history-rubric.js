@@ -1,9 +1,10 @@
 import frozen from '../data/packs/unscripted-core.v1.0.0.json' with {type:'json'};
 import current from '../data/packs/unscripted-core.v1.json' with {type:'json'};
-import intro from '../data/packs/unscripted-intro.v1.json' with {type:'json'};
+import legacyIntro from '../data/packs/unscripted-intro.v1.json' with {type:'json'};
+import intro from '../data/packs/unscripted-intro.v1.1.0.json' with {type:'json'};
 import { t } from './i18n.js';
 
-const knownPacks = [frozen, current, intro];
+const knownPacks = [frozen, current, legacyIntro, intro];
 const activeVersions = new Map([current, intro].map(pack => [pack.packId, pack.packVersion]));
 const rubricFor = (pack, entry) => pack.questions.find(q => q.id === entry.questionId)
   ?.layers.find(layer => layer.id === entry.layer)?.rubric;

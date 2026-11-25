@@ -82,6 +82,7 @@ const packLabels = new Map([
   ['unscripted-intro', 'Python 入门题库'],
 ]);
 let registeredPacks = new Map();
+let legacyIntro;
 let activePack;
 let questions = [];
 let questionId = '';
@@ -330,6 +331,16 @@ $('ai-run').onclick = async () => {
 };
 
 function evaluationContext() {
+  if ($('judge-mode').value === 'demo' && activePack.packId === 'unscripted-intro' && legacyIntro) {
+    const archived = legacyIntro.validatedPack.questions.find(q => q.id === questionId);
+    const active = activePack.questions.find(q => q.id === questionId);
+    if (archived && JSON.stringify(archived) === JSON.stringify(active)) {
+      const question = questionsFromBuiltin(legacyIntro).find(q => q.id === questionId);
+      return buildEvaluationContext({
+        pack: legacyIntro.validatedPack, question, layer: question.layers[layerIndex], language: getLanguage(),
+      });
+    }
+  }
   return buildEvaluationContext({pack: activePack, question: current(), layer: currentLayer(), language: getLanguage()});
 }
 
@@ -949,7 +960,9 @@ async function boot() {
   $('load-message').textContent = t('正在加载题库…');
   try {
     const { createPackRegistry } = await import('../work/pack-runtime.mjs');
-    const builtins = await createPackRegistry().registerBuiltins();
+    const registry = createPackRegistry();
+    const builtins = await registry.registerBuiltins();
+    legacyIntro = registry.get('unscripted-intro', '1.0.0');
     registeredPacks = new Map(builtins.map(record => [record.packId, record]));
     let preferred;
     try { preferred = localStorage.getItem(packPreferenceKey); } catch { /* use the default */ }

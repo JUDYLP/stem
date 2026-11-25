@@ -3,7 +3,7 @@
 <iframe src="./index.html?lang=en"></iframe>
 <script type="module">
 import core from './data/packs/unscripted-core.v1.json' with {type:'json'};
-import intro from './data/packs/unscripted-intro.v1.json' with {type:'json'};
+import intro from './data/packs/unscripted-intro.v1.1.0.json' with {type:'json'};
 import scenarios from './src/ai/demo-scenarios.json' with {type:'json'};
 import {HOSTED_PROXY_URL,HOSTED_MODEL_LABEL} from "./src/ai/hosted.js";
 const frame = document.querySelector('iframe');
@@ -27,8 +27,8 @@ async function run() {
     el('question-pack').value === intro.packId && el('question').value === pythonStart.id &&
     el('layer-prompt').textContent === pythonStart.layers[0].prompt.en,
     'First visit should start at Python Intro L1');
-  assert(el('load-message').textContent === intro.title.en+' · v1.0.0 · 1 question',
-    'English Intro question count must be singular');
+  assert(el('load-message').textContent === intro.title.en+' · v1.1.0 · 2 questions',
+    'English Intro should show two questions at the active version');
   const impacts = {
     'float-equality-v1': ["A loop that never stops, or a bill that's off by a cent","循环停不下来，或账单差一分钱"],
     'juc-volatile-atomicity-v2': ['A counter that silently loses updates under concurrency','计数器在并发下悄悄丢数'],
@@ -302,13 +302,18 @@ async function run() {
   finishCore(new w.Response(null,{status:429}));
   await pendingCore;
   assert(el('answer').value === '' && el('timeline').children.length === 0,'Core data leaked into Intro');
-  assert(el('load-message').textContent.includes(intro.title.en) && el('load-message').textContent.includes('1.0.0'),
+  assert(el('load-message').textContent.includes(intro.title.en) && el('load-message').textContent.includes('1.1.0'),
     'Intro pack or version was not displayed');
   assert(el('rubric-review').textContent.includes('awaiting human review'), 'Missing unreviewed status');
-  assert(el('question').options.length === 1 && el('question').value === python.id,'Python question missing');
+  const introQuestionIds = intro.questions.map(question => question.id);
+  const visibleQuestionIds = () => [...el('question').options].map(option => option.value);
+  assert(visibleQuestionIds().join() === introQuestionIds.join() && el('question').value === python.id,
+    'Python questions missing');
   select('category',python.category['zh-CN']);
   el('random-question').click();
-  assert(el('question').value === python.id && el('category').options.length === 2,'Filters escaped Intro');
+  assert(visibleQuestionIds().join() === introQuestionIds.join() &&
+    introQuestionIds.includes(el('question').value) && el('category').options.length === 2,'Filters escaped Intro');
+  select('question',python.id);
   assert(w.localStorage.getItem('unscripted.history.v1') === rawHistory,'Switching packs wrote history');
   assert(w.localStorage.getItem('unscripted.progress.v1') === rawProgress,'Switching packs wrote progress');
 
@@ -377,7 +382,7 @@ async function run() {
   assert(JSON.stringify(progressAfter.items[oldJava.questionId+'::L1']) ===
     JSON.stringify(coreProgress.items[oldJava.questionId+'::L1']) &&
     progressAfter.items[python.id+'::L3'].status==='review','v1 progress compatibility failed');
-  assert(el('timeline').children.length===1 && el('timeline').textContent.includes(intro.packId+'@1.0.0'),
+  assert(el('timeline').children.length===1 && el('timeline').textContent.includes(intro.packId+'@'+intro.packVersion),
     'Python history did not render on its own');
 
   let exported;
@@ -392,7 +397,7 @@ async function run() {
     w.HTMLAnchorElement.prototype.click = clickLink;
   }
   const sheet = await exported.text();
-  assert(sheet.includes(intro.packId+'@1.0.0') && sheet.includes('rounding') &&
+  assert(sheet.includes(intro.packId+'@'+intro.packVersion) && sheet.includes('rounding') &&
     !sheet.includes(core.packId),'Python Crash Sheet contains incorrect criteria');
   select('question-pack',core.packId);
   assert(el('question').options.length===3 && el('answer').value==='My Core draft' &&

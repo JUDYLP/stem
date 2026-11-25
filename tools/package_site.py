@@ -10,6 +10,7 @@ FILES = [
     'src/fx/verdict-fx.js', 'assets/fonts/doto-latin-wght-normal.woff2',
     'src/main.js', 'src/questions.js', 'src/storage.js', 'src/export.js', 'src/demo.js', 'src/i18n.js',
     'data/packs/unscripted-core.v1.0.0.json', 'data/packs/unscripted-intro.v1.json',
+    'data/packs/unscripted-intro.v1.1.0.json',
     'work/pack-runtime.mjs',
     'src/lights.js', 'src/history.js', 'src/history-rubric.js', 'src/dotfield.js',
 ]

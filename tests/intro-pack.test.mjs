@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import core from '../data/packs/unscripted-core.v1.json' with {type:'json'};
-import intro from '../data/packs/unscripted-intro.v1.json' with {type:'json'};
+import frozenIntro from '../data/packs/unscripted-intro.v1.json' with {type:'json'};
+import activeIntro from '../data/packs/unscripted-intro.v1.1.0.json' with {type:'json'};
 import scenarios from '../src/ai/demo-scenarios.json' with {type:'json'};
 import {createPackRegistry} from '../src/packs/registry.js';
 import {computePackDigest} from '../src/packs/digest.js';
@@ -14,22 +15,26 @@ import {questionImpact} from '../src/i18n.js';
 import {buildCrashSheet} from '../src/export.js';
 
 const registry = createPackRegistry();
-const [coreRecord,introRecord] = await registry.registerBuiltins();
+const [coreRecord,activeIntroRecord] = await registry.registerBuiltins();
+const introRecord = registry.get('unscripted-intro', '1.0.0');
+const intro = frozenIntro;
 const [question] = questionsFromBuiltin(introRecord);
 
 test('both builtins validate and register by immutable version and correct digest', async () => {
   assert.deepEqual(registry.list(),['unscripted-core','unscripted-intro']);
   assert.deepEqual(await registry.registerBuiltin(),coreRecord);
-  assert.deepEqual(await registry.registerBuiltins(),[coreRecord,introRecord]);
-  for (const [record, source] of [[coreRecord,core],[introRecord,intro]]) {
+  assert.deepEqual(await registry.registerBuiltins(),[coreRecord,activeIntroRecord]);
+  for (const [record, source] of [[coreRecord,core],[introRecord,intro],[activeIntroRecord,activeIntro]]) {
     assert.deepEqual(record.validatedPack,source);
     assert.equal(record.contentDigest,await computePackDigest(source));
-    assert.deepEqual(registry.versions(source.packId),[source.packVersion]);
     await assert.rejects(registry.registerImported(JSON.stringify(source)),{code:'RESERVED_ID'});
     assert.ok(record.validatedPack.questions.every(q => q.review.status === 'unreviewed'));
   }
-  const ids = [core,intro].flatMap(pack=>pack.questions.map(q=>q.id));
-  assert.equal(ids.length,4);
+  assert.deepEqual(registry.versions(intro.packId), ['1.0.0', '1.1.0']);
+  assert.deepEqual(activeIntro.questions[0], frozenIntro.questions[0]);
+  assert.equal(activeIntro.questions[1].id, 'python-mutable-default-v1');
+  const ids = [core,activeIntro].flatMap(pack=>pack.questions.map(q=>q.id));
+  assert.equal(ids.length,5);
   assert.equal(new Set(ids).size,ids.length,'v1 needs globally unique question IDs');
   assert.throws(()=>questionsFromBuiltin({...introRecord,source:'imported'}),/BUILTIN_REQUIRED/);
 });
@@ -61,16 +66,17 @@ for (const [index,layer] of question.layers.entries()) {
   });
 }
 
-test('new Intro v1 records export under the Intro version with their rubric snapshots', () => {
-  const layer = intro.questions[0].layers[0];
-  const entry = {questionId:question.id,layer:layer.id,light:'red',pointLights:['green','amber','red'],
-    missedPoints:[2],rubricSnapshot:makeRubricSnapshot(intro,layer)};
+test('new Intro v1 records export under the active Intro version with their rubric snapshots', () => {
+  const activeQuestion = questionsFromBuiltin(activeIntroRecord)[1];
+  const layer = activeIntro.questions[1].layers[0];
+  const entry = {questionId:activeQuestion.id,layer:layer.id,light:'red',pointLights:['green','amber','red'],
+    missedPoints:[2],rubricSnapshot:makeRubricSnapshot(activeIntro,layer)};
   assert.equal(historyRubric(entry,'en').needsReconfirmation,false);
-  const progress = {schemaVersion:1,items:{[question.id+'::L1']:{status:'review'}}};
-  const exportText = buildCrashSheet([question],progress,'en',[entry,
+  const progress = {schemaVersion:1,items:{[activeQuestion.id+'::L1']:{status:'review'}}};
+  const exportText = buildCrashSheet([activeQuestion],progress,'en',[entry,
     {...entry,questionId:core.questions[0].id,rubricSnapshot:makeRubricSnapshot(core,core.questions[0].layers[0])}]);
-  assert.match(exportText,/unscripted-intro@1.0.0/);
-  assert.ok(exportText.includes(layer.rubric[2].criterion.en));
+  assert.match(exportText,/unscripted-intro@1.1.0/);
+  assert.ok(exportText.includes(String.raw`The first output is \['a'\]; the second is \['a', 'b'\].`));
   assert.doesNotMatch(exportText,/unscripted-core|volatile|needs reconfirmation/);
 });
 

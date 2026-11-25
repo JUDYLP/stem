@@ -1,5 +1,6 @@
 import core from '../../data/packs/unscripted-core.v1.json' with {type:'json'};
-import intro from '../../data/packs/unscripted-intro.v1.json' with {type:'json'};
+import legacyIntro from '../../data/packs/unscripted-intro.v1.json' with {type:'json'};
+import intro from '../../data/packs/unscripted-intro.v1.1.0.json' with {type:'json'};
 import {validateQuestionPackText, validateQuestionPackBytes, comparePackVersions} from './validate.js';
 import {computePackDigest} from './digest.js';
 const coreText = JSON.stringify(core);
@@ -28,6 +29,7 @@ export function createPackRegistry() {
     registerBuiltin: () => register(coreText, 'builtin'),
     async registerBuiltins() {
       const coreRecord = await register(coreText, 'builtin');
+      await register(JSON.stringify(legacyIntro), 'builtin');
       const introRecord = await register(introText, 'builtin');
       const records = [coreRecord, introRecord];
       // v1 persistence uses question IDs without pack prefixes.
